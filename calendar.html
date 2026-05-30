@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dental Assistant Pro — Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Inter', sans-serif; }
+    body { background: #F7F4EF; color: #2C2A27; overflow: hidden; display: flex; flex-direction: column; }
+
+    /* ── CSS variables ────────────────────────────────────────────────── */
+    :root {
+      --cream:        #F7F4EF;
+      --cream-dark:   #EDE9E2;
+      --white:        #FFFFFF;
+      --primary:      #3D9E8F;
+      --primary-light:#E6F4F2;
+      --primary-mid:  #B2DDD8;
+      --amber:        #E8A87C;
+      --amber-light:  #FDF3EB;
+      --text:         #2C2A27;
+      --text-mid:     #5C5854;
+      --text-muted:   #9C9890;
+      --border:       #E5E0D8;
+      --shadow:       rgba(44,42,39,0.08);
+      --topbar-h:     64px;
+      --sidebar-w:    260px;
+
+      /* Appointment type colours */
+      --col-cleaning:     #4BAE8A;
+      --col-consultation: #3D9E8F;
+      --col-treatment:    #E07850;
+      --col-orthodontic:  #8B7CC8;
+      --col-emergency:    #D95F5F;
+      --col-whitening:    #C8A830;
+      --col-followup:     #5B9ED6;
+    }
+
+    /* ── Top bar ──────────────────────────────────────────────────────── */
+    .topbar {
+      height: var(--topbar-h); background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0;
+      padding: 0 24px; flex-shrink: 0;
+      box-shadow: 0 1px 4px var(--shadow);
+      z-index: 100;
+    }
+    .topbar-logo {
+      display: flex; align-items: center; gap: 10px;
+      width: var(--sidebar-w); flex-shrink: 0;
+    }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary) 0%, #2D8B7A 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -.01em; }
+    .logo-text span { color: var(--primary); }
+    .topbar-center {
+      flex: 1; display: flex; align-items: center; gap: 12px;
+    }
+    .nav-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--white);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: var(--text-mid); transition: all .15s;
+    }
+    .nav-btn:hover { background: var(--cream); border-color: var(--primary-mid); color: var(--primary); }
+    .nav-date {
+      font-size: 17px; font-weight: 700; color: var(--text);
+      letter-spacing: -.02em; min-width: 200px;
+    }
+    .today-btn {
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); font-size: 13px; font-weight: 600;
+      color: var(--text-mid); cursor: pointer; transition: all .15s;
+    }
+    .today-btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+    .view-toggle {
+      display: flex; border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; margin-left: 8px;
+    }
+    .view-btn {
+      padding: 6px 14px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: none; background: var(--white);
+      color: var(--text-muted); transition: all .15s;
+    }
+    .view-btn.active { background: var(--primary); color: #fff; }
+    .view-btn:not(.active):hover { background: var(--cream); color: var(--text); }
+    .topbar-right {
+      display: flex; align-items: center; gap: 10px; margin-left: auto;
+    }
+    .lang-toggle {
+      display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    .lang-btn {
+      padding: 5px 11px; font-size: 11px; font-weight: 700;
+      cursor: pointer; border: none; background: var(--white);
+      color: var(--text-muted); letter-spacing: .04em; transition: all .15s;
+    }
+    .lang-btn.active { background: var(--primary); color: #fff; }
+    .add-appt-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 9px;
+      background: var(--primary); color: #fff;
+      font-size: 13px; font-weight: 600; border: none; cursor: pointer;
+      transition: all .15s; box-shadow: 0 2px 8px rgba(61,158,143,.25);
+    }
+    .add-appt-btn:hover { background: #2D8B7A; box-shadow: 0 4px 14px rgba(61,158,143,.35); }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--amber) 0%, #D4906A 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff; cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* ── Body split ───────────────────────────────────────────────────── */
+    .body-wrap {
+      flex: 1; display: flex; overflow: hidden;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w); background: var(--white);
+      border-right: 1px solid var(--border);
+      padding: 20px 16px;
+      display: flex; flex-direction: column; gap: 24px;
+      overflow-y: auto; flex-shrink: 0;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Mini calendar */
+    .mini-cal { }
+    .mini-cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .mini-cal-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .mini-nav { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 12px; padding: 2px 6px; border-radius: 4px; }
+    .mini-nav:hover { background: var(--cream); color: var(--primary); }
+    .mini-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+    .mini-day-label {
+      text-align: center; font-size: 10px; font-weight: 600;
+      color: var(--text-muted); padding: 4px 0; letter-spacing: .04em;
+    }
+    .mini-day {
+      text-align: center; font-size: 12px; font-weight: 500;
+      color: var(--text-mid); padding: 5px 2px; border-radius: 6px;
+      cursor: pointer; transition: all .12s;
+    }
+    .mini-day:hover { background: var(--primary-light); color: var(--primary); }
+    .mini-day.today { background: var(--primary); color: #fff; font-weight: 700; }
+    .mini-day.in-week { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .mini-day.other-month { color: var(--border); }
+    .mini-day.has-appt { position: relative; }
+    .mini-day.has-appt::after {
+      content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+      width: 4px; height: 4px; border-radius: 50%; background: var(--amber);
+    }
+
+    /* Dentist filters */
+    .section-title {
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
+    }
+    .dentist-list { display: flex; flex-direction: column; gap: 6px; }
+    .dentist-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px; border-radius: 9px; cursor: pointer;
+      transition: background .12s;
+    }
+    .dentist-item:hover { background: var(--cream); }
+    .dentist-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dentist-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+    .dentist-count {
+      font-size: 11px; font-weight: 600;
+      background: var(--cream-dark); color: var(--text-muted);
+      padding: 2px 7px; border-radius: 10px;
+    }
+    .dentist-item input[type=checkbox] { display: none; }
+    .dentist-check {
+      width: 16px; height: 16px; border-radius: 4px; border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: all .12s;
+    }
+    .dentist-item.checked .dentist-check {
+      border-color: currentColor; background: currentColor;
+    }
+    .dentist-item.checked .dentist-check::after {
+      content: '✓'; font-size: 9px; color: white; font-weight: 900;
+    }
+
+    /* Legend */
+    .legend { display: flex; flex-direction: column; gap: 6px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+    }
+    .legend-label { font-size: 12px; color: var(--text-mid); }
+
+    /* Quick stats */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card {
+      background: var(--cream); border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .stat-value { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+    .stat-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+    .stat-card.highlight { background: var(--primary-light); }
+    .stat-card.highlight .stat-value { color: var(--primary); }
+
+    /* ── Main calendar area ───────────────────────────────────────────── */
+    .cal-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Day headers */
+    .cal-header {
+      display: grid; grid-template-columns: 56px repeat(6, 1fr);
+      border-bottom: 1px solid var(--border);
+      background: var(--white); flex-shrink: 0;
+    }
+    .cal-header-spacer { border-right: 1px solid var(--border); }
+    .cal-day-header {
+      padding: 12px 8px 10px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .cal-day-name {
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .cal-day-num {
+      font-size: 22px; font-weight: 800; color: var(--text);
+      line-height: 1.15; letter-spacing: -.02em; margin-top: 2px;
+    }
+    .cal-day-header.today .cal-day-name { color: var(--primary); }
+    .cal-day-header.today .cal-day-num {
+      background: var(--primary); color: #fff;
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 2px auto 0; font-size: 18px;
+    }
+
+    /* Calendar scroll body */
+    .cal-body {
+      flex: 1; overflow-y: auto; position: relative;
+      display: grid; grid-template-columns: 56px repeat(6, 1fr);
+    }
+    .cal-body::-webkit-scrollbar { width: 6px; }
+    .cal-body::-webkit-scrollbar-track { background: var(--cream); }
+    .cal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Time gutter */
+    .time-col { grid-column: 1; }
+    .time-slot-label {
+      height: 64px; display: flex; align-items: flex-start;
+      justify-content: flex-end; padding-right: 10px; padding-top: 4px;
+      font-size: 10px; font-weight: 600; color: var(--text-muted);
+      letter-spacing: .03em; position: relative;
+    }
+
+    /* Day columns */
+    .day-col {
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+    .time-cell {
+      height: 64px;
+      border-bottom: 1px solid var(--border);
+      position: relative; cursor: pointer; transition: background .1s;
+    }
+    .time-cell:hover { background: var(--primary-light); }
+    .time-cell:hover::after {
+      content: '+'; position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 20px; font-weight: 300; color: var(--primary); opacity: .6;
+    }
+    .time-cell.half-hour { border-bottom: 1px dashed var(--cream-dark); }
+
+    /* Current time line */
+    .now-line {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: #E05555; z-index: 10; pointer-events: none;
+    }
+    .now-dot {
+      position: absolute; left: -4px; top: -4px;
+      width: 10px; height: 10px; border-radius: 50%; background: #E05555;
+    }
+
+    /* Appointment blocks */
+    .appt {
+      position: absolute; left: 4px; right: 4px;
+      border-radius: 8px; padding: 6px 8px;
+      cursor: pointer; z-index: 5; overflow: hidden;
+      transition: transform .1s, box-shadow .1s;
+      border-left: 3px solid transparent;
+    }
+    .appt:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,.12); z-index: 20; }
+    .appt-name { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appt-type { font-size: 10px; font-weight: 500; color: rgba(255,255,255,.8); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appt-time { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.7); margin-top: 3px; }
+
+    /* Appointment type backgrounds */
+    .appt.cleaning     { background: linear-gradient(135deg, #4BAE8A, #3A9878); }
+    .appt.consultation { background: linear-gradient(135deg, #3D9E8F, #2D8B7A); }
+    .appt.treatment    { background: linear-gradient(135deg, #E07850, #C86840); }
+    .appt.orthodontic  { background: linear-gradient(135deg, #8B7CC8, #7A6CB8); }
+    .appt.emergency    { background: linear-gradient(135deg, #D95F5F, #C44F4F); }
+    .appt.whitening    { background: linear-gradient(135deg, #C8A830, #B89820); }
+    .appt.followup     { background: linear-gradient(135deg, #5B9ED6, #4A8EC6); }
+
+    /* ── Appointment modal ────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(44,42,39,.35);
+      backdrop-filter: blur(4px); z-index: 500;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--white); border-radius: 18px;
+      padding: 28px; width: 420px; max-width: 92vw;
+      box-shadow: 0 20px 60px rgba(44,42,39,.2);
+      transform: translateY(12px) scale(.97);
+      transition: transform .22s cubic-bezier(.175,.885,.32,1.275);
+    }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .modal-type-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase; color: #fff; margin-bottom: 8px;
+    }
+    .modal-patient { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); cursor: pointer; font-size: 16px; color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center; transition: all .12s; flex-shrink: 0;
+    }
+    .modal-close:hover { background: #FEE2E2; border-color: #FECACA; color: #DC2626; }
+    .modal-detail {
+      display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;
+    }
+    .modal-detail-icon { font-size: 15px; margin-top: 1px; flex-shrink: 0; }
+    .modal-detail-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .modal-detail-value { font-size: 14px; font-weight: 600; color: var(--text); margin-top: 2px; }
+    .modal-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+    .modal-btn {
+      flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; transition: all .15s;
+    }
+    .modal-btn.primary { background: var(--primary); color: #fff; }
+    .modal-btn.primary:hover { background: #2D8B7A; }
+    .modal-btn.secondary { background: var(--cream); color: var(--text-mid); border: 1px solid var(--border); }
+    .modal-btn.secondary:hover { background: var(--cream-dark); }
+    .modal-btn.danger { background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; }
+    .modal-btn.danger:hover { background: #FECACA; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .status-badge.confirmed { background: #D1FAE5; color: #065F46; }
+    .status-badge.pending   { background: #FEF3C7; color: #92400E; }
+    .status-badge.cancelled { background: #FEE2E2; color: #991B1B; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ── Month / 3-month view ─────────────────────────────────────────── */
+    .month-view {
+      flex: 1; overflow-y: auto; padding: 22px 24px; display: none;
+      background: var(--cream);
+    }
+    .month-view.active { display: block; }
+    .month-view::-webkit-scrollbar { width: 6px; }
+    .month-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .month-view-title {
+      font-size: 16px; font-weight: 800; color: var(--text);
+      letter-spacing: -.02em; margin-bottom: 16px;
+    }
+    .month-grid-wrap {
+      background: var(--white); border-radius: 14px; overflow: hidden;
+      box-shadow: 0 1px 6px var(--shadow); margin-bottom: 24px;
+    }
+    .month-day-labels {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      background: var(--cream); border-bottom: 1px solid var(--border);
+    }
+    .month-day-label {
+      text-align: center; font-size: 10px; font-weight: 700;
+      letter-spacing: .07em; color: var(--text-muted); padding: 9px 0;
+      text-transform: uppercase;
+    }
+    .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .month-cell {
+      min-height: 92px; padding: 7px 8px 4px; position: relative;
+      cursor: pointer; transition: background .1s;
+      border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .month-cell:nth-child(7n) { border-right: none; }
+    .month-cell:hover { background: var(--primary-light); }
+    .month-cell.other-month { background: rgba(247,244,239,.7); }
+    .month-cell.other-month .month-cell-num { opacity: .3; }
+    .month-cell.today-cell { background: rgba(61,158,143,.06); }
+    .month-cell.today-cell .month-cell-num {
+      background: var(--primary); color: #fff; width: 24px; height: 24px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+    .month-cell-num {
+      font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px;
+      width: 24px; height: 24px; line-height: 24px; text-align: center;
+    }
+    .month-appt-pill {
+      display: block; font-size: 10px; font-weight: 600; color: #fff;
+      border-radius: 4px; padding: 2px 6px; margin-bottom: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+      transition: filter .1s;
+    }
+    .month-appt-pill:hover { filter: brightness(1.12); }
+    .month-more {
+      font-size: 10px; font-weight: 600; color: var(--text-muted);
+      padding: 1px 4px; margin-top: 1px;
+    }
+
+    /* 3-month layout */
+    .three-month-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .three-month-container .month-grid-wrap { margin-bottom: 0; }
+    .three-month-container .month-cell { min-height: 62px; }
+    .three-month-container .month-appt-pill { font-size: 9px; padding: 1px 5px; }
+    .three-month-sub-title {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      margin-bottom: 10px; letter-spacing: -.01em;
+    }
+
+    /* ── Section header + add button ─────────────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .section-header .section-title { margin-bottom: 0; }
+    .section-add-btn {
+      width: 20px; height: 20px; border-radius: 5px;
+      border: 1.5px solid var(--border); background: var(--white);
+      cursor: pointer; font-size: 14px; line-height: 1;
+      color: var(--text-muted); display: flex; align-items: center;
+      justify-content: center; transition: all .15s; flex-shrink: 0;
+      padding: 0;
+    }
+    .section-add-btn:hover {
+      border-color: var(--primary); color: var(--primary);
+      background: var(--primary-light);
+    }
+    .section-remove-btn {
+      width: 20px; height: 20px; border-radius: 5px;
+      border: 1.5px solid var(--border); background: var(--white);
+      cursor: pointer; font-size: 15px; line-height: 1;
+      color: var(--text-muted); display: flex; align-items: center;
+      justify-content: center; transition: all .15s; flex-shrink: 0;
+      padding: 0; font-weight: 700;
+    }
+    .section-remove-btn:hover {
+      border-color: #D95F5F; color: #D95F5F; background: #FEF2F2;
+    }
+    .section-remove-btn.active {
+      border-color: #D95F5F; color: #fff; background: #D95F5F;
+    }
+    /* Remove-mode: dentist items show a red × on hover */
+    .dentist-list.remove-mode .dentist-item:not([data-dentist="all"]) {
+      cursor: pointer;
+    }
+    .dentist-list.remove-mode .dentist-item:not([data-dentist="all"]):hover {
+      background: #FEF2F2;
+      outline: 1.5px solid #FECACA;
+    }
+    .dentist-list.remove-mode .dentist-item:not([data-dentist="all"]) .dentist-check {
+      background: none !important;
+      border-color: #D95F5F !important;
+      position: relative;
+    }
+    .dentist-list.remove-mode .dentist-item:not([data-dentist="all"]) .dentist-check::after {
+      content: '×' !important;
+      font-size: 12px !important;
+      color: #D95F5F !important;
+      font-weight: 900;
+    }
+
+    /* ── Inline add form ─────────────────────────────────────────────── */
+    .add-inline-form {
+      background: var(--cream); border-radius: 10px;
+      padding: 12px 10px; margin-bottom: 6px;
+      border: 1px solid var(--border); display: none;
+    }
+    .add-inline-form.open { display: block; }
+    .add-inline-input {
+      width: 100%; padding: 7px 10px; border-radius: 7px;
+      border: 1.5px solid var(--border); background: var(--white);
+      font-size: 12px; font-weight: 500; color: var(--text);
+      outline: none; margin-bottom: 10px; font-family: inherit;
+      box-sizing: border-box;
+    }
+    .add-inline-input:focus { border-color: var(--primary); }
+    .add-color-row {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .color-swatch {
+      width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+      border: 2px solid transparent; transition: transform .1s, border-color .1s;
+      flex-shrink: 0;
+    }
+    .color-swatch:hover { transform: scale(1.18); }
+    .color-swatch.selected { border-color: var(--text); transform: scale(1.12); }
+    .add-inline-actions { display: flex; gap: 6px; }
+    .add-inline-btn {
+      flex: 1; padding: 6px 8px; border-radius: 7px;
+      font-size: 12px; font-weight: 600; cursor: pointer; border: none;
+      transition: all .15s; font-family: inherit;
+    }
+    .add-inline-btn.primary { background: var(--primary); color: #fff; }
+    .add-inline-btn.primary:hover { background: #2D8B7A; }
+    .add-inline-btn.cancel { background: var(--cream-dark); color: var(--text-muted); }
+    .add-inline-btn.cancel:hover { background: var(--border); }
+
+    /* ── New Appointment form ────────────────────────────────────────── */
+    .af-overlay {
+      position: fixed; inset: 0; z-index: 550;
+      background: rgba(20,18,15,.50); backdrop-filter: blur(5px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .af-overlay.open { opacity: 1; pointer-events: all; }
+    .af-modal {
+      background: var(--white); border-radius: 18px; overflow: hidden;
+      width: min(540px, 94vw);
+      box-shadow: 0 20px 70px rgba(20,18,15,.22);
+      transform: translateY(14px) scale(.97);
+      transition: transform .22s cubic-bezier(.175,.885,.32,1.2);
+    }
+    .af-overlay.open .af-modal { transform: none; }
+    .af-header {
+      padding: 20px 24px 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .af-title { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+    .af-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .af-close {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--white);
+      cursor: pointer; font-size: 15px; color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      transition: all .12s;
+    }
+    .af-close:hover { background: #FEE2E2; border-color: #FECACA; color: #DC2626; }
+    .af-body { padding: 18px 24px; display: flex; flex-direction: column; gap: 14px; }
+    .af-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .af-row.full { grid-template-columns: 1fr; }
+    .af-field { display: flex; flex-direction: column; gap: 5px; }
+    .af-label {
+      font-size: 10px; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .af-input, .af-select, .af-textarea {
+      padding: 9px 11px; border-radius: 9px;
+      border: 1.5px solid var(--border); background: var(--cream);
+      font-size: 13px; font-weight: 500; color: var(--text);
+      outline: none; font-family: inherit; transition: border-color .15s;
+    }
+    .af-input:focus, .af-select:focus, .af-textarea:focus {
+      border-color: var(--primary); background: var(--white);
+    }
+    .af-textarea { resize: none; min-height: 62px; }
+    .af-time-row { display: flex; gap: 6px; align-items: center; }
+    .af-time-sep { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+    .af-status-row { display: flex; gap: 10px; }
+    .af-status-opt {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px; border: 1.5px solid var(--border);
+      cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-mid);
+      transition: all .12s; user-select: none;
+    }
+    .af-status-opt input { display: none; }
+    .af-status-opt.selected-confirmed { border-color: #059669; background: #D1FAE5; color: #065F46; }
+    .af-status-opt.selected-pending   { border-color: #D97706; background: #FEF3C7; color: #92400E; }
+    .af-footer {
+      padding: 14px 24px; border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 8px;
+    }
+    .af-btn {
+      padding: 9px 20px; border-radius: 9px; font-size: 13px;
+      font-weight: 700; cursor: pointer; border: none; font-family: inherit;
+      transition: all .15s;
+    }
+    .af-btn.secondary { background: var(--cream); color: var(--text-mid); border: 1px solid var(--border); }
+    .af-btn.secondary:hover { background: var(--cream-dark); }
+    .af-btn.primary { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(61,158,143,.25); }
+    .af-btn.primary:hover { background: #2D8B7A; }
+    /* Colour swatch on type select */
+    .af-type-dot {
+      display: inline-block; width: 9px; height: 9px;
+      border-radius: 50%; margin-right: 5px; vertical-align: middle;
+    }
+
+    /* ── New Patient button (sidebar) ────────────────────────────────── */
+    .new-patient-btn {
+      width: 100%; display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--primary) 0%, #2D8B7A 100%);
+      color: #fff; border: none; cursor: pointer; font-family: inherit;
+      transition: all .18s; box-shadow: 0 2px 10px rgba(61,158,143,.28);
+    }
+    .new-patient-btn:hover {
+      box-shadow: 0 4px 18px rgba(61,158,143,.42); transform: translateY(-1px);
+    }
+    .np-icon { font-size: 17px; flex-shrink: 0; }
+    .np-label { font-size: 13px; font-weight: 700; letter-spacing: -.01em; flex: 1; text-align: left; }
+    .np-arrow { font-size: 14px; opacity: .7; }
+
+    /* ── Patient form overlay ─────────────────────────────────────────── */
+    .patient-overlay {
+      position: fixed; inset: 0; z-index: 600;
+      background: rgba(20,18,15,.55); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .22s;
+    }
+    .patient-overlay.open { opacity: 1; pointer-events: all; }
+    .patient-modal {
+      background: var(--white); border-radius: 20px; overflow: hidden;
+      width: min(760px, 96vw); max-height: 90vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 24px 80px rgba(20,18,15,.25);
+      transform: translateY(16px) scale(.97);
+      transition: transform .24s cubic-bezier(.175,.885,.32,1.2);
+    }
+    .patient-overlay.open .patient-modal { transform: none; }
+
+    /* Modal header */
+    .pm-header {
+      padding: 22px 28px 0; display: flex; align-items: center;
+      justify-content: space-between; flex-shrink: 0;
+    }
+    .pm-title { font-size: 20px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+    .pm-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .pm-close {
+      width: 34px; height: 34px; border-radius: 9px;
+      border: 1px solid var(--border); background: var(--white);
+      cursor: pointer; font-size: 16px; color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      transition: all .12s; flex-shrink: 0;
+    }
+    .pm-close:hover { background: #FEE2E2; border-color: #FECACA; color: #DC2626; }
+
+    /* Mode toggle */
+    .pm-mode-toggle {
+      display: flex; margin: 16px 28px 0;
+      background: var(--cream); border-radius: 10px; padding: 4px; gap: 4px;
+      flex-shrink: 0;
+    }
+    .pm-mode-btn {
+      flex: 1; padding: 8px 14px; border-radius: 7px; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all .15s; color: var(--text-muted);
+      background: transparent; display: flex; align-items: center;
+      justify-content: center; gap: 6px;
+    }
+    .pm-mode-btn.active { background: var(--white); color: var(--text); box-shadow: 0 1px 4px var(--shadow); }
+
+    /* ── WRITE MODE ───────────────────────────────────────────────────── */
+    .pm-write { flex: 1; overflow-y: auto; padding: 20px 28px 24px; }
+    .pm-write::-webkit-scrollbar { width: 5px; }
+    .pm-write::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .pm-section-title {
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin: 18px 0 10px; border-top: 1px solid var(--border); padding-top: 16px;
+    }
+    .pm-section-title:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+    .pm-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .pm-field-row.full { grid-template-columns: 1fr; }
+    .pm-field { display: flex; flex-direction: column; gap: 5px; }
+    .pm-label { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: .04em; }
+    .pm-input, .pm-select, .pm-textarea {
+      padding: 9px 12px; border-radius: 9px;
+      border: 1.5px solid var(--border); background: var(--cream);
+      font-size: 13px; font-weight: 500; color: var(--text);
+      outline: none; font-family: inherit; transition: border-color .15s;
+    }
+    .pm-input:focus, .pm-select:focus, .pm-textarea:focus {
+      border-color: var(--primary); background: var(--white);
+    }
+    .pm-textarea { resize: vertical; min-height: 70px; }
+    .pm-radio-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .pm-radio-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer;
+    }
+    .pm-footer {
+      padding: 16px 28px; border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;
+      background: var(--white);
+    }
+    .pm-btn {
+      padding: 10px 22px; border-radius: 10px; font-size: 13px;
+      font-weight: 700; cursor: pointer; border: none;
+      font-family: inherit; transition: all .15s;
+    }
+    .pm-btn.secondary { background: var(--cream); color: var(--text-mid); border: 1px solid var(--border); }
+    .pm-btn.secondary:hover { background: var(--cream-dark); }
+    .pm-btn.primary { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(61,158,143,.25); }
+    .pm-btn.primary:hover { background: #2D8B7A; }
+
+    /* ── VOICE MODE ───────────────────────────────────────────────────── */
+    .pm-voice {
+      flex: 1; display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px 36px; gap: 0; text-align: center;
+    }
+    .pm-voice.active { display: flex; }
+
+    /* Progress bar */
+    .voice-progress-wrap {
+      width: 100%; margin-bottom: 28px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .voice-progress-track {
+      width: 100%; height: 5px; background: var(--cream-dark);
+      border-radius: 3px; overflow: hidden;
+    }
+    .voice-progress-fill {
+      height: 100%; background: var(--primary); border-radius: 3px;
+      transition: width .35s ease;
+    }
+    .voice-progress-text {
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-align: right; letter-spacing: .03em;
+    }
+
+    /* Question display */
+    .voice-question-num {
+      font-size: 11px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--primary); margin-bottom: 8px;
+    }
+    .voice-question-text {
+      font-size: 24px; font-weight: 800; color: var(--text);
+      letter-spacing: -.02em; line-height: 1.25; margin-bottom: 6px;
+    }
+    .voice-question-hint {
+      font-size: 13px; color: var(--text-muted); margin-bottom: 20px;
+    }
+
+    /* Answer area */
+    .voice-answer-box {
+      width: 100%; min-height: 64px; padding: 12px 16px;
+      background: var(--cream); border-radius: 12px;
+      border: 2px solid var(--border); font-size: 16px;
+      font-weight: 500; color: var(--text); font-family: inherit;
+      outline: none; resize: none; text-align: left;
+      transition: border-color .15s; margin-bottom: 20px;
+    }
+    .voice-answer-box:focus { border-color: var(--primary); background: var(--white); }
+    .voice-answer-box.listening { border-color: #E05555; background: #FFF8F8; }
+
+    /* Mic button */
+    .voice-mic-btn {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--primary); color: #fff; border: none;
+      font-size: 32px; cursor: pointer; transition: all .18s;
+      box-shadow: 0 4px 20px rgba(61,158,143,.35);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 12px; flex-shrink: 0;
+    }
+    .voice-mic-btn:hover { transform: scale(1.07); box-shadow: 0 6px 28px rgba(61,158,143,.45); }
+    .voice-mic-btn.recording {
+      background: #E05555; box-shadow: 0 0 0 12px rgba(224,85,85,.18);
+      animation: mic-pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes mic-pulse {
+      0%, 100% { box-shadow: 0 0 0 8px rgba(224,85,85,.18); }
+      50%       { box-shadow: 0 0 0 20px rgba(224,85,85,.08); }
+    }
+    .voice-mic-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 24px; }
+    .voice-mic-label.recording { color: #E05555; }
+
+    /* Voice nav */
+    .voice-nav { display: flex; gap: 10px; width: 100%; }
+    .voice-nav-btn {
+      flex: 1; padding: 11px; border-radius: 10px; font-size: 13px;
+      font-weight: 700; cursor: pointer; border: none; font-family: inherit;
+      transition: all .15s;
+    }
+    .voice-nav-btn.back  { background: var(--cream); color: var(--text-mid); border: 1px solid var(--border); }
+    .voice-nav-btn.back:hover  { background: var(--cream-dark); }
+    .voice-nav-btn.next  { background: var(--primary); color: #fff; }
+    .voice-nav-btn.next:hover  { background: #2D8B7A; }
+    .voice-nav-btn.finish { background: #298129; color: #fff; }
+    .voice-nav-btn.finish:hover { background: #1e6b1e; }
+    .voice-skip { font-size: 12px; color: var(--text-muted); cursor: pointer; text-decoration: underline; margin-top: 10px; }
+    .voice-skip:hover { color: var(--primary); }
+
+    /* No speech support warning */
+    .voice-no-support {
+      background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 10px;
+      padding: 10px 14px; font-size: 12px; color: #92400E;
+      margin-bottom: 16px; display: none;
+    }
+    .voice-no-support.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ── Top bar ─────────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-logo">
+    <div class="logo-icon">🦷</div>
+    <div class="logo-text">Dental <span>Assistant</span> Pro</div>
+  </div>
+
+  <div class="topbar-center">
+    <button class="nav-btn" id="prev-week">&#8249;</button>
+    <div class="nav-date" id="nav-date">—</div>
+    <button class="nav-btn" id="next-week">&#8250;</button>
+    <button class="today-btn" id="today-btn" data-en="Today" data-el="Σήμερα">Today</button>
+    <div class="view-toggle">
+      <button class="view-btn" id="vbtn-day" data-en="Day" data-el="Ημέρα">Day</button>
+      <button class="view-btn active" id="vbtn-week" data-en="Week" data-el="Εβδομάδα">Week</button>
+      <button class="view-btn" id="vbtn-month" data-en="Month" data-el="Μήνας">Month</button>
+      <button class="view-btn" id="vbtn-3month" data-en="3 Months" data-el="3 Μήνες">3 Months</button>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="lang-en">EN</button>
+      <button class="lang-btn" id="lang-el">ΕΛ</button>
+    </div>
+    <button class="add-appt-btn" id="add-appt-btn">
+      <span>＋</span>
+      <span data-en="New Appointment" data-el="Νέο Ραντεβού">New Appointment</span>
+    </button>
+    <div class="avatar" title="Dr. Maria Papadopoulos">MP</div>
+  </div>
+</header>
+
+<!-- ── Body ───────────────────────────────────────────────────────────── -->
+<div class="body-wrap">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <!-- Mini calendar -->
+    <div class="mini-cal">
+      <div class="mini-cal-header">
+        <div class="mini-cal-title" id="mini-cal-title">—</div>
+        <div style="display:flex;gap:2px">
+          <button class="mini-nav" id="mini-prev">‹</button>
+          <button class="mini-nav" id="mini-next">›</button>
+        </div>
+      </div>
+      <div class="mini-grid" id="mini-grid"></div>
+    </div>
+
+    <!-- Dentist filters -->
+    <div>
+      <div class="section-header">
+        <div class="section-title" data-en="DENTISTS" data-el="ΟΔΟΝΤΙΑΤΡΟΙ">DENTISTS</div>
+        <div style="display:flex;gap:4px">
+          <button class="section-remove-btn" id="remove-dentist-btn" title="Remove a dentist">－</button>
+          <button class="section-add-btn" id="add-dentist-btn" title="Add dentist">＋</button>
+        </div>
+      </div>
+      <!-- Add dentist inline form -->
+      <div class="add-inline-form" id="add-dentist-form">
+        <input class="add-inline-input" id="dentist-name-input" type="text" placeholder="Dr. First. Surname" maxlength="40"/>
+        <div class="add-color-row" id="dentist-color-row"></div>
+        <div class="add-inline-actions">
+          <button class="add-inline-btn cancel" id="dentist-add-cancel">Cancel</button>
+          <button class="add-inline-btn primary" id="dentist-add-confirm">Add</button>
+        </div>
+      </div>
+      <div class="dentist-list" id="dentist-list">
+        <div class="dentist-item checked" data-dentist="all" style="color:#3D9E8F">
+          <div class="dentist-check"></div>
+          <div class="dentist-dot" style="background:#3D9E8F"></div>
+          <div class="dentist-name" data-en="All Dentists" data-el="Όλοι">All Dentists</div>
+          <div class="dentist-count" id="count-all">12</div>
+        </div>
+        <div class="dentist-item checked" data-dentist="maria" style="color:#E07850">
+          <div class="dentist-check"></div>
+          <div class="dentist-dot" style="background:#E07850"></div>
+          <div class="dentist-name">Dr. M. Papadopoulos</div>
+          <div class="dentist-count" id="count-maria">7</div>
+        </div>
+        <div class="dentist-item checked" data-dentist="nikos" style="color:#8B7CC8">
+          <div class="dentist-check"></div>
+          <div class="dentist-dot" style="background:#8B7CC8"></div>
+          <div class="dentist-name">Dr. N. Konstantinou</div>
+          <div class="dentist-count" id="count-nikos">5</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointment types legend -->
+    <div>
+      <div class="section-header">
+        <div class="section-title" data-en="APPOINTMENT TYPES" data-el="ΤΥΠΟΙ ΡΑΝΤΕΒΟΥ">APPOINTMENT TYPES</div>
+        <button class="section-add-btn" id="add-type-btn" title="Add appointment type">＋</button>
+      </div>
+      <!-- Add type inline form -->
+      <div class="add-inline-form" id="add-type-form">
+        <input class="add-inline-input" id="type-name-input" type="text" placeholder="Type name…" maxlength="30"/>
+        <div class="add-color-row" id="type-color-row"></div>
+        <div class="add-inline-actions">
+          <button class="add-inline-btn cancel" id="type-add-cancel">Cancel</button>
+          <button class="add-inline-btn primary" id="type-add-confirm">Add</button>
+        </div>
+      </div>
+      <div class="legend" id="legend-list">
+        <!-- appointment types added dynamically via + button -->
+      </div>
+    </div>
+
+    <!-- New Patient -->
+    <div>
+      <button class="new-patient-btn" id="new-patient-btn">
+        <span class="np-icon">👤</span>
+        <span class="np-label" data-en="New Patient" data-el="Νέος Ασθενής">New Patient</span>
+        <span class="np-arrow">→</span>
+      </button>
+    </div>
+
+    <!-- Quick stats -->
+    <div>
+      <div class="section-title" data-en="THIS WEEK" data-el="ΑΥΤΗ ΤΗΝ ΕΒΔΟΜΑΔΑ">THIS WEEK</div>
+      <div class="stats-grid">
+        <div class="stat-card highlight">
+          <div class="stat-value">12</div>
+          <div class="stat-label" data-en="Appointments" data-el="Ραντεβού">Appointments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">9</div>
+          <div class="stat-label" data-en="Patients" data-el="Ασθενείς">Patients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">2</div>
+          <div class="stat-label" data-en="Pending" data-el="Εκκρεμεί">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">1</div>
+          <div class="stat-label" data-en="Emergency" data-el="Επείγον">Emergency</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Main calendar -->
+  <main class="cal-main">
+    <div class="cal-header" id="cal-header">
+      <div class="cal-header-spacer"></div>
+      <!-- day headers injected by JS -->
+    </div>
+    <div class="cal-body" id="cal-body">
+      <!-- time col + day cols injected by JS -->
+    </div>
+    <!-- Month / 3-month / day-detail view panel -->
+    <div id="month-view" class="month-view"></div>
+  </main>
+
+</div>
+
+<!-- ── Appointment detail modal ────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-type-badge" id="modal-badge">—</div>
+        <div class="modal-patient" id="modal-patient">—</div>
+      </div>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-detail">
+      <div class="modal-detail-icon">📅</div>
+      <div>
+        <div class="modal-detail-label" data-en="Date & Time" data-el="Ημερομηνία & Ώρα">Date & Time</div>
+        <div class="modal-detail-value" id="modal-datetime">—</div>
+      </div>
+    </div>
+    <div class="modal-detail">
+      <div class="modal-detail-icon">⏱</div>
+      <div>
+        <div class="modal-detail-label" data-en="Duration" data-el="Διάρκεια">Duration</div>
+        <div class="modal-detail-value" id="modal-duration">—</div>
+      </div>
+    </div>
+    <div class="modal-detail">
+      <div class="modal-detail-icon">👨‍⚕️</div>
+      <div>
+        <div class="modal-detail-label" data-en="Dentist" data-el="Οδοντίατρος">Dentist</div>
+        <div class="modal-detail-value" id="modal-dentist">—</div>
+      </div>
+    </div>
+    <div class="modal-detail">
+      <div class="modal-detail-icon">📋</div>
+      <div>
+        <div class="modal-detail-label" data-en="Notes" data-el="Σημειώσεις">Notes</div>
+        <div class="modal-detail-value" id="modal-notes">—</div>
+      </div>
+    </div>
+    <hr class="modal-divider">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="modal-detail-label" data-en="Status" data-el="Κατάσταση">Status</div>
+      <div class="status-badge confirmed" id="modal-status">
+        <div class="status-dot"></div>
+        <span id="modal-status-text">Confirmed</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" data-en="Edit" data-el="Επεξεργασία">Edit</button>
+      <button class="modal-btn primary" data-en="Patient Chart" data-el="Φάκελος">Patient Chart</button>
+      <button class="modal-btn danger" data-en="Cancel" data-el="Ακύρωση">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New Appointment Form ──────────────────────────────────────────────── -->
+<div class="af-overlay" id="af-overlay">
+  <div class="af-modal">
+    <div class="af-header">
+      <div>
+        <div class="af-title" data-en="New Appointment" data-el="Νέο Ραντεβού">New Appointment</div>
+        <div class="af-subtitle" id="af-subtitle">—</div>
+      </div>
+      <button class="af-close" id="af-close">✕</button>
+    </div>
+    <div class="af-body">
+
+      <!-- Patient + Dentist -->
+      <div class="af-row">
+        <div class="af-field">
+          <label class="af-label" data-en="PATIENT NAME" data-el="ΟΝΟΜΑ ΑΣΘΕΝΗ">PATIENT NAME</label>
+          <input class="af-input" id="af-patient" type="text" placeholder="Full name…" autocomplete="off"/>
+        </div>
+        <div class="af-field">
+          <label class="af-label" data-en="DENTIST" data-el="ΟΔΟΝΤΙΑΤΡΟΣ">DENTIST</label>
+          <select class="af-select" id="af-dentist"></select>
+        </div>
+      </div>
+
+      <!-- Type + Date -->
+      <div class="af-row">
+        <div class="af-field">
+          <label class="af-label" data-en="APPOINTMENT TYPE" data-el="ΤΥΠΟΣ ΡΑΝΤΕΒΟΥ">APPOINTMENT TYPE</label>
+          <select class="af-select" id="af-type"></select>
+        </div>
+        <div class="af-field">
+          <label class="af-label" data-en="DATE" data-el="ΗΜΕΡΟΜΗΝΙΑ">DATE</label>
+          <input class="af-input" id="af-date" type="date"/>
+        </div>
+      </div>
+
+      <!-- Time + Duration -->
+      <div class="af-row">
+        <div class="af-field">
+          <label class="af-label" data-en="START TIME" data-el="ΩΡΑ ΕΝΑΡΞΗΣ">START TIME</label>
+          <div class="af-time-row">
+            <select class="af-select" id="af-hour" style="flex:1"></select>
+            <span class="af-time-sep">:</span>
+            <select class="af-select" id="af-min" style="flex:1"></select>
+          </div>
+        </div>
+        <div class="af-field">
+          <label class="af-label" data-en="DURATION" data-el="ΔΙΑΡΚΕΙΑ">DURATION</label>
+          <select class="af-select" id="af-dur">
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="45" selected>45 min</option>
+            <option value="60">1 hour</option>
+            <option value="90">1h 30m</option>
+            <option value="120">2 hours</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="af-row full">
+        <div class="af-field">
+          <label class="af-label" data-en="NOTES / REASON" data-el="ΣΗΜΕΙΩΣΕΙΣ / ΛΟΓΟΣ">NOTES / REASON</label>
+          <textarea class="af-textarea" id="af-notes" placeholder="Optional notes…"></textarea>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="af-field">
+        <label class="af-label" data-en="STATUS" data-el="ΚΑΤΑΣΤΑΣΗ">STATUS</label>
+        <div class="af-status-row" id="af-status-row">
+          <label class="af-status-opt selected-confirmed" data-status="confirmed">
+            <input type="radio" name="af-status" value="confirmed" checked/> ✓ Confirmed
+          </label>
+          <label class="af-status-opt" data-status="pending">
+            <input type="radio" name="af-status" value="pending"/> ⏳ Pending
+          </label>
+        </div>
+      </div>
+
+    </div>
+    <div class="af-footer">
+      <button class="af-btn secondary" id="af-cancel">Cancel</button>
+      <button class="af-btn primary" id="af-save">Save Appointment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New Patient Form ──────────────────────────────────────────────────── -->
+<div class="patient-overlay" id="patient-overlay">
+  <div class="patient-modal">
+
+    <!-- Header -->
+    <div class="pm-header">
+      <div>
+        <div class="pm-title" data-en="New Patient Registration" data-el="Εγγραφή Νέου Ασθενή">New Patient Registration</div>
+        <div class="pm-subtitle" data-en="Complete the form or use voice mode on a tablet" data-el="Συμπληρώστε τη φόρμα ή χρησιμοποιήστε τη φωνή">Complete the form or use voice mode on a tablet</div>
+      </div>
+      <button class="pm-close" id="pm-close">✕</button>
+    </div>
+
+    <!-- Mode toggle -->
+    <div class="pm-mode-toggle">
+      <button class="pm-mode-btn active" id="pm-mode-write">✍️ <span data-en="Write" data-el="Γραπτά">Write</span></button>
+      <button class="pm-mode-btn" id="pm-mode-voice">🎙️ <span data-en="Voice (Tablet)" data-el="Φωνή (Tablet)">Voice (Tablet)</span></button>
+    </div>
+
+    <!-- ── WRITE MODE ─────────────────────────────────────── -->
+    <div class="pm-write" id="pm-write">
+
+      <div class="pm-section-title" data-en="PERSONAL INFORMATION" data-el="ΠΡΟΣΩΠΙΚΑ ΣΤΟΙΧΕΙΑ">PERSONAL INFORMATION</div>
+      <div class="pm-field-row">
+        <div class="pm-field">
+          <label class="pm-label" data-en="FULL NAME" data-el="ΟΝΟΜΑΤΕΠΩΝΥΜΟ">FULL NAME</label>
+          <input class="pm-input" id="pf-name" type="text" placeholder="First Last" data-key="fullName"/>
+        </div>
+        <div class="pm-field">
+          <label class="pm-label" data-en="DATE OF BIRTH" data-el="ΗΜΕΡ. ΓΕΝΝΗΣΗΣ">DATE OF BIRTH</label>
+          <input class="pm-input" id="pf-dob" type="date" data-key="dob"/>
+        </div>
+      </div>
+      <div class="pm-field-row">
+        <div class="pm-field">
+          <label class="pm-label" data-en="PHONE" data-el="ΤΗΛΕΦΩΝΟ">PHONE</label>
+          <input class="pm-input" id="pf-phone" type="tel" placeholder="+30 ..." data-key="phone"/>
+        </div>
+        <div class="pm-field">
+          <label class="pm-label" data-en="EMAIL" data-el="EMAIL">EMAIL</label>
+          <input class="pm-input" id="pf-email" type="email" placeholder="email@..." data-key="email"/>
+        </div>
+      </div>
+      <div class="pm-field-row full">
+        <div class="pm-field">
+          <label class="pm-label" data-en="ADDRESS" data-el="ΔΙΕΥΘΥΝΣΗ">ADDRESS</label>
+          <input class="pm-input" id="pf-address" type="text" placeholder="Street, City" data-key="address"/>
+        </div>
+      </div>
+      <div class="pm-field-row">
+        <div class="pm-field">
+          <label class="pm-label" data-en="GENDER" data-el="ΦΥΛΟ">GENDER</label>
+          <div class="pm-radio-row" style="padding-top:6px">
+            <label class="pm-radio-label"><input type="radio" name="gender" value="male" data-key="gender"> <span data-en="Male" data-el="Άνδρας">Male</span></label>
+            <label class="pm-radio-label"><input type="radio" name="gender" value="female" data-key="gender"> <span data-en="Female" data-el="Γυναίκα">Female</span></label>
+            <label class="pm-radio-label"><input type="radio" name="gender" value="other" data-key="gender"> <span data-en="Other" data-el="Άλλο">Other</span></label>
+          </div>
+        </div>
+        <div class="pm-field">
+          <label class="pm-label" data-en="PREFERRED LANGUAGE" data-el="ΓΛΩΣΣΑ ΕΠΙΚΟΙΝΩΝΙΑΣ">PREFERRED LANGUAGE</label>
+          <select class="pm-select" id="pf-lang" data-key="prefLang">
+            <option value="en">English</option>
+            <option value="el">Ελληνικά</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pm-section-title" data-en="EMERGENCY CONTACT" data-el="ΕΠΑΦΗ ΕΚΤΑΚΤΗΣ ΑΝΑΓΚΗΣ">EMERGENCY CONTACT</div>
+      <div class="pm-field-row">
+        <div class="pm-field">
+          <label class="pm-label" data-en="CONTACT NAME" data-el="ΟΝΟΜΑ ΕΠΑΦΗΣ">CONTACT NAME</label>
+          <input class="pm-input" id="pf-emerg-name" type="text" placeholder="Full name" data-key="emergName"/>
+        </div>
+        <div class="pm-field">
+          <label class="pm-label" data-en="CONTACT PHONE" data-el="ΤΗΛΕΦΩΝΟ ΕΠΑΦΗΣ">CONTACT PHONE</label>
+          <input class="pm-input" id="pf-emerg-phone" type="tel" placeholder="+30 ..." data-key="emergPhone"/>
+        </div>
+      </div>
+
+      <div class="pm-section-title" data-en="MEDICAL HISTORY" data-el="ΙΑΤΡΙΚΟ ΙΣΤΟΡΙΚΟ">MEDICAL HISTORY</div>
+      <div class="pm-field-row full">
+        <div class="pm-field">
+          <label class="pm-label" data-en="KNOWN ALLERGIES (medications, latex, etc.)" data-el="ΑΛΛΕΡΓΙΕΣ (φάρμακα, latex κ.λπ.)">KNOWN ALLERGIES</label>
+          <textarea class="pm-textarea" id="pf-allergies" placeholder="List any known allergies, or write 'None'" data-key="allergies"></textarea>
+        </div>
+      </div>
+      <div class="pm-field-row full">
+        <div class="pm-field">
+          <label class="pm-label" data-en="CURRENT MEDICATIONS" data-el="ΤΡΕΧΟΥΣΕΣ ΦΑΡΜΑΚΕΥΤΙΚΕΣ ΑΓΩΓΕΣ">CURRENT MEDICATIONS</label>
+          <textarea class="pm-textarea" id="pf-meds" placeholder="List current medications and dosages, or 'None'" data-key="medications"></textarea>
+        </div>
+      </div>
+      <div class="pm-field-row full">
+        <div class="pm-field">
+          <label class="pm-label" data-en="MEDICAL CONDITIONS" data-el="ΠΑΘΗΣΕΙΣ / ΠΡΟΒΛΗΜΑΤΑ ΥΓΕΙΑΣ">MEDICAL CONDITIONS</label>
+          <textarea class="pm-textarea" id="pf-conditions" placeholder="Diabetes, heart disease, blood pressure, etc." data-key="conditions"></textarea>
+        </div>
+      </div>
+      <div class="pm-field-row">
+        <div class="pm-field">
+          <label class="pm-label" data-en="SMOKER / TOBACCO USE?" data-el="ΚΑΠΝΙΣΤΗΣ / ΧΡΗΣΗ ΚΑΠΝΟΥ;">SMOKER?</label>
+          <div class="pm-radio-row" style="padding-top:6px">
+            <label class="pm-radio-label"><input type="radio" name="smoker" value="no" data-key="smoker"> <span data-en="No" data-el="Όχι">No</span></label>
+            <label class="pm-radio-label"><input type="radio" name="smoker" value="yes" data-key="smoker"> <span data-en="Yes" data-el="Ναι">Yes</span></label>
+            <label class="pm-radio-label"><input type="radio" name="smoker" value="ex" data-key="smoker"> <span data-en="Ex-smoker" data-el="Πρώην καπνιστής">Ex-smoker</span></label>
+          </div>
+        </div>
+        <div class="pm-field">
+          <label class="pm-label" data-en="PREGNANT OR BREASTFEEDING?" data-el="ΕΓΚΥΟΣ / ΘΗΛΑΖΕΙ;">PREGNANT / BREASTFEEDING?</label>
+          <div class="pm-radio-row" style="padding-top:6px">
+            <label class="pm-radio-label"><input type="radio" name="pregnant" value="no" data-key="pregnant"> <span data-en="No" data-el="Όχι">No</span></label>
+            <label class="pm-radio-label"><input type="radio" name="pregnant" value="yes" data-key="pregnant"> <span data-en="Yes" data-el="Ναι">Yes</span></label>
+            <label class="pm-radio-label"><input type="radio" name="pregnant" value="na" data-key="pregnant"> <span data-en="N/A" data-el="Δ/Ι">N/A</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="pm-section-title" data-en="DENTAL HISTORY" data-el="ΟΔΟΝΤΙΑΤΡΙΚΟ ΙΣΤΟΡΙΚΟ">DENTAL HISTORY</div>
+      <div class="pm-field-row">
+        <div class="pm-field">
+          <label class="pm-label" data-en="LAST DENTAL VISIT" data-el="ΤΕΛΕΥΤΑΙΑ ΕΠΙΣΚΕΨΗ">LAST DENTAL VISIT</label>
+          <input class="pm-input" id="pf-last-visit" type="text" placeholder="e.g. 6 months ago / 2024" data-key="lastVisit"/>
+        </div>
+        <div class="pm-field">
+          <label class="pm-label" data-en="ANY DENTAL ANXIETY?" data-el="ΟΔΟΝΤΟΦΟΒΙΑ;">DENTAL ANXIETY?</label>
+          <div class="pm-radio-row" style="padding-top:6px">
+            <label class="pm-radio-label"><input type="radio" name="anxiety" value="none" data-key="anxiety"> <span data-en="None" data-el="Καθόλου">None</span></label>
+            <label class="pm-radio-label"><input type="radio" name="anxiety" value="mild" data-key="anxiety"> <span data-en="Mild" data-el="Λίγο">Mild</span></label>
+            <label class="pm-radio-label"><input type="radio" name="anxiety" value="high" data-key="anxiety"> <span data-en="High" data-el="Πολύ">High</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="pm-field-row full">
+        <div class="pm-field">
+          <label class="pm-label" data-en="PREVIOUS DENTAL WORK" data-el="ΠΡΟΗΓΟΥΜΕΝΗ ΟΔΟΝΤΙΑΤΡΙΚΗ ΕΡΓΑΣΙΑ">PREVIOUS DENTAL WORK</label>
+          <textarea class="pm-textarea" id="pf-prev-work" placeholder="Fillings, extractions, crowns, braces, implants…" data-key="prevWork"></textarea>
+        </div>
+      </div>
+      <div class="pm-field-row full">
+        <div class="pm-field">
+          <label class="pm-label" data-en="REASON FOR TODAY'S VISIT / CHIEF COMPLAINT" data-el="ΛΟΓΟΣ ΕΠΙΣΚΕΨΗΣ / ΚΥΡΙΟ ΠΑΡΑΠΟΝ">REASON FOR VISIT</label>
+          <textarea class="pm-textarea" id="pf-complaint" placeholder="What brings you in today?" data-key="chiefComplaint"></textarea>
+        </div>
+      </div>
+
+      <div class="pm-section-title" data-en="INSURANCE" data-el="ΑΣΦΑΛΙΣΗ">INSURANCE</div>
+      <div class="pm-field-row">
+        <div class="pm-field">
+          <label class="pm-label" data-en="INSURANCE PROVIDER" data-el="ΑΣΦΑΛΙΣΤΙΚΟΣ ΦΟΡΕΑΣ">INSURANCE PROVIDER</label>
+          <input class="pm-input" id="pf-insurance" type="text" placeholder="Provider name (if applicable)" data-key="insurance"/>
+        </div>
+        <div class="pm-field">
+          <label class="pm-label" data-en="HOW DID YOU HEAR ABOUT US?" data-el="ΠΩΣ ΜΑΣ ΒΡΗΚΑΤΕ;">HOW DID YOU FIND US?</label>
+          <select class="pm-select" id="pf-referral" data-key="referral">
+            <option value="">— Select —</option>
+            <option value="google" data-en="Google Search" data-el="Google">Google Search</option>
+            <option value="referral" data-en="Friend / Family" data-el="Φίλος / Οικογένεια">Friend / Family</option>
+            <option value="social" data-en="Social Media" data-el="Κοινωνικά Δίκτυα">Social Media</option>
+            <option value="walkin" data-en="Walk-in" data-el="Αυτόβουλα">Walk-in</option>
+            <option value="other" data-en="Other" data-el="Άλλο">Other</option>
+          </select>
+        </div>
+      </div>
+
+    </div><!-- end pm-write -->
+
+    <!-- ── VOICE MODE ─────────────────────────────────────── -->
+    <div class="pm-voice" id="pm-voice">
+      <div class="voice-no-support" id="voice-no-support">
+        ⚠️ Your browser doesn't support voice input. Please use Write mode instead.
+      </div>
+      <div class="voice-progress-wrap">
+        <div class="voice-progress-track"><div class="voice-progress-fill" id="voice-progress-fill"></div></div>
+        <div class="voice-progress-text" id="voice-progress-text">1 / 14</div>
+      </div>
+      <div class="voice-question-num" id="voice-q-num">QUESTION 1</div>
+      <div class="voice-question-text" id="voice-q-text">—</div>
+      <div class="voice-question-hint" id="voice-q-hint"></div>
+      <textarea class="voice-answer-box" id="voice-answer-box" rows="3" placeholder="Your answer will appear here…"></textarea>
+      <button class="voice-mic-btn" id="voice-mic-btn">🎙️</button>
+      <div class="voice-mic-label" id="voice-mic-label">Tap to speak</div>
+      <div class="voice-nav">
+        <button class="voice-nav-btn back" id="voice-back">← Back</button>
+        <button class="voice-nav-btn next" id="voice-next">Next →</button>
+      </div>
+      <div class="voice-skip" id="voice-skip">Skip this question</div>
+    </div><!-- end pm-voice -->
+
+    <!-- Footer (write mode only) -->
+    <div class="pm-footer" id="pm-footer">
+      <button class="pm-btn secondary" id="pm-cancel">Cancel</button>
+      <button class="pm-btn primary" id="pm-save">💾 Save Patient</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── i18n ────────────────────────────────────────────────────────────────
+let lang = 'en'
+const DAYS_EN = ['Mon','Tue','Wed','Thu','Fri','Sat']
+const DAYS_EL = ['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ']
+const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December']
+const MONTHS_EL = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος']
+const MONTHS_SHORT_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const MONTHS_SHORT_EL = ['Ιαν','Φεβ','Μαρ','Απρ','Μαι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']
+const MINI_DAYS_EN = ['M','T','W','T','F','S','S']
+const MINI_DAYS_EL = ['Δ','Τ','Τ','Π','Π','Σ','Κ']
+
+function t(el) {
+  const v = el.dataset[lang]
+  if (v) el.textContent = v
+}
+function applyLang() {
+  document.querySelectorAll('[data-en]').forEach(t)
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en')
+  document.getElementById('lang-el').classList.toggle('active', lang === 'el')
+}
+
+// ── Appointment data ─────────────────────────────────────────────────────
+// Each appointment: { id, patient, patientEl, type, dentist, day (0=Mon), hour, min, duration (mins), notes, status }
+const TYPE_LABELS = { en: {}, el: {} }
+const STATUS_LABELS = {
+  en: { confirmed:'Confirmed', pending:'Pending', cancelled:'Cancelled' },
+  el: { confirmed:'Επιβεβαιωμένο', pending:'Εκκρεμεί', cancelled:'Ακυρωμένο' },
+}
+const APPTS = []
+
+// ── Week navigation ──────────────────────────────────────────────────────
+const today = new Date()
+let weekOffset = 0
+let miniMonthOffset = 0
+
+// ── View state ───────────────────────────────────────────────────────────
+let currentView = 'week'   // 'day' | 'week' | 'month' | '3month'
+let monthOffset = 0        // months from today for month/3month views
+let dayOffset   = 0        // days from today for day view
+
+// ── Dentist filter state ─────────────────────────────────────────────────
+// 'maria' → Dr. M. Papadopoulos, 'nikos' → Dr. N. Konstantinou
+const DENTIST_MAP = {
+  maria: 'Dr. M. Papadopoulos',
+  nikos: 'Dr. N. Konstantinou',
+}
+let activeDentists = new Set(['maria', 'nikos'])  // all on by default
+
+// ── Appointment date helper ───────────────────────────────────────────────
+// New appointments store a real ISO `date` string; legacy entries use `day` offset
+function apptRealDate(a) {
+  if (a.date) return new Date(a.date + 'T00:00:00')
+  const mon = getMonday(today)
+  const d = new Date(mon)
+  d.setDate(d.getDate() + (a.day || 0))
+  return d
+}
+function getApptsForDate(date) {
+  return APPTS.filter(a => {
+    const d = apptRealDate(a)
+    if (d.toDateString() !== date.toDateString()) return false
+    const key = Object.keys(DENTIST_MAP).find(k => DENTIST_MAP[k] === a.dentist)
+    return !key || activeDentists.has(key)
+  })
+}
+// Format a Date as YYYY-MM-DD for storage
+function toISODate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+// Render a coloured appointment block (shared by week + day views)
+function makeApptBlock(a, date) {
+  const top    = ((a.hour + a.min/60) - START_HOUR) * SLOT_H
+  const height = (a.dur / 60) * SLOT_H - 4
+  if (top < 0 || top > (END_HOUR - START_HOUR) * SLOT_H) return null
+  const block = document.createElement('div')
+  block.className = 'appt'
+  block.style.top    = top + 'px'
+  block.style.height = Math.max(height, 28) + 'px'
+  const color  = TYPE_COLORS[a.type] || '#888'
+  block.style.background = `linear-gradient(135deg, ${color}, ${color}bb)`
+  const typeLbl = TYPE_LABELS[lang][a.type] || a.type
+  const timeStr = `${a.hour}:${String(a.min).padStart(2,'0')} – ${endTime(a)}`
+  block.innerHTML = `
+    <div class="appt-name">${a.patient}</div>
+    <div class="appt-type">${typeLbl}</div>
+    ${height > 44 ? `<div class="appt-time">${timeStr}</div>` : ''}
+  `
+  block.addEventListener('click', e => { e.stopPropagation(); openModal(a, date) })
+  return block
+}
+
+// ── Show / hide week grid elements ───────────────────────────────────────
+function showWeekGrid() {
+  const h = document.getElementById('cal-header')
+  const b = document.getElementById('cal-body')
+  h.style.display = ''
+  b.style.display = ''
+  h.style.gridTemplateColumns = ''
+  b.style.gridTemplateColumns = ''
+  document.getElementById('month-view').classList.remove('active')
+}
+function showMonthPanel() {
+  document.getElementById('cal-header').style.display = 'none'
+  document.getElementById('cal-body').style.display   = 'none'
+  document.getElementById('month-view').classList.add('active')
+}
+
+// ── Shared month grid renderer ────────────────────────────────────────────
+const TYPE_COLORS = {}   // populated via + button
+function buildMonthGrid(container, year, month, compact) {
+  const firstDay  = new Date(year, month, 1)
+  const daysInMo  = new Date(year, month + 1, 0).getDate()
+  let   startDow  = firstDay.getDay() - 1; if (startDow < 0) startDow = 6
+
+  const DLBLS_EN = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+  const DLBLS_EL = ['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ']
+  const dlbls    = lang === 'en' ? DLBLS_EN : DLBLS_EL
+
+  const wrap = document.createElement('div')
+  wrap.className = 'month-grid-wrap'
+
+  const labelsRow = document.createElement('div')
+  labelsRow.className = 'month-day-labels'
+  dlbls.forEach(d => {
+    const el = document.createElement('div')
+    el.className = 'month-day-label'
+    el.textContent = d
+    labelsRow.appendChild(el)
+  })
+  wrap.appendChild(labelsRow)
+
+  const grid = document.createElement('div')
+  grid.className = 'month-grid'
+
+  const total = Math.ceil((startDow + daysInMo) / 7) * 7
+  for (let i = 0; i < total; i++) {
+    let d
+    if (i < startDow) {
+      d = new Date(year, month - 1, new Date(year, month, 0).getDate() - startDow + i + 1)
+    } else if (i >= startDow + daysInMo) {
+      d = new Date(year, month + 1, i - startDow - daysInMo + 1)
+    } else {
+      d = new Date(year, month, i - startDow + 1)
+    }
+
+    const cell = document.createElement('div')
+    cell.className = 'month-cell'
+    if (i < startDow || i >= startDow + daysInMo) cell.classList.add('other-month')
+    if (d.toDateString() === today.toDateString()) cell.classList.add('today-cell')
+
+    const numEl = document.createElement('div')
+    numEl.className = 'month-cell-num'
+    numEl.textContent = d.getDate()
+    cell.appendChild(numEl)
+
+    const appts = getApptsForDate(d)
+    const maxShow = compact ? 2 : 3
+    appts.slice(0, maxShow).forEach(a => {
+      const pill = document.createElement('div')
+      pill.className = 'month-appt-pill'
+      pill.style.background = TYPE_COLORS[a.type]
+      pill.textContent = compact ? a.patient.split(' ')[0] : `${a.patient.split(' ')[0]} · ${TYPE_LABELS[lang][a.type]}`
+      const dd = new Date(d)
+      pill.addEventListener('click', e => { e.stopPropagation(); openModal(a, dd) })
+      cell.appendChild(pill)
+    })
+    if (appts.length > maxShow) {
+      const more = document.createElement('div')
+      more.className = 'month-more'
+      more.textContent = `+${appts.length - maxShow} ${lang === 'en' ? 'more' : 'ακόμα'}`
+      cell.appendChild(more)
+    }
+
+    grid.appendChild(cell)
+  }
+
+  wrap.appendChild(grid)
+  container.appendChild(wrap)
+}
+
+function getMonday(d) {
+  const dt = new Date(d)
+  const day = dt.getDay()
+  const diff = dt.getDate() - day + (day === 0 ? -6 : 1)
+  dt.setDate(diff); dt.setHours(0,0,0,0)
+  return dt
+}
+
+function getWeekDates() {
+  const base = getMonday(today)
+  base.setDate(base.getDate() + weekOffset * 7)
+  return Array.from({length:6}, (_,i) => { const d = new Date(base); d.setDate(d.getDate()+i); return d })
+}
+
+function fmtRange(dates) {
+  const s = dates[0], e = dates[5]
+  const months = lang === 'en' ? MONTHS_EN : MONTHS_EL
+  if (s.getMonth() === e.getMonth())
+    return `${months[s.getMonth()]} ${s.getDate()}–${e.getDate()}, ${s.getFullYear()}`
+  return `${months[s.getMonth()]} ${s.getDate()} – ${months[e.getMonth()]} ${e.getDate()}, ${s.getFullYear()}`
+}
+
+// ── Render calendar ──────────────────────────────────────────────────────
+const START_HOUR = 8, END_HOUR = 19  // 8am – 7pm
+const SLOT_H = 64  // px per hour
+
+function renderCalendar() {
+  if (currentView === 'month')  { renderMonthView();      renderMiniCal(); applyLang(); return }
+  if (currentView === '3month') { renderThreeMonthView(); renderMiniCal(); applyLang(); return }
+  if (currentView === 'day')    { renderDayView();        renderMiniCal(); applyLang(); return }
+  renderWeekView()
+}
+
+// ── Day view ──────────────────────────────────────────────────────────────
+function renderDayView() {
+  showWeekGrid()
+  const h = document.getElementById('cal-header')
+  const b = document.getElementById('cal-body')
+  h.style.gridTemplateColumns = '56px 1fr'
+  b.style.gridTemplateColumns = '56px 1fr'
+
+  const targetDate = new Date(today)
+  targetDate.setDate(today.getDate() + dayOffset)
+
+  // Header
+  h.innerHTML = '<div class="cal-header-spacer"></div>'
+  const isToday = targetDate.toDateString() === today.toDateString()
+  const div = document.createElement('div')
+  div.className = 'cal-day-header' + (isToday ? ' today' : '')
+  const dnames = lang === 'en' ? DAYS_EN : DAYS_EL
+  const dow = targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1
+  div.innerHTML = `<div class="cal-day-name">${dnames[dow]}</div><div class="cal-day-num">${targetDate.getDate()}</div>`
+  h.appendChild(div)
+
+  // Body
+  b.innerHTML = ''
+  const timeCol = document.createElement('div')
+  timeCol.className = 'time-col'
+  for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
+    const lbl = document.createElement('div')
+    lbl.className = 'time-slot-label'
+    const ampm = hr >= 12 ? (lang === 'en' ? 'pm' : 'μμ') : (lang === 'en' ? 'am' : 'πμ')
+    lbl.textContent = `${hr > 12 ? hr-12 : hr}${ampm}`
+    timeCol.appendChild(lbl)
+  }
+  b.appendChild(timeCol)
+
+  const col = document.createElement('div')
+  col.className = 'day-col'
+  for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
+    const cell = document.createElement('div')
+    cell.className = 'time-cell'
+    if (isToday) cell.style.background = 'rgba(61,158,143,.025)'
+    const _hr = hr
+    cell.addEventListener('click', () => openApptForm(new Date(targetDate), _hr, 0))
+    col.appendChild(cell)
+  }
+  if (isToday) {
+    const now = new Date()
+    const mins = (now.getHours() - START_HOUR) * 60 + now.getMinutes()
+    if (mins >= 0 && mins <= (END_HOUR - START_HOUR) * 60) {
+      const line = document.createElement('div')
+      line.className = 'now-line'
+      line.style.top = (mins / 60 * SLOT_H) + 'px'
+      line.innerHTML = '<div class="now-dot"></div>'
+      col.appendChild(line)
+    }
+  }
+  getApptsForDate(targetDate).forEach(a => {
+    const block = makeApptBlock(a, new Date(targetDate))
+    if (block) col.appendChild(block)
+  })
+  b.appendChild(col)
+
+  const months = lang === 'en' ? MONTHS_EN : MONTHS_EL
+  document.getElementById('nav-date').textContent =
+    `${dnames[dow]}, ${targetDate.getDate()} ${months[targetDate.getMonth()]} ${targetDate.getFullYear()}`
+  renderMiniCal()
+  applyLang()
+}
+
+// ── Month view ────────────────────────────────────────────────────────────
+function renderMonthView() {
+  showMonthPanel()
+  const mv = document.getElementById('month-view')
+  mv.innerHTML = ''
+  const base   = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1)
+  const months = lang === 'en' ? MONTHS_EN : MONTHS_EL
+
+  const title = document.createElement('div')
+  title.className = 'month-view-title'
+  title.textContent = `${months[base.getMonth()]} ${base.getFullYear()}`
+  mv.appendChild(title)
+
+  buildMonthGrid(mv, base.getFullYear(), base.getMonth(), false)
+  document.getElementById('nav-date').textContent = title.textContent
+}
+
+// ── 3-Month view ──────────────────────────────────────────────────────────
+function renderThreeMonthView() {
+  showMonthPanel()
+  const mv = document.getElementById('month-view')
+  mv.innerHTML = ''
+  const base   = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1)
+  const months = lang === 'en' ? MONTHS_EN : MONTHS_EL
+  const end    = new Date(base.getFullYear(), base.getMonth() + 2, 1)
+
+  const title = document.createElement('div')
+  title.className = 'month-view-title'
+  title.textContent = `${months[base.getMonth()]} – ${months[end.getMonth()]} ${end.getFullYear()}`
+  mv.appendChild(title)
+
+  const container = document.createElement('div')
+  container.className = 'three-month-container'
+  mv.appendChild(container)
+
+  for (let i = 0; i < 3; i++) {
+    const sub  = new Date(base.getFullYear(), base.getMonth() + i, 1)
+    const wrap = document.createElement('div')
+    const sub_title = document.createElement('div')
+    sub_title.className = 'three-month-sub-title'
+    sub_title.textContent = `${months[sub.getMonth()]} ${sub.getFullYear()}`
+    wrap.appendChild(sub_title)
+    buildMonthGrid(wrap, sub.getFullYear(), sub.getMonth(), true)
+    container.appendChild(wrap)
+  }
+
+  document.getElementById('nav-date').textContent = title.textContent
+}
+
+// ── Week view (original logic extracted) ──────────────────────────────────
+function renderWeekView() {
+  showWeekGrid()
+  const dates = getWeekDates()
+  document.getElementById('nav-date').textContent = fmtRange(dates)
+
+  // Header
+  const header = document.getElementById('cal-header')
+  header.innerHTML = '<div class="cal-header-spacer"></div>'
+  const days = lang === 'en' ? DAYS_EN : DAYS_EL
+  dates.forEach((d, i) => {
+    const isToday = d.toDateString() === today.toDateString()
+    const div = document.createElement('div')
+    div.className = 'cal-day-header' + (isToday ? ' today' : '')
+    div.innerHTML = `<div class="cal-day-name">${days[i]}</div><div class="cal-day-num">${d.getDate()}</div>`
+    header.appendChild(div)
+  })
+
+  // Body
+  const body = document.getElementById('cal-body')
+  body.innerHTML = ''
+
+  // Time column
+  const timeCol = document.createElement('div')
+  timeCol.className = 'time-col'
+  for (let h = START_HOUR; h <= END_HOUR; h++) {
+    const label = document.createElement('div')
+    label.className = 'time-slot-label'
+    const ampm = h >= 12 ? (lang === 'en' ? 'pm' : 'μμ') : (lang === 'en' ? 'am' : 'πμ')
+    const h12 = h > 12 ? h - 12 : h
+    label.textContent = `${h12}${ampm}`
+    timeCol.appendChild(label)
+  }
+  body.appendChild(timeCol)
+
+  // Day columns
+  dates.forEach((date, dayIdx) => {
+    const col = document.createElement('div')
+    col.className = 'day-col'
+
+    // Is today's column?
+    const colIsToday = date.toDateString() === today.toDateString()
+
+    // Time cells (background grid) + slot-click to open new appt form
+    for (let h = START_HOUR; h <= END_HOUR; h++) {
+      const cell = document.createElement('div')
+      cell.className = 'time-cell'
+      if (colIsToday) cell.style.background = 'rgba(61,158,143,.025)'
+      const cellDate = new Date(date), cellHour = h
+      cell.addEventListener('click', () => openApptForm(cellDate, cellHour, 0))
+      col.appendChild(cell)
+    }
+
+    // Current time line (today only)
+    if (colIsToday && weekOffset === 0) {
+      const now = new Date()
+      const mins = (now.getHours() - START_HOUR) * 60 + now.getMinutes()
+      if (mins >= 0 && mins <= (END_HOUR - START_HOUR) * 60) {
+        const line = document.createElement('div')
+        line.className = 'now-line'
+        line.style.top = (mins / 60 * SLOT_H) + 'px'
+        line.innerHTML = '<div class="now-dot"></div>'
+        col.appendChild(line)
+      }
+    }
+
+    // Appointments for this day
+    getApptsForDate(date).forEach(a => {
+      const block = makeApptBlock(a, date)
+      if (block) col.appendChild(block)
+    })
+
+    body.appendChild(col)
+  })
+
+  renderMiniCal()
+  applyLang()
+}
+
+function endTime(a) {
+  const total = a.hour * 60 + a.min + a.dur
+  return `${Math.floor(total/60)}:${String(total%60).padStart(2,'0')}`
+}
+
+// ── Mini calendar ────────────────────────────────────────────────────────
+function renderMiniCal() {
+  const base = new Date(today.getFullYear(), today.getMonth() + miniMonthOffset, 1)
+  const months = lang === 'en' ? MONTHS_EN : MONTHS_EL
+  document.getElementById('mini-cal-title').textContent = `${months[base.getMonth()]} ${base.getFullYear()}`
+
+  const grid = document.getElementById('mini-grid')
+  grid.innerHTML = ''
+  const dayLabels = lang === 'en' ? MINI_DAYS_EN : MINI_DAYS_EL
+  dayLabels.forEach(d => {
+    const el = document.createElement('div')
+    el.className = 'mini-day-label'
+    el.textContent = d
+    grid.appendChild(el)
+  })
+
+  const firstDay = new Date(base.getFullYear(), base.getMonth(), 1)
+  let startDow = firstDay.getDay() - 1; if (startDow < 0) startDow = 6
+  const daysInMonth = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate()
+  const daysInPrev  = new Date(base.getFullYear(), base.getMonth(), 0).getDate()
+
+  const weekDates = getWeekDates()
+  const weekDateStrs = new Set(weekDates.map(d => d.toDateString()))
+
+  for (let i = 0; i < 42; i++) {
+    const el = document.createElement('div')
+    el.className = 'mini-day'
+    let num, d
+    if (i < startDow) {
+      num = daysInPrev - startDow + i + 1
+      d = new Date(base.getFullYear(), base.getMonth() - 1, num)
+      el.classList.add('other-month')
+    } else if (i >= startDow + daysInMonth) {
+      num = i - startDow - daysInMonth + 1
+      d = new Date(base.getFullYear(), base.getMonth() + 1, num)
+      el.classList.add('other-month')
+    } else {
+      num = i - startDow + 1
+      d = new Date(base.getFullYear(), base.getMonth(), num)
+    }
+    el.textContent = num
+    if (d.toDateString() === today.toDateString()) el.classList.add('today')
+    else if (weekDateStrs.has(d.toDateString())) el.classList.add('in-week')
+
+    const dd = new Date(d)
+    el.addEventListener('click', () => {
+      const mon = getMonday(dd)
+      const cur = getMonday(today)
+      const diff = Math.round((mon - cur) / (7 * 86400000))
+      weekOffset = diff
+      renderCalendar()
+    })
+    grid.appendChild(el)
+  }
+}
+
+// ── Modal ────────────────────────────────────────────────────────────────
+function openModal(a, date) {
+  const overlay = document.getElementById('modal-overlay')
+  const badge = document.getElementById('modal-badge')
+
+  badge.textContent = TYPE_LABELS[lang][a.type] || a.type
+  badge.style.background = TYPE_COLORS[a.type] || '#888'
+  document.getElementById('modal-patient').textContent = a.patient
+
+  const days = lang === 'en' ? ['Mon','Tue','Wed','Thu','Fri','Sat'] : ['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ']
+  const months = lang === 'en' ? MONTHS_SHORT_EN : MONTHS_SHORT_EL
+  document.getElementById('modal-datetime').textContent =
+    `${days[date.getDay()-1 < 0 ? 6 : date.getDay()-1]} ${date.getDate()} ${months[date.getMonth()]} — ${a.hour}:${String(a.min).padStart(2,'0')} – ${endTime(a)}`
+
+  const durLbl = lang === 'en' ? `${a.dur} minutes` : `${a.dur} λεπτά`
+  document.getElementById('modal-duration').textContent = durLbl
+  document.getElementById('modal-dentist').textContent = a.dentist
+  document.getElementById('modal-notes').textContent = a.notes
+
+  const statusEl = document.getElementById('modal-status')
+  const statusTxt = document.getElementById('modal-status-text')
+  statusEl.className = `status-badge ${a.status}`
+  statusTxt.textContent = STATUS_LABELS[lang][a.status]
+
+  overlay.classList.add('open')
+}
+
+document.getElementById('modal-close').addEventListener('click', () =>
+  document.getElementById('modal-overlay').classList.remove('open'))
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open')
+})
+
+// ── Colour palette for new dentists / types ───────────────────────────────
+const PALETTE = [
+  '#fd0202','#858383','#c5fafb','#aba6fb','#298129',
+  '#04fc04','#fdee05','#827d29','#fabc04','#04faec',
+  '#f050fa','#9c50fa',
+]
+
+function buildSwatches(containerId, defaultColor, onPick) {
+  const row = document.getElementById(containerId)
+  row.innerHTML = ''
+  let selected = defaultColor
+  PALETTE.forEach(color => {
+    const sw = document.createElement('div')
+    sw.className = 'color-swatch' + (color === selected ? ' selected' : '')
+    sw.style.background = color
+    sw.dataset.color = color
+    sw.addEventListener('click', () => {
+      row.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'))
+      sw.classList.add('selected')
+      selected = color
+      onPick(color)
+    })
+    row.appendChild(sw)
+  })
+}
+
+// ── Dentist filter — event delegation ────────────────────────────────────
+function updateDentistCounts() {
+  const totalVisible = APPTS.filter(a => {
+    const key = Object.keys(DENTIST_MAP).find(k => DENTIST_MAP[k] === a.dentist)
+    return !key || activeDentists.has(key)
+  }).length
+  document.getElementById('count-all').textContent = totalVisible
+  Object.keys(DENTIST_MAP).forEach(key => {
+    const el = document.getElementById(`count-${key}`)
+    if (el) el.textContent = APPTS.filter(a => DENTIST_MAP[key] === a.dentist).length
+  })
+}
+
+document.getElementById('dentist-list').addEventListener('click', e => {
+  const item = e.target.closest('.dentist-item[data-dentist]')
+  if (!item) return
+  const key = item.dataset.dentist
+
+  if (key === 'all') {
+    if (activeDentists.size === Object.keys(DENTIST_MAP).length) return
+    activeDentists = new Set(Object.keys(DENTIST_MAP))
+    document.querySelectorAll('.dentist-item[data-dentist]').forEach(i => i.classList.add('checked'))
+  } else {
+    if (activeDentists.has(key)) {
+      if (activeDentists.size === 1) return
+      activeDentists.delete(key)
+      item.classList.remove('checked')
+    } else {
+      activeDentists.add(key)
+      item.classList.add('checked')
+    }
+    const allItem = document.querySelector('.dentist-item[data-dentist="all"]')
+    if (activeDentists.size === Object.keys(DENTIST_MAP).length) allItem.classList.add('checked')
+    else allItem.classList.remove('checked')
+  }
+  updateDentistCounts()
+  renderCalendar()
+})
+
+// ── Add Dentist ───────────────────────────────────────────────────────────
+let _newDentistColor = PALETTE[0]
+buildSwatches('dentist-color-row', _newDentistColor, c => { _newDentistColor = c })
+
+document.getElementById('add-dentist-btn').addEventListener('click', () => {
+  const form = document.getElementById('add-dentist-form')
+  form.classList.toggle('open')
+  if (form.classList.contains('open')) document.getElementById('dentist-name-input').focus()
+})
+document.getElementById('dentist-add-cancel').addEventListener('click', () => {
+  document.getElementById('dentist-name-input').value = ''
+  document.getElementById('add-dentist-form').classList.remove('open')
+})
+document.getElementById('dentist-add-confirm').addEventListener('click', () => {
+  const name = document.getElementById('dentist-name-input').value.trim()
+  if (!name) { document.getElementById('dentist-name-input').focus(); return }
+
+  const key = 'dr_' + Date.now().toString(36)
+  DENTIST_MAP[key] = name
+  activeDentists.add(key)
+
+  const item = document.createElement('div')
+  item.className = 'dentist-item checked'
+  item.dataset.dentist = key
+  item.style.color = _newDentistColor
+  item.innerHTML = `
+    <div class="dentist-check"></div>
+    <div class="dentist-dot" style="background:${_newDentistColor}"></div>
+    <div class="dentist-name">${name}</div>
+    <div class="dentist-count" id="count-${key}">0</div>
+  `
+  document.getElementById('dentist-list').appendChild(item)
+
+  document.getElementById('dentist-name-input').value = ''
+  document.getElementById('add-dentist-form').classList.remove('open')
+  // Pick next unused colour for next time
+  const usedColors = Object.values(DENTIST_MAP).length
+  _newDentistColor = PALETTE[usedColors % PALETTE.length]
+  buildSwatches('dentist-color-row', _newDentistColor, c => { _newDentistColor = c })
+
+  updateDentistCounts()
+  renderCalendar()
+})
+
+// ── Remove Dentist (toggle mode) ──────────────────────────────────────────
+let _removeMode = false
+
+document.getElementById('remove-dentist-btn').addEventListener('click', () => {
+  _removeMode = !_removeMode
+  const btn  = document.getElementById('remove-dentist-btn')
+  const list = document.getElementById('dentist-list')
+  btn.classList.toggle('active', _removeMode)
+  list.classList.toggle('remove-mode', _removeMode)
+  // Close add form if open
+  if (_removeMode) {
+    document.getElementById('add-dentist-form').classList.remove('open')
+  }
+})
+
+// Intercept clicks in remove mode (runs before the filter delegation)
+document.getElementById('dentist-list').addEventListener('click', e => {
+  if (!_removeMode) return
+  const item = e.target.closest('.dentist-item[data-dentist]')
+  if (!item) return
+  const key = item.dataset.dentist
+  if (key === 'all') return  // can't remove the "All" row
+
+  // Must keep at least one dentist
+  if (Object.keys(DENTIST_MAP).length <= 1) return
+
+  e.stopImmediatePropagation()  // block the filter delegation handler
+
+  // Remove from data maps + DOM
+  delete DENTIST_MAP[key]
+  activeDentists.delete(key)
+  item.remove()
+
+  // Sync All Dentists count
+  updateDentistCounts()
+
+  // Auto-exit remove mode when only "All" + 1 dentist remain (nothing left to remove)
+  if (Object.keys(DENTIST_MAP).length <= 1) {
+    _removeMode = false
+    document.getElementById('remove-dentist-btn').classList.remove('active')
+    document.getElementById('dentist-list').classList.remove('remove-mode')
+  }
+
+  renderCalendar()
+}, true)  // capture phase so stopImmediatePropagation works
+
+// ── Add Appointment Type ──────────────────────────────────────────────────
+let _newTypeColor = PALETTE[4]
+buildSwatches('type-color-row', _newTypeColor, c => { _newTypeColor = c })
+
+document.getElementById('add-type-btn').addEventListener('click', () => {
+  const form = document.getElementById('add-type-form')
+  form.classList.toggle('open')
+  if (form.classList.contains('open')) document.getElementById('type-name-input').focus()
+})
+document.getElementById('type-add-cancel').addEventListener('click', () => {
+  document.getElementById('type-name-input').value = ''
+  document.getElementById('add-type-form').classList.remove('open')
+})
+document.getElementById('type-add-confirm').addEventListener('click', () => {
+  const name = document.getElementById('type-name-input').value.trim()
+  if (!name) { document.getElementById('type-name-input').focus(); return }
+
+  // Derive a CSS-safe key
+  const key = name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g,'_').replace(/^_|_$/g,'')
+               + '_' + Date.now().toString(36)
+
+  // Register in data maps
+  TYPE_COLORS[key] = _newTypeColor
+  TYPE_LABELS.en[key] = name
+  TYPE_LABELS.el[key] = name  // staff can translate later
+
+  // Inject CSS class for week/day appointment blocks
+  const styleEl = document.createElement('style')
+  styleEl.textContent = `.appt.${CSS.escape(key)} { background: linear-gradient(135deg, ${_newTypeColor}, ${_newTypeColor}cc); }`
+  document.head.appendChild(styleEl)
+
+  // Add legend item
+  const item = document.createElement('div')
+  item.className = 'legend-item'
+  item.innerHTML = `<div class="legend-dot" style="background:${_newTypeColor}"></div><div class="legend-label">${name}</div>`
+  document.getElementById('legend-list').appendChild(item)
+
+  document.getElementById('type-name-input').value = ''
+  document.getElementById('add-type-form').classList.remove('open')
+  // Rotate colour suggestion
+  _newTypeColor = PALETTE[(Object.keys(TYPE_COLORS).length) % PALETTE.length]
+  buildSwatches('type-color-row', _newTypeColor, c => { _newTypeColor = c })
+})
+
+// ── New Appointment form ──────────────────────────────────────────────────
+
+function populateApptForm() {
+  // Dentist dropdown — built from live DENTIST_MAP
+  const dentistSel = document.getElementById('af-dentist')
+  dentistSel.innerHTML = ''
+  Object.entries(DENTIST_MAP).forEach(([, name]) => {
+    const opt = document.createElement('option')
+    opt.value = name; opt.textContent = name
+    dentistSel.appendChild(opt)
+  })
+  if (!dentistSel.options.length) {
+    const opt = document.createElement('option')
+    opt.value = ''; opt.textContent = '— No dentists added —'
+    dentistSel.appendChild(opt)
+  }
+
+  // Type dropdown — built from live TYPE_COLORS
+  const typeSel = document.getElementById('af-type')
+  typeSel.innerHTML = ''
+  const typeKeys = Object.keys(TYPE_COLORS)
+  if (typeKeys.length === 0) {
+    const opt = document.createElement('option')
+    opt.value = ''; opt.textContent = '— No types added —'
+    typeSel.appendChild(opt)
+  } else {
+    typeKeys.forEach(key => {
+      const opt = document.createElement('option')
+      opt.value = key
+      opt.textContent = TYPE_LABELS[lang][key] || key
+      typeSel.appendChild(opt)
+    })
+  }
+
+  // Hour options 8 am – 7 pm
+  const hourSel = document.getElementById('af-hour')
+  if (!hourSel.options.length) {
+    for (let h = START_HOUR; h <= END_HOUR; h++) {
+      const opt = document.createElement('option')
+      opt.value = h
+      const ampm = h >= 12 ? 'pm' : 'am'
+      const h12  = h > 12 ? h - 12 : h
+      opt.textContent = `${h12}:00 ${ampm}`
+      hourSel.appendChild(opt)
+    }
+  }
+
+  // Minute options
+  const minSel = document.getElementById('af-min')
+  if (!minSel.options.length) {
+    ['00','15','30','45'].forEach(m => {
+      const opt = document.createElement('option')
+      opt.value = parseInt(m); opt.textContent = m
+      minSel.appendChild(opt)
+    })
+  }
+}
+
+function openApptForm(date, hour = null, min = 0) {
+  populateApptForm()
+
+  // Set defaults
+  const d = date || new Date()
+  document.getElementById('af-date').value = toISODate(d)
+
+  // Subtitle shows the day
+  const months = lang === 'en' ? MONTHS_EN : MONTHS_EL
+  const days   = lang === 'en' ? DAYS_EN   : DAYS_EL
+  const dow    = d.getDay() === 0 ? 6 : d.getDay() - 1
+  document.getElementById('af-subtitle').textContent =
+    `${days[dow]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+
+  // Pre-fill time if clicked from a slot
+  if (hour !== null) {
+    document.getElementById('af-hour').value = hour
+    document.getElementById('af-min').value  = min
+  } else {
+    // Default to next round hour
+    const now = new Date()
+    const nextHour = Math.min(Math.max(now.getHours() + 1, START_HOUR), END_HOUR)
+    document.getElementById('af-hour').value = nextHour
+    document.getElementById('af-min').value  = 0
+  }
+
+  // Reset other fields
+  document.getElementById('af-patient').value = ''
+  document.getElementById('af-notes').value   = ''
+  document.getElementById('af-dur').value     = '45'
+  document.querySelectorAll('input[name="af-status"]').forEach(r => { r.checked = r.value === 'confirmed' })
+  document.querySelectorAll('.af-status-opt').forEach(el => {
+    el.className = 'af-status-opt' + (el.dataset.status === 'confirmed' ? ' selected-confirmed' : '')
+  })
+
+  document.getElementById('af-overlay').classList.add('open')
+  setTimeout(() => document.getElementById('af-patient').focus(), 120)
+}
+
+function closeApptForm() {
+  document.getElementById('af-overlay').classList.remove('open')
+}
+
+// Status radio visual toggle
+document.getElementById('af-status-row').addEventListener('click', e => {
+  const opt = e.target.closest('.af-status-opt')
+  if (!opt) return
+  const status = opt.dataset.status
+  opt.querySelector('input').checked = true
+  document.querySelectorAll('.af-status-opt').forEach(el => {
+    el.className = 'af-status-opt' + (el.dataset.status === status ? ` selected-${status}` : '')
+  })
+})
+
+document.getElementById('af-close').addEventListener('click', closeApptForm)
+document.getElementById('af-cancel').addEventListener('click', closeApptForm)
+document.getElementById('af-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeApptForm()
+})
+document.getElementById('add-appt-btn').addEventListener('click', () => openApptForm(new Date()))
+
+document.getElementById('af-save').addEventListener('click', () => {
+  const patient = document.getElementById('af-patient').value.trim()
+  if (!patient) { document.getElementById('af-patient').focus(); return }
+
+  const dateVal = document.getElementById('af-date').value
+  if (!dateVal) { document.getElementById('af-date').focus(); return }
+
+  const typeKey = document.getElementById('af-type').value
+  const dentist = document.getElementById('af-dentist').value
+  const hour    = parseInt(document.getElementById('af-hour').value)
+  const min     = parseInt(document.getElementById('af-min').value)
+  const dur     = parseInt(document.getElementById('af-dur').value)
+  const notes   = document.getElementById('af-notes').value.trim()
+  const status  = document.querySelector('input[name="af-status"]:checked')?.value || 'confirmed'
+
+  const newAppt = {
+    id:      Date.now(),
+    patient, type: typeKey, dentist,
+    date:    dateVal,   // YYYY-MM-DD — real calendar date
+    hour, min, dur, notes, status,
+  }
+
+  APPTS.push(newAppt)
+  closeApptForm()
+  renderCalendar()
+})
+
+// ── New Patient form ─────────────────────────────────────────────────────
+
+// Question list (voice mode iterates through these, write mode shows all)
+const PATIENT_QS = [
+  { key:'fullName',      label:'What is your full name?',                     hint:'First and last name',                     type:'text'     },
+  { key:'dob',           label:'What is your date of birth?',                 hint:'Day / Month / Year',                      type:'text'     },
+  { key:'phone',         label:'What is your phone number?',                  hint:'Include country code if needed',           type:'text'     },
+  { key:'email',         label:'What is your email address?',                 hint:'We\'ll send appointment confirmations here',type:'text'    },
+  { key:'address',       label:'What is your home address?',                  hint:'Street and city',                         type:'text'     },
+  { key:'gender',        label:'How do you identify your gender?',            hint:'Male, Female, or Other',                  type:'text'     },
+  { key:'emergName',     label:'Who should we contact in an emergency?',      hint:'Name of a family member or friend',       type:'text'     },
+  { key:'emergPhone',    label:'What is their phone number?',                 hint:'Emergency contact phone',                 type:'text'     },
+  { key:'allergies',     label:'Do you have any known allergies?',            hint:'Medications, latex, anaesthetic, etc. Say "None" if not', type:'text' },
+  { key:'medications',   label:'Are you currently taking any medications?',   hint:'Name and dosage, or say "None"',           type:'text'     },
+  { key:'conditions',    label:'Do you have any medical conditions?',         hint:'Diabetes, heart disease, blood pressure…', type:'text'    },
+  { key:'lastVisit',     label:'When was your last dental visit?',            hint:'Approximate is fine — e.g. "2 years ago"', type:'text'    },
+  { key:'prevWork',      label:'Have you had any previous dental work?',      hint:'Fillings, extractions, crowns, braces…',   type:'text'    },
+  { key:'chiefComplaint',label:'What brings you in today?',                   hint:'Your main concern or reason for the visit',type:'text'    },
+]
+
+// Patient data store
+let patientData = {}
+
+function openPatientForm() {
+  patientData = {}
+  document.querySelectorAll('.pm-input, .pm-textarea, .pm-select').forEach(el => { el.value = '' })
+  document.querySelectorAll('input[type=radio]').forEach(el => { el.checked = false })
+  switchPmMode('write')
+  voiceQIdx = 0
+  renderVoiceQuestion()
+  document.getElementById('patient-overlay').classList.add('open')
+}
+function closePatientForm() {
+  document.getElementById('patient-overlay').classList.remove('open')
+  stopRecognition()
+}
+
+document.getElementById('new-patient-btn').addEventListener('click', openPatientForm)
+document.getElementById('pm-close').addEventListener('click', closePatientForm)
+document.getElementById('pm-cancel').addEventListener('click', closePatientForm)
+document.getElementById('patient-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closePatientForm()
+})
+
+// ── Mode toggle ───────────────────────────────────────────────────────────
+function switchPmMode(mode) {
+  const isWrite = mode === 'write'
+  document.getElementById('pm-write').style.display     = isWrite ? '' : 'none'
+  document.getElementById('pm-voice').classList.toggle('active', !isWrite)
+  document.getElementById('pm-footer').style.display    = isWrite ? '' : 'none'
+  document.getElementById('pm-mode-write').classList.toggle('active', isWrite)
+  document.getElementById('pm-mode-voice').classList.toggle('active', !isWrite)
+  if (!isWrite) stopRecognition()
+}
+document.getElementById('pm-mode-write').addEventListener('click', () => switchPmMode('write'))
+document.getElementById('pm-mode-voice').addEventListener('click', () => switchPmMode('voice'))
+
+// ── Collect write-mode data on save ──────────────────────────────────────
+document.getElementById('pm-save').addEventListener('click', () => {
+  document.querySelectorAll('[data-key]').forEach(el => {
+    if (el.type === 'radio') { if (el.checked) patientData[el.dataset.key] = el.value }
+    else patientData[el.dataset.key] = el.value
+  })
+  console.log('New patient saved:', patientData)
+  // TODO: POST to API — for now just log and close
+  closePatientForm()
+  // Optionally show a brief toast here
+})
+
+// ── Voice mode ────────────────────────────────────────────────────────────
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+let recognition       = null
+let isRecording       = false
+let voiceQIdx         = 0
+let interimTranscript = ''
+
+// Show warning if speech not supported
+if (!SpeechRecognition) {
+  document.getElementById('voice-no-support').classList.add('show')
+}
+
+function renderVoiceQuestion() {
+  const q       = PATIENT_QS[voiceQIdx]
+  const total   = PATIENT_QS.length
+  const pct     = ((voiceQIdx) / total * 100).toFixed(0)
+
+  document.getElementById('voice-progress-fill').style.width  = pct + '%'
+  document.getElementById('voice-progress-text').textContent  = `${voiceQIdx + 1} / ${total}`
+  document.getElementById('voice-q-num').textContent          = `QUESTION ${voiceQIdx + 1}`
+  document.getElementById('voice-q-text').textContent         = q.label
+  document.getElementById('voice-q-hint').textContent         = q.hint
+
+  // Pre-fill from patientData if answer already given
+  document.getElementById('voice-answer-box').value           = patientData[q.key] || ''
+  document.getElementById('voice-answer-box').classList.remove('listening')
+
+  // Update Next button label on last question
+  const nextBtn = document.getElementById('voice-next')
+  nextBtn.textContent  = voiceQIdx === total - 1 ? '✓ Finish' : 'Next →'
+  nextBtn.className    = 'voice-nav-btn ' + (voiceQIdx === total - 1 ? 'finish' : 'next')
+  document.getElementById('voice-back').style.visibility = voiceQIdx === 0 ? 'hidden' : 'visible'
+}
+
+function stopRecognition() {
+  if (recognition) { try { recognition.stop() } catch(_){} }
+  isRecording = false
+  const btn = document.getElementById('voice-mic-btn')
+  const lbl = document.getElementById('voice-mic-label')
+  if (btn) { btn.classList.remove('recording'); btn.textContent = '🎙️' }
+  if (lbl) { lbl.textContent = 'Tap to speak'; lbl.classList.remove('recording') }
+  if (document.getElementById('voice-answer-box'))
+    document.getElementById('voice-answer-box').classList.remove('listening')
+}
+
+document.getElementById('voice-mic-btn').addEventListener('click', () => {
+  if (!SpeechRecognition) return
+  if (isRecording) { stopRecognition(); return }
+
+  recognition = new SpeechRecognition()
+  recognition.lang          = lang === 'el' ? 'el-GR' : 'en-US'
+  recognition.continuous    = true
+  recognition.interimResults= true
+
+  const answerBox = document.getElementById('voice-answer-box')
+  const micBtn    = document.getElementById('voice-mic-btn')
+  const micLbl    = document.getElementById('voice-mic-label')
+  const existing  = answerBox.value.trim()
+
+  recognition.onstart = () => {
+    isRecording = true
+    micBtn.classList.add('recording'); micBtn.textContent = '⏹️'
+    micLbl.textContent = 'Recording… tap to stop'; micLbl.classList.add('recording')
+    answerBox.classList.add('listening')
+  }
+  recognition.onresult = (e) => {
+    let interim = '', final = ''
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript
+      if (e.results[i].isFinal) final += t
+      else interim += t
+    }
+    // Append finalized text; show interim in brackets
+    if (final) {
+      answerBox.value = (existing ? existing + ' ' : '') + final.trim()
+    }
+    interimTranscript = interim
+    if (interim) answerBox.placeholder = interim + '…'
+  }
+  recognition.onerror = (e) => { stopRecognition() }
+  recognition.onend   = () => {
+    answerBox.placeholder = 'Your answer will appear here…'
+    stopRecognition()
+  }
+  recognition.start()
+})
+
+document.getElementById('voice-next').addEventListener('click', () => {
+  stopRecognition()
+  const q = PATIENT_QS[voiceQIdx]
+  patientData[q.key] = document.getElementById('voice-answer-box').value.trim()
+
+  if (voiceQIdx === PATIENT_QS.length - 1) {
+    // All done — sync back to write form and save
+    syncVoiceToWriteForm()
+    closePatientForm()
+    console.log('New patient saved (voice):', patientData)
+  } else {
+    voiceQIdx++
+    renderVoiceQuestion()
+  }
+})
+document.getElementById('voice-back').addEventListener('click', () => {
+  stopRecognition()
+  const q = PATIENT_QS[voiceQIdx]
+  patientData[q.key] = document.getElementById('voice-answer-box').value.trim()
+  if (voiceQIdx > 0) { voiceQIdx--; renderVoiceQuestion() }
+})
+document.getElementById('voice-skip').addEventListener('click', () => {
+  stopRecognition()
+  if (voiceQIdx < PATIENT_QS.length - 1) { voiceQIdx++; renderVoiceQuestion() }
+})
+
+function syncVoiceToWriteForm() {
+  // Push patientData back into the write form fields
+  Object.entries(patientData).forEach(([key, val]) => {
+    const el = document.querySelector(`[data-key="${key}"]`)
+    if (el && el.tagName !== 'INPUT' || (el && el.type !== 'radio')) {
+      if (el) el.value = val
+    }
+  })
+}
+
+// ── View toggle buttons ───────────────────────────────────────────────────
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    currentView = btn.id.replace('vbtn-', '')
+    renderCalendar()
+  })
+})
+
+// ── Controls — view-aware prev / next / today ─────────────────────────────
+document.getElementById('prev-week').addEventListener('click', () => {
+  if      (currentView === 'month')  { monthOffset--;  renderCalendar() }
+  else if (currentView === '3month') { monthOffset -= 3; renderCalendar() }
+  else if (currentView === 'day')    { dayOffset--;    renderCalendar() }
+  else                               { weekOffset--;   renderCalendar() }
+})
+document.getElementById('next-week').addEventListener('click', () => {
+  if      (currentView === 'month')  { monthOffset++;  renderCalendar() }
+  else if (currentView === '3month') { monthOffset += 3; renderCalendar() }
+  else if (currentView === 'day')    { dayOffset++;    renderCalendar() }
+  else                               { weekOffset++;   renderCalendar() }
+})
+document.getElementById('today-btn').addEventListener('click', () => {
+  weekOffset = 0; monthOffset = 0; dayOffset = 0; renderCalendar()
+})
+document.getElementById('mini-prev').addEventListener('click', () => { miniMonthOffset--; renderMiniCal() })
+document.getElementById('mini-next').addEventListener('click', () => { miniMonthOffset++; renderMiniCal() })
+document.getElementById('lang-en').addEventListener('click', () => { lang='en'; renderCalendar(); applyLang() })
+document.getElementById('lang-el').addEventListener('click', () => { lang='el'; renderCalendar(); applyLang() })
+
+// ── Init ──────────────────────────────────────────────────────────────────
+renderCalendar()
+
+// Scroll to 8am (a bit below start)
+setTimeout(() => {
+  const body = document.getElementById('cal-body')
+  if (body) body.scrollTop = SLOT_H * 0.5
+}, 100)
+
+// Refresh current-time line every minute
+setInterval(renderCalendar, 60000)
+</script>
+</body>
+</html>
