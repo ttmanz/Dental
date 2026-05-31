@@ -298,15 +298,85 @@
     /* Appointment blocks */
     .appt {
       position: absolute; left: 4px; right: 4px;
-      border-radius: 8px; padding: 6px 8px;
-      cursor: pointer; z-index: 5; overflow: hidden;
+      border-radius: 8px; padding: 5px 7px 5px 6px;
+      cursor: default; z-index: 5; overflow: hidden;
       transition: transform .1s, box-shadow .1s;
-      border-left: 3px solid transparent;
+      display: flex; align-items: flex-start; gap: 5px;
     }
-    .appt:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,.12); z-index: 20; }
-    .appt-name { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .appt-type { font-size: 10px; font-weight: 500; color: rgba(255,255,255,.8); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .appt-time { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.7); margin-top: 3px; }
+    .appt:hover { transform: scale(1.015); box-shadow: 0 4px 16px rgba(0,0,0,.15); z-index: 20; }
+
+    /* Avatar circle (left) */
+    .appt-avatar {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,255,255,.28);
+      border: 1.5px solid rgba(255,255,255,.55);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px; font-weight: 800; color: #fff;
+      overflow: hidden; cursor: pointer; margin-top: 1px;
+      transition: transform .13s, box-shadow .13s;
+    }
+    .appt-avatar:hover { transform: scale(1.18); box-shadow: 0 0 0 3px rgba(255,255,255,.4); }
+    .appt-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    /* Content (middle) */
+    .appt-content { flex: 1; min-width: 0; }
+    .appt-name {
+      font-size: 11px; font-weight: 700; color: #fff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: pointer; display: block;
+    }
+    .appt-name:hover { text-decoration: underline; text-decoration-color: rgba(255,255,255,.65); }
+    .appt-type { font-size: 9px; font-weight: 500; color: rgba(255,255,255,.82); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appt-time { font-size: 9px; font-weight: 600; color: rgba(255,255,255,.7); margin-top: 2px; }
+
+    /* Confirm dot (right) */
+    .appt-confirm {
+      width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+      margin-top: 4px; cursor: pointer;
+      border: 1.5px solid rgba(255,255,255,.45);
+      transition: transform .13s, box-shadow .13s;
+    }
+    .appt-confirm:hover { transform: scale(1.35); }
+    .appt-confirm.pending   { background: #111; }
+    .appt-confirm.confirmed { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,.65); border-color: #16a34a; }
+    .appt-confirm.declined  { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,.65); border-color: #dc2626; }
+
+    /* Cancelled appointment overlay */
+    .appt.appt-cancelled { opacity: .52; filter: grayscale(.4); }
+    .appt.appt-cancelled .appt-name { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.8); }
+    .appt-slot-free {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .appt-slot-free span {
+      background: rgba(0,0,0,.52); color: #fff; font-size: 8px; font-weight: 700;
+      padding: 2px 6px; border-radius: 4px; letter-spacing: .05em;
+    }
+
+    /* ── Contact panel ───────────────────────────────────────────────────── */
+    #contact-panel {
+      position: fixed; z-index: 9000;
+      background: #fff; border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2), 0 0 0 1px rgba(0,0,0,.07);
+      width: 230px; overflow: hidden;
+      opacity: 0; pointer-events: none;
+      transform: scale(.9) translateY(-8px);
+      transition: opacity .16s, transform .18s cubic-bezier(.175,.885,.32,1.2);
+    }
+    #contact-panel.open { opacity: 1; pointer-events: all; transform: scale(1) translateY(0); }
+    .cp-header { padding: 12px 14px 10px; background: linear-gradient(135deg, var(--primary), #2D8B7A); }
+    .cp-patient-name  { font-size: 13px; font-weight: 700; color: #fff; }
+    .cp-patient-phone { font-size: 11px; color: rgba(255,255,255,.82); margin-top: 3px; }
+    .cp-patient-email { font-size: 10px; color: rgba(255,255,255,.65); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cp-actions { padding: 4px 0 6px; }
+    .cp-action {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 14px; font-size: 13px; font-weight: 500; color: var(--text);
+      text-decoration: none; transition: background .1s; cursor: pointer;
+    }
+    .cp-action:hover { background: var(--cream); color: var(--primary); }
+    .cp-action-icon { font-size: 16px; width: 22px; text-align: center; }
+    .cp-divider { height: 1px; background: var(--border); margin: 3px 14px; }
 
     /* Appointment type backgrounds */
     .appt.cleaning     { background: linear-gradient(135deg, #4BAE8A, #3A9878); }
@@ -1606,6 +1676,22 @@
 <!-- Hidden input for changing photo from Patient Chart -->
 <input type="file" id="pc-photo-input" accept="image/*"/>
 
+<!-- ── Contact panel (floats near appointment name click) ──────────────── -->
+<div id="contact-panel">
+  <div class="cp-header">
+    <div class="cp-patient-name" id="cp-name">—</div>
+    <div class="cp-patient-phone" id="cp-phone">—</div>
+    <div class="cp-patient-email" id="cp-email"></div>
+  </div>
+  <div class="cp-actions">
+    <a class="cp-action" id="cp-call"      href="#"><span class="cp-action-icon">📞</span> <span data-en="Call" data-el="Κλήση">Call</span></a>
+    <a class="cp-action" id="cp-whatsapp" href="#" target="_blank"><span class="cp-action-icon">💬</span> <span data-en="WhatsApp Call" data-el="WhatsApp">WhatsApp</span></a>
+    <div class="cp-divider"></div>
+    <a class="cp-action" id="cp-email-btn" href="#"><span class="cp-action-icon">✉️</span> <span data-en="Email" data-el="Email">Email</span></a>
+    <a class="cp-action" id="cp-sms"      href="#"><span class="cp-action-icon">💬</span> <span data-en="SMS" data-el="SMS">SMS</span></a>
+  </div>
+</div>
+
 <script>
 // ── i18n ────────────────────────────────────────────────────────────────
 let lang = 'en'
@@ -1650,6 +1736,18 @@ function savePatients() {
   localStorage.setItem('dental_patients', JSON.stringify(PATIENTS))
 }
 loadPatients()
+
+// ── Appointments localStorage persistence ─────────────────────────────────
+function saveAppts() {
+  localStorage.setItem('dental_appts', JSON.stringify(APPTS))
+}
+function loadAppts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('dental_appts') || '[]')
+    APPTS.length = 0
+    saved.forEach(a => APPTS.push(a))
+  } catch(_) {}
+}
 
 function findPatientByName(name) {
   if (!name) return null
@@ -1761,19 +1859,94 @@ function makeApptBlock(a, date) {
   const top    = ((a.hour + a.min/60) - START_HOUR) * SLOT_H
   const height = (a.dur / 60) * SLOT_H - 4
   if (top < 0 || top > (END_HOUR - START_HOUR) * SLOT_H) return null
+
+  const color       = TYPE_COLORS[a.type] || '#888'
+  const typeLbl     = TYPE_LABELS[lang][a.type] || a.type
+  const timeStr     = `${a.hour}:${String(a.min).padStart(2,'0')} – ${endTime(a)}`
+  const confirm     = a.confirmStatus || 'pending'
+  const isCancelled = confirm === 'declined'
+
   const block = document.createElement('div')
-  block.className = 'appt'
+  block.className = 'appt' + (isCancelled ? ' appt-cancelled' : '')
   block.style.top    = top + 'px'
   block.style.height = Math.max(height, 28) + 'px'
-  const color  = TYPE_COLORS[a.type] || '#888'
   block.style.background = `linear-gradient(135deg, ${color}, ${color}bb)`
-  const typeLbl = TYPE_LABELS[lang][a.type] || a.type
-  const timeStr = `${a.hour}:${String(a.min).padStart(2,'0')} – ${endTime(a)}`
-  block.innerHTML = `
-    <div class="appt-name">${a.patient}</div>
-    <div class="appt-type">${typeLbl}</div>
-    ${height > 44 ? `<div class="appt-time">${timeStr}</div>` : ''}
-  `
+
+  // ── Avatar circle (left) — click → Patient Chart ───────────────────────
+  const avatarEl = document.createElement('div')
+  avatarEl.className = 'appt-avatar'
+  avatarEl.title = lang === 'el' ? 'Φάκελος Ασθενή' : 'Open Patient Chart'
+  const patientRec = findPatientByName(a.patient)
+  if (patientRec?.photo) {
+    const img = document.createElement('img')
+    img.src = patientRec.photo
+    avatarEl.appendChild(img)
+  } else {
+    avatarEl.textContent = getInitials(a.patient)
+  }
+  avatarEl.addEventListener('click', e => { e.stopPropagation(); openPatientChart(a.patient) })
+
+  // ── Content (middle) ───────────────────────────────────────────────────
+  const content = document.createElement('div')
+  content.className = 'appt-content'
+
+  const nameEl = document.createElement('span')
+  nameEl.className = 'appt-name'
+  nameEl.textContent = a.patient
+  nameEl.title = lang === 'el' ? 'Επικοινωνία' : 'Contact patient'
+  nameEl.addEventListener('click', e => { e.stopPropagation(); openContactPanel(a, e) })
+
+  const typeEl = document.createElement('div')
+  typeEl.className = 'appt-type'
+  typeEl.textContent = typeLbl
+
+  content.appendChild(nameEl)
+  content.appendChild(typeEl)
+  if (height > 42) {
+    const timeEl = document.createElement('div')
+    timeEl.className = 'appt-time'
+    timeEl.textContent = timeStr
+    content.appendChild(timeEl)
+  }
+
+  // ── Confirm dot (right) — click cycles pending→confirmed→declined ──────
+  const dotEl = document.createElement('div')
+  dotEl.className = `appt-confirm ${confirm}`
+  const dotTitles = {
+    pending:   lang === 'el' ? 'Αναμονή απάντησης' : 'Awaiting reply',
+    confirmed: lang === 'el' ? 'Επιβεβαιωμένο ✓'  : 'Confirmed ✓',
+    declined:  lang === 'el' ? 'Δεν έρχεται — θέση ελεύθερη' : 'Not coming — slot open',
+  }
+  dotEl.title = dotTitles[confirm]
+  dotEl.addEventListener('click', e => {
+    e.stopPropagation()
+    const cycle = { pending: 'confirmed', confirmed: 'declined', declined: 'pending' }
+    a.confirmStatus = cycle[confirm]
+    a.status = a.confirmStatus === 'declined' ? 'cancelled'
+             : a.confirmStatus === 'confirmed' ? 'confirmed'
+             : 'pending'
+    saveAppts()
+    showToast(
+      a.confirmStatus === 'confirmed' ? (lang === 'el' ? 'Επιβεβαιωμένο ✓' : 'Confirmed ✓')
+    : a.confirmStatus === 'declined'  ? (lang === 'el' ? 'Ακυρώθηκε — θέση ελεύθερη' : 'Declined — slot now open')
+    : (lang === 'el' ? 'Σε αναμονή' : 'Back to pending')
+    )
+    renderCalendar()
+  })
+
+  block.appendChild(avatarEl)
+  block.appendChild(content)
+  block.appendChild(dotEl)
+
+  // Cancelled slot badge overlay
+  if (isCancelled) {
+    const badge = document.createElement('div')
+    badge.className = 'appt-slot-free'
+    badge.innerHTML = `<span>${lang === 'el' ? 'ΕΛΕΥΘΕΡΟ' : 'SLOT OPEN'}</span>`
+    block.appendChild(badge)
+  }
+
+  // Click on the block body (not avatar/name/dot) → appointment detail modal
   block.addEventListener('click', e => { e.stopPropagation(); openModal(a, date) })
   return block
 }
@@ -2531,6 +2704,7 @@ document.getElementById('af-save').addEventListener('click', () => {
   }
 
   APPTS.push(newAppt)
+  saveAppts()
   closeApptForm()
   renderCalendar()
 })
@@ -2755,6 +2929,62 @@ function syncVoiceToWriteForm() {
   })
 }
 
+// ── Contact panel ─────────────────────────────────────────────────────────
+const _cp = document.getElementById('contact-panel')
+
+function openContactPanel(appt, evt) {
+  const patient = findPatientByName(appt.patient)
+  const phone   = patient?.phone || ''
+  const email   = patient?.email || ''
+
+  // Clean phone number → digits only (strip spaces, dashes, dots, leading +)
+  const rawPhone = phone.replace(/[\s\-().]/g, '')
+  const waPhone  = rawPhone.replace(/^\+/, '')   // WhatsApp needs no +
+
+  // Populate header
+  document.getElementById('cp-name').textContent  = appt.patient
+  document.getElementById('cp-phone').textContent = phone || (lang === 'el' ? 'Δεν υπάρχει τηλέφωνο' : 'No phone on record')
+  const emailEl = document.getElementById('cp-email')
+  emailEl.textContent = email
+  emailEl.style.display = email ? '' : 'none'
+
+  // Wire action links
+  const callEl = document.getElementById('cp-call')
+  callEl.href = phone ? `tel:${rawPhone}` : '#'
+  callEl.style.opacity = phone ? '1' : '.4'
+
+  const waEl = document.getElementById('cp-whatsapp')
+  waEl.href = waPhone ? `https://wa.me/${waPhone}` : '#'
+  waEl.style.opacity = waPhone ? '1' : '.4'
+
+  const emailBtn = document.getElementById('cp-email-btn')
+  emailBtn.href = email ? `mailto:${email}` : '#'
+  emailBtn.style.opacity = email ? '1' : '.4'
+
+  const smsEl = document.getElementById('cp-sms')
+  smsEl.href = phone ? `sms:${rawPhone}` : '#'
+  smsEl.style.opacity = phone ? '1' : '.4'
+
+  // Position near click — keep inside viewport
+  const panelW = 230, panelH = 220
+  let x = evt.clientX + 8
+  let y = evt.clientY + 8
+  if (x + panelW > window.innerWidth  - 8) x = evt.clientX - panelW - 8
+  if (y + panelH > window.innerHeight - 8) y = evt.clientY - panelH - 8
+  _cp.style.left = x + 'px'
+  _cp.style.top  = y + 'px'
+  _cp.classList.add('open')
+}
+
+function closeContactPanel() { _cp.classList.remove('open') }
+
+// Close when clicking outside
+document.addEventListener('click', e => {
+  if (!_cp.contains(e.target)) closeContactPanel()
+})
+// Stop panel itself from triggering the outside-click
+_cp.addEventListener('click', e => e.stopPropagation())
+
 // ── Toast helper ─────────────────────────────────────────────────────────
 function showToast(msg, duration = 2800) {
   let toast = document.getElementById('_toast')
@@ -2958,6 +3188,58 @@ document.getElementById('lang-en').addEventListener('click', () => { lang='en'; 
 document.getElementById('lang-el').addEventListener('click', () => { lang='el'; renderCalendar(); applyLang() })
 
 // ── Init ──────────────────────────────────────────────────────────────────
+loadAppts()
+
+// Seed demo data — re-seeds whenever SEED_V changes (clears stale data)
+const SEED_V = 'v3'
+if (localStorage.getItem('dental_seed_v') !== SEED_V) {
+  localStorage.removeItem('dental_appts')
+  localStorage.removeItem('dental_patients')
+  APPTS.length = 0; PATIENTS.length = 0
+
+  // Seed appointment types
+  TYPE_COLORS['cleaning']     = '#4BAE8A'
+  TYPE_COLORS['consultation'] = '#3D9E8F'
+  TYPE_COLORS['treatment']    = '#E07850'
+  TYPE_LABELS.en['cleaning']     = 'Cleaning';      TYPE_LABELS.el['cleaning']     = 'Καθαρισμός'
+  TYPE_LABELS.en['consultation'] = 'Consultation';  TYPE_LABELS.el['consultation'] = 'Συνεννόηση'
+  TYPE_LABELS.en['treatment']    = 'Treatment';     TYPE_LABELS.el['treatment']    = 'Θεραπεία'
+
+  // Use Monday of current week as base so demo appts land in Mon–Sat view
+  const mon = getMonday(today)
+  const dayDate = (offset) => {
+    const d = new Date(mon); d.setDate(d.getDate() + offset); return toISODate(d)
+  }
+  const mk = (dayOff, h, m, dur, type, patient, dentist, confirmStatus) => ({
+    id: Date.now() + Math.random(),
+    patient, type, dentist,
+    status: confirmStatus === 'declined' ? 'cancelled' : confirmStatus === 'confirmed' ? 'confirmed' : 'pending',
+    confirmStatus,
+    date: dayDate(dayOff), hour: h, min: m, dur, notes: ''
+  })
+
+  APPTS.push(
+    mk(0,  9,  0, 45, 'cleaning',     'Maria Stavros',    'Dr. M. Papadopoulos', 'confirmed'),
+    mk(0, 10,  0, 60, 'consultation', 'Nikos Papadakis',  'Dr. M. Papadopoulos', 'pending'),
+    mk(0, 11, 30, 30, 'treatment',    'Elena Kosta',      'Dr. N. Konstantinou', 'confirmed'),
+    mk(1,  9, 30, 45, 'cleaning',     'Giorgos Alexiou',  'Dr. N. Konstantinou', 'pending'),
+    mk(2, 14,  0, 60, 'consultation', 'Sofia Dimitriou',  'Dr. M. Papadopoulos', 'declined'),
+    mk(3, 10,  0, 45, 'treatment',    'Petros Lambrou',   'Dr. N. Konstantinou', 'confirmed'),
+    mk(4, 11,  0, 30, 'cleaning',     'Anna Georgiou',    'Dr. M. Papadopoulos', 'pending')
+  )
+  PATIENTS.push(
+    { id:1, fullName:'Maria Stavros',    photo:'', phone:'+30 6912 345 678', email:'maria.stavros@gmail.com',  dob:'1985-03-14', address:'Athens',    gender:'female', createdAt: new Date().toISOString() },
+    { id:2, fullName:'Nikos Papadakis',  photo:'', phone:'+30 6934 567 890', email:'nikos.p@hotmail.com',      dob:'1979-07-22', address:'Piraeus',   gender:'male',   createdAt: new Date().toISOString() },
+    { id:3, fullName:'Elena Kosta',      photo:'', phone:'+30 6956 789 012', email:'elena.kosta@outlook.com',  dob:'1992-11-05', address:'Glyfada',   gender:'female', createdAt: new Date().toISOString() },
+    { id:4, fullName:'Giorgos Alexiou',  photo:'', phone:'+30 6978 901 234', email:'g.alexiou@gmail.com',      dob:'1988-02-28', address:'Kifisia',   gender:'male',   createdAt: new Date().toISOString() },
+    { id:5, fullName:'Sofia Dimitriou',  photo:'', phone:'+30 6901 234 567', email:'sofia.dim@yahoo.gr',       dob:'1995-09-17', address:'Chalandri', gender:'female', createdAt: new Date().toISOString() },
+    { id:6, fullName:'Petros Lambrou',   photo:'', phone:'+30 6923 456 789', email:'p.lambrou@gmail.com',      dob:'1971-12-03', address:'Marousi',   gender:'male',   createdAt: new Date().toISOString() },
+    { id:7, fullName:'Anna Georgiou',    photo:'', phone:'+30 6945 678 901', email:'anna.g@gmail.com',         dob:'1990-06-20', address:'Kolonaki',  gender:'female', createdAt: new Date().toISOString() }
+  )
+  saveAppts(); savePatients()
+  localStorage.setItem('dental_seed_v', SEED_V)
+}
+
 renderCalendar()
 
 // Scroll to 8am (a bit below start)
