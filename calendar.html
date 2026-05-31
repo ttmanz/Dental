@@ -811,6 +811,151 @@
       margin-bottom: 16px; display: none;
     }
     .voice-no-support.show { display: block; }
+
+    /* ── Photo upload widget (inside New Patient form) ──────────────────── */
+    .photo-upload-section {
+      display: flex; align-items: center; gap: 20px;
+      padding: 18px 20px; background: var(--cream); border-radius: 14px;
+      margin-bottom: 20px;
+    }
+    .photo-preview-circle {
+      width: 80px; height: 80px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--primary-mid), var(--primary));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 700; color: #fff;
+      overflow: hidden; position: relative; cursor: pointer;
+      border: 3px solid var(--white); box-shadow: 0 2px 8px var(--shadow);
+    }
+    .photo-preview-circle img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+    }
+    .photo-preview-circle .photo-overlay {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(0,0,0,.45); display: flex; align-items: center;
+      justify-content: center; font-size: 18px; opacity: 0; transition: opacity .18s;
+    }
+    .photo-preview-circle:hover .photo-overlay { opacity: 1; }
+    .photo-upload-info { flex: 1; }
+    .photo-upload-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .photo-upload-hint  { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
+    .photo-upload-btns  { display: flex; gap: 8px; }
+    .photo-upload-btn {
+      padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      border: 1px solid var(--border); background: var(--white); cursor: pointer;
+      color: var(--text-mid); transition: all .14s; display: flex; align-items: center; gap: 5px;
+    }
+    .photo-upload-btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+    .photo-upload-btn.camera { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .photo-upload-btn.camera:hover { background: #2D8B7A; }
+
+    /* ── Patient Chart modal ────────────────────────────────────────────── */
+    .pc-overlay {
+      position: fixed; inset: 0; z-index: 700;
+      background: rgba(20,18,15,.60); backdrop-filter: blur(8px);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 24px 16px; overflow-y: auto;
+      opacity: 0; pointer-events: none; transition: opacity .22s;
+    }
+    .pc-overlay.open { opacity: 1; pointer-events: all; }
+    .pc-modal {
+      background: var(--white); border-radius: 22px;
+      width: min(820px, 100%); overflow: hidden;
+      box-shadow: 0 24px 60px rgba(44,42,39,.20);
+      transform: translateY(20px) scale(.97);
+      transition: transform .26s cubic-bezier(.175,.885,.32,1.15);
+    }
+    .pc-overlay.open .pc-modal { transform: none; }
+
+    /* Hero strip */
+    .pc-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #2D8B7A 100%);
+      padding: 28px 28px 20px;
+      display: flex; align-items: flex-end; gap: 20px; position: relative;
+    }
+    .pc-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,.2); border: none; color: #fff;
+      font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .pc-close:hover { background: rgba(255,255,255,.35); }
+    .pc-avatar {
+      width: 88px; height: 88px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,255,255,.25);
+      border: 3px solid rgba(255,255,255,.5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 700; color: #fff;
+      overflow: hidden; position: relative;
+    }
+    .pc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .pc-avatar-change {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer; color: #fff;
+    }
+    .pc-avatar:hover .pc-avatar-change { display: flex; }
+    .pc-hero-info { flex: 1; padding-bottom: 4px; }
+    .pc-name { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -.02em; margin-bottom: 4px; }
+    .pc-meta { font-size: 13px; color: rgba(255,255,255,.75); display: flex; gap: 16px; flex-wrap: wrap; }
+    .pc-meta span { display: flex; align-items: center; gap: 4px; }
+    .pc-change-photo-btn {
+      padding: 7px 14px; border-radius: 9px; font-size: 12px; font-weight: 600;
+      background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.35);
+      color: #fff; cursor: pointer; transition: background .15s; white-space: nowrap;
+    }
+    .pc-change-photo-btn:hover { background: rgba(255,255,255,.32); }
+
+    /* Body */
+    .pc-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+    .pc-section { }
+    .pc-section-title {
+      font-size: 10px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 12px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .pc-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    .pc-grid.full  { grid-template-columns: 1fr; }
+    .pc-field { }
+    .pc-field-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 3px; }
+    .pc-field-value { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.4; }
+    .pc-field-value.muted { color: var(--text-muted); font-style: italic; }
+    .pc-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .pc-badge.allergy { background: #FEE2E2; color: #991B1B; }
+    .pc-badge.med     { background: #DBEAFE; color: #1D4ED8; }
+
+    /* Appointment history table */
+    .pc-appt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .pc-appt-table th {
+      font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--text-muted); padding: 6px 10px; text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .pc-appt-table td { padding: 9px 10px; border-bottom: 1px solid var(--cream-dark); vertical-align: top; }
+    .pc-appt-table tr:last-child td { border-bottom: none; }
+    .pc-appt-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
+    .pc-empty { color: var(--text-muted); font-style: italic; font-size: 13px; padding: 10px 0; }
+
+    /* Footer actions */
+    .pc-footer {
+      padding: 16px 28px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+    }
+    .pc-btn {
+      padding: 9px 20px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); transition: all .15s;
+    }
+    .pc-btn.secondary { background: var(--white); color: var(--text-mid); }
+    .pc-btn.secondary:hover { background: var(--cream); }
+    .pc-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .pc-btn.primary:hover { background: #2D8B7A; }
+    /* Hidden file inputs */
+    #pc-photo-input, #pf-photo-input, #pf-camera-input { display: none; }
   </style>
 </head>
 <body>
@@ -1139,6 +1284,24 @@
     <!-- ── WRITE MODE ─────────────────────────────────────── -->
     <div class="pm-write" id="pm-write">
 
+      <!-- Photo upload -->
+      <div class="photo-upload-section">
+        <div class="photo-preview-circle" id="pf-photo-circle" title="Click to upload photo">
+          <span id="pf-photo-initials">?</span>
+          <div class="photo-overlay">📷</div>
+        </div>
+        <div class="photo-upload-info">
+          <div class="photo-upload-title" data-en="Patient Photo" data-el="Φωτογραφία Ασθενή">Patient Photo</div>
+          <div class="photo-upload-hint" data-en="Optional — helps staff identify the patient quickly" data-el="Προαιρετικό — βοηθά το προσωπικό να αναγνωρίσει τον ασθενή">Optional — helps staff identify the patient quickly</div>
+          <div class="photo-upload-btns">
+            <button type="button" class="photo-upload-btn" id="pf-upload-btn">📁 <span data-en="Upload Photo" data-el="Ανέβασμα">Upload Photo</span></button>
+            <button type="button" class="photo-upload-btn camera" id="pf-camera-btn">📷 <span data-en="Take Photo" data-el="Φωτογράφηση">Take Photo</span></button>
+          </div>
+        </div>
+      </div>
+      <input type="file" id="pf-photo-input" accept="image/*"/>
+      <input type="file" id="pf-camera-input" accept="image/*" capture="user"/>
+
       <div class="pm-section-title" data-en="PERSONAL INFORMATION" data-el="ΠΡΟΣΩΠΙΚΑ ΣΤΟΙΧΕΙΑ">PERSONAL INFORMATION</div>
       <div class="pm-field-row">
         <div class="pm-field">
@@ -1314,6 +1477,135 @@
   </div>
 </div>
 
+<!-- ── Patient Chart modal ──────────────────────────────────────────────── -->
+<div class="pc-overlay" id="pc-overlay">
+  <div class="pc-modal">
+
+    <!-- Hero -->
+    <div class="pc-hero">
+      <div class="pc-avatar" id="pc-avatar">
+        <span id="pc-avatar-initials">?</span>
+        <div class="pc-avatar-change" id="pc-avatar-change" title="Change photo">📷</div>
+      </div>
+      <div class="pc-hero-info">
+        <div class="pc-name" id="pc-name">—</div>
+        <div class="pc-meta">
+          <span id="pc-dob-wrap">🎂 <span id="pc-dob">—</span></span>
+          <span id="pc-phone-wrap">📞 <span id="pc-phone">—</span></span>
+          <span id="pc-email-wrap">✉️ <span id="pc-email">—</span></span>
+        </div>
+      </div>
+      <button class="pc-change-photo-btn" id="pc-change-photo-btn">📷 Change Photo</button>
+      <button class="pc-close" id="pc-close">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="pc-body">
+
+      <!-- Contact & Personal -->
+      <div class="pc-section">
+        <div class="pc-section-title" data-en="PERSONAL DETAILS" data-el="ΠΡΟΣΩΠΙΚΑ ΣΤΟΙΧΕΙΑ">PERSONAL DETAILS</div>
+        <div class="pc-grid three">
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Address" data-el="Διεύθυνση">Address</div>
+            <div class="pc-field-value" id="pc-address">—</div>
+          </div>
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Gender" data-el="Φύλο">Gender</div>
+            <div class="pc-field-value" id="pc-gender">—</div>
+          </div>
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Insurance" data-el="Ασφάλιση">Insurance</div>
+            <div class="pc-field-value" id="pc-insurance">—</div>
+          </div>
+        </div>
+        <div class="pc-grid" style="margin-top:12px">
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Emergency Contact" data-el="Επαφή Εκτάκτου">Emergency Contact</div>
+            <div class="pc-field-value" id="pc-emerg">—</div>
+          </div>
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Emergency Phone" data-el="Τηλ. Εκτάκτου">Emergency Phone</div>
+            <div class="pc-field-value" id="pc-emerg-phone">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medical history -->
+      <div class="pc-section">
+        <div class="pc-section-title" data-en="MEDICAL HISTORY" data-el="ΙΑΤΡΙΚΟ ΙΣΤΟΡΙΚΟ">MEDICAL HISTORY</div>
+        <div class="pc-grid full" style="gap:10px">
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Allergies" data-el="Αλλεργίες">Allergies</div>
+            <div class="pc-field-value" id="pc-allergies">—</div>
+          </div>
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Medications" data-el="Φάρμακα">Medications</div>
+            <div class="pc-field-value" id="pc-meds">—</div>
+          </div>
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Conditions" data-el="Παθήσεις">Conditions</div>
+            <div class="pc-field-value" id="pc-conditions">—</div>
+          </div>
+        </div>
+        <div class="pc-grid three" style="margin-top:12px">
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Smoker" data-el="Καπνιστής">Smoker</div>
+            <div class="pc-field-value" id="pc-smoker">—</div>
+          </div>
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Pregnant/Nursing" data-el="Εγκυος/Θηλαζει">Pregnant/Nursing</div>
+            <div class="pc-field-value" id="pc-pregnant">—</div>
+          </div>
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Dental Anxiety" data-el="Οδοντοφοβία">Dental Anxiety</div>
+            <div class="pc-field-value" id="pc-anxiety">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dental history -->
+      <div class="pc-section">
+        <div class="pc-section-title" data-en="DENTAL HISTORY" data-el="ΟΔΟΝΤΙΑΤΡΙΚΟ ΙΣΤΟΡΙΚΟ">DENTAL HISTORY</div>
+        <div class="pc-grid">
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Last Visit" data-el="Τελευταία Επίσκεψη">Last Visit</div>
+            <div class="pc-field-value" id="pc-last-visit">—</div>
+          </div>
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Chief Complaint" data-el="Κύριο Παράπονο">Chief Complaint</div>
+            <div class="pc-field-value" id="pc-complaint">—</div>
+          </div>
+        </div>
+        <div class="pc-grid full" style="margin-top:12px">
+          <div class="pc-field">
+            <div class="pc-field-label" data-en="Previous Dental Work" data-el="Προηγ. Εργασία">Previous Dental Work</div>
+            <div class="pc-field-value" id="pc-prev-work">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Appointment history -->
+      <div class="pc-section">
+        <div class="pc-section-title" data-en="APPOINTMENT HISTORY" data-el="ΙΣΤΟΡΙΚΟ ΡΑΝΤΕΒΟΥ">APPOINTMENT HISTORY</div>
+        <div id="pc-appt-history">
+          <div class="pc-empty" data-en="No appointments on record." data-el="Δεν υπάρχουν ραντεβού.">No appointments on record.</div>
+        </div>
+      </div>
+
+    </div><!-- end pc-body -->
+
+    <div class="pc-footer">
+      <button class="pc-btn secondary" id="pc-close-btn" data-en="Close" data-el="Κλείσιμο">Close</button>
+      <button class="pc-btn primary" id="pc-new-appt-btn" data-en="+ New Appointment" data-el="+ Νέο Ραντεβού">+ New Appointment</button>
+    </div>
+
+  </div><!-- end pc-modal -->
+</div><!-- end pc-overlay -->
+
+<!-- Hidden input for changing photo from Patient Chart -->
+<input type="file" id="pc-photo-input" accept="image/*"/>
+
 <script>
 // ── i18n ────────────────────────────────────────────────────────────────
 let lang = 'en'
@@ -1344,6 +1636,86 @@ const STATUS_LABELS = {
   el: { confirmed:'Επιβεβαιωμένο', pending:'Εκκρεμεί', cancelled:'Ακυρωμένο' },
 }
 const APPTS = []
+
+// ── Patient registry ──────────────────────────────────────────────────────
+// Each patient: { id, photo (base64|''), fullName, dob, phone, email, address,
+//   gender, prefLang, emergName, emergPhone, allergies, medications, conditions,
+//   smoker, pregnant, lastVisit, anxiety, prevWork, chiefComplaint, insurance,
+//   referral, createdAt }
+let PATIENTS = []
+function loadPatients() {
+  try { PATIENTS = JSON.parse(localStorage.getItem('dental_patients') || '[]') } catch(_) { PATIENTS = [] }
+}
+function savePatients() {
+  localStorage.setItem('dental_patients', JSON.stringify(PATIENTS))
+}
+loadPatients()
+
+function findPatientByName(name) {
+  if (!name) return null
+  const n = name.trim().toLowerCase()
+  return PATIENTS.find(p => p.fullName && p.fullName.trim().toLowerCase() === n) || null
+}
+
+function getInitials(name) {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/)
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase()
+}
+
+// Photo helpers — shared between new patient form and patient chart
+let _pfCurrentPhoto = ''   // base64 of photo currently being edited in new-patient form
+let _pcCurrentPatientId = null  // ID of patient currently open in chart
+
+function readFileAsBase64(file, cb) {
+  const reader = new FileReader()
+  reader.onload = e => cb(e.target.result)
+  reader.readAsDataURL(file)
+}
+
+function applyPhotoToNewPatientForm(base64) {
+  _pfCurrentPhoto = base64
+  const circle = document.getElementById('pf-photo-circle')
+  const initials = document.getElementById('pf-photo-initials')
+  if (base64) {
+    // Replace initials with image
+    let img = circle.querySelector('img')
+    if (!img) { img = document.createElement('img'); circle.insertBefore(img, initials) }
+    img.src = base64
+    initials.style.display = 'none'
+  } else {
+    const img = circle.querySelector('img')
+    if (img) img.remove()
+    initials.style.display = ''
+  }
+}
+
+// Wire photo buttons in new patient form
+document.getElementById('pf-photo-circle').addEventListener('click', () =>
+  document.getElementById('pf-photo-input').click())
+document.getElementById('pf-upload-btn').addEventListener('click', () =>
+  document.getElementById('pf-photo-input').click())
+document.getElementById('pf-camera-btn').addEventListener('click', () =>
+  document.getElementById('pf-camera-input').click())
+
+document.getElementById('pf-photo-input').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return
+  readFileAsBase64(file, base64 => applyPhotoToNewPatientForm(base64))
+  e.target.value = ''
+})
+document.getElementById('pf-camera-input').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return
+  readFileAsBase64(file, base64 => applyPhotoToNewPatientForm(base64))
+  e.target.value = ''
+})
+
+// Update initials preview when name is typed
+document.getElementById('pf-name').addEventListener('input', e => {
+  const v = e.target.value.trim()
+  if (!_pfCurrentPhoto) {
+    document.getElementById('pf-photo-initials').textContent = v ? getInitials(v) : '?'
+  }
+})
 
 // ── Week navigation ──────────────────────────────────────────────────────
 const today = new Date()
@@ -2190,6 +2562,13 @@ function openPatientForm() {
   patientData = {}
   document.querySelectorAll('.pm-input, .pm-textarea, .pm-select').forEach(el => { el.value = '' })
   document.querySelectorAll('input[type=radio]').forEach(el => { el.checked = false })
+  // Reset photo widget
+  _pfCurrentPhoto = ''
+  const circle = document.getElementById('pf-photo-circle')
+  const oldImg = circle.querySelector('img')
+  if (oldImg) oldImg.remove()
+  document.getElementById('pf-photo-initials').textContent = '?'
+  document.getElementById('pf-photo-initials').style.display = ''
   switchPmMode('write')
   voiceQIdx = 0
   renderVoiceQuestion()
@@ -2226,10 +2605,23 @@ document.getElementById('pm-save').addEventListener('click', () => {
     if (el.type === 'radio') { if (el.checked) patientData[el.dataset.key] = el.value }
     else patientData[el.dataset.key] = el.value
   })
-  console.log('New patient saved:', patientData)
-  // TODO: POST to API — for now just log and close
+
+  // Check if patient already exists (update) or is new
+  const existing = findPatientByName(patientData.fullName)
+  if (existing) {
+    Object.assign(existing, patientData)
+    if (_pfCurrentPhoto) existing.photo = _pfCurrentPhoto
+  } else {
+    PATIENTS.push({
+      id: Date.now(),
+      photo: _pfCurrentPhoto || '',
+      ...patientData,
+      createdAt: new Date().toISOString(),
+    })
+  }
+  savePatients()
+  showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
   closePatientForm()
-  // Optionally show a brief toast here
 })
 
 // ── Voice mode ────────────────────────────────────────────────────────────
@@ -2327,8 +2719,16 @@ document.getElementById('voice-next').addEventListener('click', () => {
   if (voiceQIdx === PATIENT_QS.length - 1) {
     // All done — sync back to write form and save
     syncVoiceToWriteForm()
+    const existing = findPatientByName(patientData.fullName)
+    if (existing) {
+      Object.assign(existing, patientData)
+      if (_pfCurrentPhoto) existing.photo = _pfCurrentPhoto
+    } else {
+      PATIENTS.push({ id: Date.now(), photo: _pfCurrentPhoto || '', ...patientData, createdAt: new Date().toISOString() })
+    }
+    savePatients()
+    showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
     closePatientForm()
-    console.log('New patient saved (voice):', patientData)
   } else {
     voiceQIdx++
     renderVoiceQuestion()
@@ -2354,6 +2754,177 @@ function syncVoiceToWriteForm() {
     }
   })
 }
+
+// ── Toast helper ─────────────────────────────────────────────────────────
+function showToast(msg, duration = 2800) {
+  let toast = document.getElementById('_toast')
+  if (!toast) {
+    toast = document.createElement('div')
+    toast.id = '_toast'
+    Object.assign(toast.style, {
+      position:'fixed', bottom:'28px', left:'50%', transform:'translateX(-50%) translateY(16px)',
+      background:'#2C2A27', color:'#fff', padding:'10px 22px', borderRadius:'12px',
+      fontSize:'13px', fontWeight:'600', boxShadow:'0 4px 20px rgba(0,0,0,.25)',
+      zIndex:'9999', opacity:'0', transition:'opacity .22s, transform .22s', pointerEvents:'none',
+    })
+    document.body.appendChild(toast)
+  }
+  toast.textContent = msg
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1'; toast.style.transform = 'translateX(-50%) translateY(0)'
+  })
+  clearTimeout(toast._timer)
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = '0'; toast.style.transform = 'translateX(-50%) translateY(16px)'
+  }, duration)
+}
+
+// ── Patient Chart ─────────────────────────────────────────────────────────
+function openPatientChart(patientNameOrId) {
+  const patient = (typeof patientNameOrId === 'number')
+    ? PATIENTS.find(p => p.id === patientNameOrId)
+    : findPatientByName(patientNameOrId)
+
+  const overlay = document.getElementById('pc-overlay')
+
+  // Populate hero
+  const name = patient ? (patient.fullName || '—') : (patientNameOrId || '—')
+  document.getElementById('pc-name').textContent = name
+  document.getElementById('pc-dob').textContent  = patient?.dob || '—'
+  document.getElementById('pc-phone').textContent= patient?.phone || '—'
+  document.getElementById('pc-email').textContent= patient?.email || '—'
+
+  // Avatar
+  const avatarEl   = document.getElementById('pc-avatar')
+  const initialsEl = document.getElementById('pc-avatar-initials')
+  let avatarImg    = avatarEl.querySelector('img')
+  if (patient?.photo) {
+    if (!avatarImg) { avatarImg = document.createElement('img'); avatarEl.insertBefore(avatarImg, initialsEl) }
+    avatarImg.src = patient.photo
+    initialsEl.style.display = 'none'
+  } else {
+    if (avatarImg) avatarImg.remove()
+    initialsEl.textContent  = getInitials(name)
+    initialsEl.style.display = ''
+  }
+
+  // Personal details
+  const val = (v) => v || '—'
+  document.getElementById('pc-address').textContent    = val(patient?.address)
+  document.getElementById('pc-gender').textContent     = val(patient?.gender)
+  document.getElementById('pc-insurance').textContent  = val(patient?.insurance)
+  document.getElementById('pc-emerg').textContent      = val(patient?.emergName)
+  document.getElementById('pc-emerg-phone').textContent= val(patient?.emergPhone)
+
+  // Medical history
+  document.getElementById('pc-allergies').textContent  = val(patient?.allergies)
+  document.getElementById('pc-meds').textContent       = val(patient?.medications)
+  document.getElementById('pc-conditions').textContent = val(patient?.conditions)
+  document.getElementById('pc-smoker').textContent     = val(patient?.smoker)
+  document.getElementById('pc-pregnant').textContent   = val(patient?.pregnant)
+  document.getElementById('pc-anxiety').textContent    = val(patient?.anxiety)
+
+  // Dental history
+  document.getElementById('pc-last-visit').textContent = val(patient?.lastVisit)
+  document.getElementById('pc-complaint').textContent  = val(patient?.chiefComplaint)
+  document.getElementById('pc-prev-work').textContent  = val(patient?.prevWork)
+
+  // Appointment history
+  const histEl = document.getElementById('pc-appt-history')
+  const patientAppts = APPTS.filter(a => a.patient && a.patient.trim().toLowerCase() === name.trim().toLowerCase())
+    .sort((a,b) => {
+      const da = apptRealDate(a), db = apptRealDate(b)
+      return db - da
+    })
+
+  if (patientAppts.length === 0) {
+    histEl.innerHTML = `<div class="pc-empty">${lang === 'el' ? 'Δεν υπάρχουν ραντεβού.' : 'No appointments on record.'}</div>`
+  } else {
+    const months = lang === 'en' ? MONTHS_SHORT_EN : MONTHS_SHORT_EL
+    const rows = patientAppts.map(a => {
+      const d   = apptRealDate(a)
+      const dateStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+      const color   = TYPE_COLORS[a.type] || '#888'
+      const typeLbl = TYPE_LABELS[lang][a.type] || a.type
+      const timeStr = `${a.hour}:${String(a.min).padStart(2,'0')} – ${endTime(a)}`
+      return `<tr>
+        <td>${dateStr}</td>
+        <td>${timeStr}</td>
+        <td><span class="pc-appt-dot" style="background:${color}"></span>${typeLbl}</td>
+        <td>${a.dentist || '—'}</td>
+        <td><span class="status-badge ${a.status || 'confirmed'}" style="font-size:11px;padding:2px 8px">
+          <span class="status-dot"></span>${STATUS_LABELS[lang][a.status] || a.status}
+        </span></td>
+      </tr>`
+    }).join('')
+    histEl.innerHTML = `<table class="pc-appt-table">
+      <thead><tr>
+        <th>${lang==='el'?'Ημ/νια':'Date'}</th>
+        <th>${lang==='el'?'Ώρα':'Time'}</th>
+        <th>${lang==='el'?'Τύπος':'Type'}</th>
+        <th>${lang==='el'?'Οδοντίατρος':'Dentist'}</th>
+        <th>${lang==='el'?'Κατάσταση':'Status'}</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`
+  }
+
+  _pcCurrentPatientId = patient?.id || null
+  overlay.classList.add('open')
+  // Close the appointment modal if open
+  document.getElementById('modal-overlay').classList.remove('open')
+}
+
+function closePatientChart() {
+  document.getElementById('pc-overlay').classList.remove('open')
+  _pcCurrentPatientId = null
+}
+
+// Patient chart close buttons
+document.getElementById('pc-close').addEventListener('click', closePatientChart)
+document.getElementById('pc-close-btn').addEventListener('click', closePatientChart)
+document.getElementById('pc-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closePatientChart()
+})
+
+// Patient chart → New Appointment
+document.getElementById('pc-new-appt-btn').addEventListener('click', () => {
+  closePatientChart()
+  const name = document.getElementById('pc-name').textContent
+  openApptForm(new Date())
+  setTimeout(() => { document.getElementById('af-patient').value = name }, 80)
+})
+
+// Change photo from Patient Chart
+document.getElementById('pc-change-photo-btn').addEventListener('click', () =>
+  document.getElementById('pc-photo-input').click())
+document.getElementById('pc-avatar-change').addEventListener('click', () =>
+  document.getElementById('pc-photo-input').click())
+document.getElementById('pc-photo-input').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return
+  readFileAsBase64(file, base64 => {
+    // Update avatar in modal
+    const avatarEl   = document.getElementById('pc-avatar')
+    const initialsEl = document.getElementById('pc-avatar-initials')
+    let img = avatarEl.querySelector('img')
+    if (!img) { img = document.createElement('img'); avatarEl.insertBefore(img, initialsEl) }
+    img.src = base64
+    initialsEl.style.display = 'none'
+    // Persist to patient record
+    if (_pcCurrentPatientId) {
+      const p = PATIENTS.find(p => p.id === _pcCurrentPatientId)
+      if (p) { p.photo = base64; savePatients() }
+    }
+    showToast(lang === 'el' ? 'Φωτογραφία ενημερώθηκε ✓' : 'Photo updated ✓')
+  })
+  e.target.value = ''
+})
+
+// Wire "Patient Chart" button in appointment detail modal
+document.querySelector('.modal-btn.primary[data-en="Patient Chart"]').addEventListener('click', () => {
+  const patientName = document.getElementById('modal-patient').textContent
+  openPatientChart(patientName)
+})
 
 // ── View toggle buttons ───────────────────────────────────────────────────
 document.querySelectorAll('.view-btn').forEach(btn => {
