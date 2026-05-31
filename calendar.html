@@ -882,6 +882,182 @@
     }
     .voice-no-support.show { display: block; }
 
+    /* ── Import Patients button (sidebar) ──────────────────────────────── */
+    .import-patients-btn {
+      width: 100%; display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 11px; margin-top: 8px;
+      background: var(--white); color: var(--text-mid);
+      border: 1.5px dashed var(--border); cursor: pointer; font-family: inherit;
+      transition: all .18s;
+    }
+    .import-patients-btn:hover {
+      border-color: var(--primary); color: var(--primary); background: var(--primary-light);
+    }
+    .import-patients-btn .np-icon { font-size: 15px; }
+    .import-patients-btn .np-label { font-size: 12px; font-weight: 600; flex:1; text-align:left; }
+
+    /* ── Import overlay ─────────────────────────────────────────────────── */
+    .import-overlay {
+      position: fixed; inset: 0; z-index: 800;
+      background: rgba(20,18,15,.58); backdrop-filter: blur(7px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px 16px;
+      opacity: 0; pointer-events: none; transition: opacity .22s;
+    }
+    .import-overlay.open { opacity: 1; pointer-events: all; }
+    .import-modal {
+      background: var(--white); border-radius: 22px;
+      width: min(860px, 100%); max-height: 90vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 24px 70px rgba(44,42,39,.22);
+      transform: translateY(20px) scale(.97);
+      transition: transform .26s cubic-bezier(.175,.885,.32,1.15);
+    }
+    .import-overlay.open .import-modal { transform: none; }
+
+    /* Header */
+    .import-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 22px 28px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .import-title { font-size: 19px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+    .import-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .import-close {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--white);
+      font-size: 13px; cursor: pointer; color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center; transition: all .15s;
+    }
+    .import-close:hover { background: var(--cream); color: var(--text); }
+
+    /* Step indicator */
+    .import-steps {
+      display: flex; align-items: center; padding: 16px 28px;
+      border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 0;
+    }
+    .import-step { display: flex; align-items: center; gap: 8px; }
+    .step-num {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--cream-dark); color: var(--text-muted);
+      font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .step-lbl { font-size: 12px; font-weight: 600; color: var(--text-muted); transition: color .2s; }
+    .import-step.active .step-num { background: var(--primary); color: #fff; }
+    .import-step.active .step-lbl { color: var(--text); }
+    .import-step.done .step-num { background: #22c55e; color: #fff; }
+    .import-step.done .step-lbl { color: var(--text-mid); }
+    .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 12px; min-width: 32px; }
+    .step-line.done { background: #22c55e; }
+
+    /* Panel (step content) */
+    .import-panel { display: none; flex: 1; overflow-y: auto; padding: 24px 28px; }
+    .import-panel.active { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Upload drop zone */
+    .upload-zone {
+      border: 2.5px dashed var(--border); border-radius: 16px;
+      padding: 40px 20px; text-align: center; cursor: pointer;
+      transition: all .18s; background: var(--cream);
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--primary); background: var(--primary-light);
+    }
+    .upload-zone.dragover { transform: scale(1.01); }
+    .upload-icon { font-size: 40px; margin-bottom: 12px; }
+    .upload-main-text { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .upload-sub-text  { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+    .upload-browse-btn {
+      padding: 9px 22px; border-radius: 9px;
+      background: var(--primary); color: #fff; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s;
+    }
+    .upload-browse-btn:hover { background: #2D8B7A; }
+
+    /* Compatible software chips */
+    .import-compat { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .import-compat-lbl { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .sw-chip {
+      padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600;
+      background: var(--cream-dark); color: var(--text-mid); border: 1px solid var(--border);
+    }
+
+    /* File info bar */
+    .file-info-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: var(--primary-light); border-radius: 10px;
+      border: 1px solid var(--primary-mid); margin-bottom: 4px;
+    }
+    .file-info-bar .fi-name { font-size: 13px; font-weight: 700; color: var(--primary); flex:1; }
+    .file-info-bar .fi-rows { font-size: 11px; color: var(--text-muted); }
+
+    /* Column mapper table */
+    .mapper-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    .mapper-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .mapper-table th {
+      background: var(--cream); padding: 10px 14px; text-align: left;
+      font-size: 10px; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .mapper-table td { padding: 9px 14px; border-bottom: 1px solid var(--cream-dark); vertical-align: middle; }
+    .mapper-table tr:last-child td { border-bottom: none; }
+    .mapper-col-name { font-weight: 600; color: var(--text); font-family: monospace; font-size: 12px; }
+    .mapper-sample { font-size: 11px; color: var(--text-muted); max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mapper-select {
+      width: 100%; padding: 6px 10px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--white);
+      font-size: 12px; font-family: inherit; color: var(--text);
+      cursor: pointer;
+    }
+    .mapper-select.mapped { border-color: var(--primary); background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .mapper-row-count { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+
+    /* Preview cards */
+    .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .preview-card {
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; background: var(--cream);
+    }
+    .preview-card-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .preview-card-fields { display: flex; flex-direction: column; gap: 3px; }
+    .preview-field { font-size: 11px; color: var(--text-muted); display: flex; gap: 6px; }
+    .preview-field-key { font-weight: 600; color: var(--text-mid); min-width: 60px; }
+
+    /* Result panel */
+    .import-result-box {
+      text-align: center; padding: 30px 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .import-result-icon { font-size: 52px; }
+    .import-result-title { font-size: 20px; font-weight: 800; color: var(--text); }
+    .import-result-stats {
+      display: flex; gap: 20px; margin-top: 4px;
+    }
+    .import-stat {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 12px 20px; border-radius: 12px; background: var(--cream); min-width: 90px;
+    }
+    .import-stat-num { font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: -.02em; }
+    .import-stat-num.amber { color: var(--amber); }
+    .import-stat-lbl { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+
+    /* Footer */
+    .import-footer {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 28px; border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+    .import-btn {
+      padding: 9px 22px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); transition: all .15s;
+    }
+    .import-btn.secondary { background: var(--white); color: var(--text-mid); }
+    .import-btn.secondary:hover { background: var(--cream); }
+    .import-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .import-btn.primary:hover { background: #2D8B7A; }
+    .import-btn:disabled { opacity: .45; cursor: not-allowed; }
+
     /* ── Photo upload widget (inside New Patient form) ──────────────────── */
     .photo-upload-section {
       display: flex; align-items: center; gap: 20px;
@@ -1141,12 +1317,16 @@
       </div>
     </div>
 
-    <!-- New Patient -->
+    <!-- New Patient + Import -->
     <div>
       <button class="new-patient-btn" id="new-patient-btn">
         <span class="np-icon">👤</span>
         <span class="np-label" data-en="New Patient" data-el="Νέος Ασθενής">New Patient</span>
         <span class="np-arrow">→</span>
+      </button>
+      <button class="import-patients-btn" id="import-patients-btn">
+        <span class="np-icon">📥</span>
+        <span class="np-label" data-en="Import Patients" data-el="Εισαγωγή Ασθενών">Import Patients</span>
       </button>
     </div>
 
@@ -1675,6 +1855,97 @@
 
 <!-- Hidden input for changing photo from Patient Chart -->
 <input type="file" id="pc-photo-input" accept="image/*"/>
+
+<!-- ── Import Patients overlay ───────────────────────────────────────────── -->
+<div class="import-overlay" id="import-overlay">
+  <div class="import-modal">
+
+    <!-- Header -->
+    <div class="import-header">
+      <div>
+        <div class="import-title" data-en="Import Patients" data-el="Εισαγωγή Ασθενών">Import Patients</div>
+        <div class="import-subtitle" data-en="Upload a CSV or Excel file exported from your existing dental software" data-el="Ανεβάστε CSV ή Excel από το υπάρχον πρόγραμμά σας">Upload a CSV or Excel file exported from your existing dental software</div>
+      </div>
+      <button class="import-close" id="import-close">✕</button>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="import-steps">
+      <div class="import-step active" id="step-ind-1">
+        <div class="step-num">1</div>
+        <div class="step-lbl" data-en="Upload File" data-el="Αρχείο">Upload File</div>
+      </div>
+      <div class="step-line" id="step-line-1"></div>
+      <div class="import-step" id="step-ind-2">
+        <div class="step-num">2</div>
+        <div class="step-lbl" data-en="Map Columns" data-el="Αντιστοίχιση">Map Columns</div>
+      </div>
+      <div class="step-line" id="step-line-2"></div>
+      <div class="import-step" id="step-ind-3">
+        <div class="step-num">3</div>
+        <div class="step-lbl" data-en="Preview & Import" data-el="Προεπισκόπηση">Preview & Import</div>
+      </div>
+    </div>
+
+    <!-- ── Step 1: Upload ────────────────────────────────────────────────── -->
+    <div class="import-panel active" id="import-panel-1">
+      <div class="upload-zone" id="upload-zone">
+        <div class="upload-icon">📂</div>
+        <div class="upload-main-text" data-en="Drag & drop your file here" data-el="Σύρετε το αρχείο εδώ">Drag & drop your file here</div>
+        <div class="upload-sub-text" data-en="Supports CSV (.csv) and Excel (.xlsx, .xls)" data-el="CSV και Excel">Supports CSV (.csv) and Excel (.xlsx, .xls)</div>
+        <button class="upload-browse-btn" id="upload-browse-btn" data-en="Browse Files" data-el="Επιλογή Αρχείου">Browse Files</button>
+      </div>
+      <input type="file" id="import-file-input" accept=".csv,.xlsx,.xls" style="display:none"/>
+
+      <div class="import-compat">
+        <span class="import-compat-lbl">Works with:</span>
+        <div class="sw-chip">Open Dental</div>
+        <div class="sw-chip">Dentrix Ascend</div>
+        <div class="sw-chip">Curve Dental</div>
+        <div class="sw-chip">CareStack</div>
+        <div class="sw-chip">Dent-O-Soft</div>
+        <div class="sw-chip">iDentalSoft</div>
+        <div class="sw-chip">Any CSV / Excel</div>
+      </div>
+    </div>
+
+    <!-- ── Step 2: Map Columns ───────────────────────────────────────────── -->
+    <div class="import-panel" id="import-panel-2">
+      <div class="file-info-bar" id="file-info-bar">
+        <span>📄</span>
+        <span class="fi-name" id="fi-name">—</span>
+        <span class="fi-rows" id="fi-rows">— rows</span>
+      </div>
+      <div class="mapper-wrap">
+        <table class="mapper-table">
+          <thead>
+            <tr>
+              <th data-en="Column in your file" data-el="Στήλη αρχείου">Column in your file</th>
+              <th data-en="Sample data" data-el="Δείγμα">Sample data</th>
+              <th data-en="Import as" data-el="Εισαγωγή ως">Import as</th>
+            </tr>
+          </thead>
+          <tbody id="mapper-body"></tbody>
+        </table>
+      </div>
+      <div class="mapper-row-count" id="mapper-row-count"></div>
+    </div>
+
+    <!-- ── Step 3: Preview & Import ──────────────────────────────────────── -->
+    <div class="import-panel" id="import-panel-3">
+      <div id="import-result-area"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="import-footer">
+      <button class="import-btn secondary" id="import-back-btn">← Back</button>
+      <div style="flex:1"></div>
+      <button class="import-btn secondary" id="import-cancel-btn" data-en="Cancel" data-el="Ακύρωση">Cancel</button>
+      <button class="import-btn primary" id="import-next-btn" data-en="Next →" data-el="Επόμενο →">Next →</button>
+    </div>
+
+  </div>
+</div>
 
 <!-- ── Contact panel (floats near appointment name click) ──────────────── -->
 <div id="contact-panel">
@@ -2928,6 +3199,380 @@ function syncVoiceToWriteForm() {
     }
   })
 }
+
+// ── Patient Import Wizard ─────────────────────────────────────────────────
+
+// Our patient fields and their common aliases from dental software exports
+const IMPORT_FIELDS = [
+  { key: '__skip',       label: '— Skip this column —' },
+  { key: 'fullName',     label: 'Full Name',             aliases: ['full name','patient name','name','patient','fullname','nome','ονομα','ονοματεπωνυμο'] },
+  { key: 'firstName',    label: 'First Name',            aliases: ['first name','firstname','given name','first','prénom','μικρο ονομα','ονομα'] },
+  { key: 'lastName',     label: 'Last Name',             aliases: ['last name','lastname','surname','family name','last','επιθετο','επωνυμο'] },
+  { key: 'dob',          label: 'Date of Birth',         aliases: ['date of birth','dob','birth date','birthdate','birthday','born','ημερομηνια γεννησης','ημ. γεννησης'] },
+  { key: 'phone',        label: 'Phone',                 aliases: ['phone','telephone','mobile','cell','phone number','tel','τηλεφωνο','κινητο'] },
+  { key: 'email',        label: 'Email',                 aliases: ['email','e-mail','email address','mail','e mail'] },
+  { key: 'address',      label: 'Address',               aliases: ['address','street','full address','διευθυνση'] },
+  { key: 'gender',       label: 'Gender',                aliases: ['gender','sex','φυλο'] },
+  { key: 'insurance',    label: 'Insurance Provider',    aliases: ['insurance','insurer','insurance provider','insurance company','ασφαλιση','ασφαλιστικος'] },
+  { key: 'allergies',    label: 'Allergies',             aliases: ['allergies','allergy','allergic to','αλλεργιες'] },
+  { key: 'medications',  label: 'Current Medications',   aliases: ['medications','medication','drugs','current medications','meds','φαρμακα'] },
+  { key: 'conditions',   label: 'Medical Conditions',    aliases: ['conditions','medical conditions','medical history','diagnosis','παθησεις','ιατρικο ιστορικο'] },
+  { key: 'emergName',    label: 'Emergency Contact',     aliases: ['emergency contact','emergency name','em contact','emergency','επαφη εκτακτης'] },
+  { key: 'emergPhone',   label: 'Emergency Phone',       aliases: ['emergency phone','emergency contact phone','em phone','τηλ. εκτακτης'] },
+  { key: 'lastVisit',    label: 'Last Dental Visit',     aliases: ['last visit','last dental visit','previous visit','last appointment','τελευταια επισκεψη'] },
+  { key: 'prevWork',     label: 'Previous Dental Work',  aliases: ['previous work','dental work','past treatment','past dental','προηγουμενη εργασια'] },
+  { key: 'chiefComplaint',label:'Reason for Visit',      aliases: ['reason','chief complaint','complaint','reason for visit','λογος επισκεψης'] },
+  { key: 'notes',        label: 'Notes / Comments',      aliases: ['notes','comments','remarks','σημειωσεις','παρατηρησεις'] },
+]
+
+let _importStep   = 1
+let _importRows   = []    // array of row objects {colName: value}
+let _importCols   = []    // column names from file
+let _importColMap = {}    // colName → field key
+let _importFileName = ''
+
+function autoDetectField(colName) {
+  const normalized = colName.toLowerCase().trim().replace(/[_\-]/g,' ')
+  for (const f of IMPORT_FIELDS) {
+    if (!f.aliases) continue
+    if (f.aliases.some(a => normalized === a || normalized.includes(a) || a.includes(normalized))) {
+      return f.key
+    }
+  }
+  return '__skip'
+}
+
+// ── CSV parser (pure JS, no library needed) ───────────────────────────────
+function parseCSV(text) {
+  const rows = []; let inQ = false, field = '', row = []
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (inQ) {
+      if (c === '"' && text[i+1] === '"') { field += '"'; i++ }
+      else if (c === '"') inQ = false
+      else field += c
+    } else {
+      if      (c === '"')  inQ = true
+      else if (c === ',')  { row.push(field.trim()); field = '' }
+      else if (c === '\n') { row.push(field.trim()); rows.push(row); row = []; field = '' }
+      else if (c === '\r') { /* skip */ }
+      else field += c
+    }
+  }
+  if (field || row.length) { row.push(field.trim()); rows.push(row) }
+  return rows.filter(r => r.some(c => c !== ''))
+}
+
+// ── Excel parser via SheetJS (loaded from CDN) ────────────────────────────
+function loadSheetJS(cb) {
+  if (window.XLSX) { cb(null); return }
+  const s = document.createElement('script')
+  s.src = 'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js'
+  s.onload  = () => cb(null)
+  s.onerror = () => cb(new Error('Could not load Excel parser. Please convert your file to CSV first.'))
+  document.head.appendChild(s)
+}
+
+// ── Process uploaded file ─────────────────────────────────────────────────
+function processImportFile(file) {
+  _importFileName = file.name
+  const ext = file.name.split('.').pop().toLowerCase()
+
+  const handleRows = (rows2d) => {
+    if (rows2d.length < 2) { alert('File appears empty or has only one row.'); return }
+    _importCols = rows2d[0].map(c => String(c).trim())
+    _importRows = rows2d.slice(1).map(r => {
+      const obj = {}
+      _importCols.forEach((col, i) => { obj[col] = String(r[i] || '').trim() })
+      return obj
+    }).filter(r => Object.values(r).some(v => v))
+
+    // Auto-detect column mapping
+    _importColMap = {}
+    const used = new Set()
+    _importCols.forEach(col => {
+      const key = autoDetectField(col)
+      if (key !== '__skip' && used.has(key)) _importColMap[col] = '__skip'
+      else { _importColMap[col] = key; if (key !== '__skip') used.add(key) }
+    })
+
+    goImportStep(2)
+  }
+
+  if (ext === 'csv') {
+    const reader = new FileReader()
+    reader.onload = e => handleRows(parseCSV(e.target.result))
+    reader.readAsText(file, 'UTF-8')
+  } else {
+    loadSheetJS(err => {
+      if (err) { alert(err.message); return }
+      const reader = new FileReader()
+      reader.onload = e => {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' })
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
+        handleRows(data.map(r => r.map(c => String(c === null || c === undefined ? '' : c))))
+      }
+      reader.readAsArrayBuffer(file)
+    })
+  }
+}
+
+// ── Step navigation ───────────────────────────────────────────────────────
+function goImportStep(step) {
+  _importStep = step
+
+  // Update step indicators
+  for (let i = 1; i <= 3; i++) {
+    const ind  = document.getElementById(`step-ind-${i}`)
+    const line = document.getElementById(`step-line-${i}`)
+    ind.classList.toggle('active', i === step)
+    ind.classList.toggle('done', i < step)
+    if (line) line.classList.toggle('done', i < step)
+  }
+
+  // Show/hide panels
+  for (let i = 1; i <= 3; i++) {
+    const panel = document.getElementById(`import-panel-${i}`)
+    panel.classList.toggle('active', i === step)
+  }
+
+  // Back button
+  document.getElementById('import-back-btn').style.display = step > 1 ? '' : 'none'
+
+  const nextBtn = document.getElementById('import-next-btn')
+
+  if (step === 2) {
+    renderMapper()
+    nextBtn.textContent = lang === 'el' ? 'Προεπισκόπηση →' : 'Preview →'
+  } else if (step === 3) {
+    renderPreview()
+    nextBtn.textContent = lang === 'el' ? '✅ Import All' : '✅ Import All'
+  } else {
+    nextBtn.textContent = lang === 'el' ? 'Επόμενο →' : 'Next →'
+  }
+}
+
+// ── Render column mapper ──────────────────────────────────────────────────
+function renderMapper() {
+  document.getElementById('fi-name').textContent = _importFileName
+  document.getElementById('fi-rows').textContent = `${_importRows.length} ${lang === 'el' ? 'εγγραφές' : 'rows'}`
+
+  const optHtml = IMPORT_FIELDS.map(f =>
+    `<option value="${f.key}">${f.label}</option>`
+  ).join('')
+
+  const body = document.getElementById('mapper-body')
+  body.innerHTML = ''
+  _importCols.forEach(col => {
+    const sampleVals = _importRows.slice(0, 3).map(r => r[col]).filter(Boolean)
+    const sample = sampleVals.join(' · ') || '—'
+    const mapped  = _importColMap[col] || '__skip'
+
+    const tr = document.createElement('tr')
+    tr.innerHTML = `
+      <td><span class="mapper-col-name">${col}</span></td>
+      <td><span class="mapper-sample" title="${sample}">${sample}</span></td>
+      <td>
+        <select class="mapper-select ${mapped !== '__skip' ? 'mapped' : ''}" data-col="${col}">
+          ${optHtml}
+        </select>
+      </td>
+    `
+    const sel = tr.querySelector('select')
+    sel.value = mapped
+    sel.addEventListener('change', e => {
+      _importColMap[col] = e.target.value
+      e.target.className = `mapper-select ${e.target.value !== '__skip' ? 'mapped' : ''}`
+    })
+    body.appendChild(tr)
+  })
+
+  const mappedCount = Object.values(_importColMap).filter(v => v !== '__skip').length
+  document.getElementById('mapper-row-count').textContent =
+    `${mappedCount} of ${_importCols.length} columns mapped · ${_importRows.length} patients to import`
+}
+
+// ── Render preview ────────────────────────────────────────────────────────
+function renderPreview() {
+  const area = document.getElementById('import-result-area')
+
+  // Build patient objects from mapped columns
+  const mapped = buildMappedPatients()
+  const preview = mapped.slice(0, 6)
+
+  const fieldLabel = key => IMPORT_FIELDS.find(f => f.key === key)?.label || key
+  const rows = preview.map(p => {
+    const fields = Object.entries(p)
+      .filter(([k, v]) => k !== 'id' && k !== 'createdAt' && v)
+      .slice(0, 5)
+      .map(([k, v]) => `<div class="preview-field"><span class="preview-field-key">${fieldLabel(k)}</span><span>${v}</span></div>`)
+      .join('')
+    return `<div class="preview-card">
+      <div class="preview-card-name">${p.fullName || '(no name)'}</div>
+      <div class="preview-card-fields">${fields}</div>
+    </div>`
+  }).join('')
+
+  const existingNames = new Set(PATIENTS.map(p => (p.fullName||'').toLowerCase().trim()))
+  const dupes = mapped.filter(p => existingNames.has((p.fullName||'').toLowerCase().trim())).length
+  const newCount = mapped.length - dupes
+
+  area.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">
+        Preview — first ${Math.min(6, mapped.length)} of ${mapped.length} patients
+      </div>
+      <div style="font-size:11px;color:var(--text-muted)">
+        ${newCount} new · ${dupes} already in registry (will be updated)
+      </div>
+    </div>
+    <div class="preview-grid">${rows}</div>
+  `
+}
+
+// ── Build mapped patient objects from raw rows ────────────────────────────
+function buildMappedPatients() {
+  return _importRows.map((row, i) => {
+    const p = { id: Date.now() + i, createdAt: new Date().toISOString(), photo: '' }
+
+    // Apply column mapping
+    _importCols.forEach(col => {
+      const key = _importColMap[col]
+      if (!key || key === '__skip') return
+      const val = row[col]
+      if (!val) return
+      if (key === 'firstName') p._firstName = val
+      else if (key === 'lastName') p._lastName = val
+      else p[key] = val
+    })
+
+    // Combine firstName + lastName → fullName if needed
+    if (!p.fullName && (p._firstName || p._lastName)) {
+      p.fullName = [p._firstName, p._lastName].filter(Boolean).join(' ')
+    }
+    delete p._firstName; delete p._lastName
+
+    return p
+  }).filter(p => p.fullName || p.phone || p.email)
+}
+
+// ── Execute the import ────────────────────────────────────────────────────
+function executeImport() {
+  const mapped = buildMappedPatients()
+  let imported = 0, updated = 0
+
+  mapped.forEach(p => {
+    const existing = findPatientByName(p.fullName)
+    if (existing) {
+      // Update existing — keep photo if already set
+      const photo = existing.photo
+      Object.assign(existing, p)
+      if (photo && !p.photo) existing.photo = photo
+      updated++
+    } else {
+      PATIENTS.push(p)
+      imported++
+    }
+  })
+
+  savePatients()
+
+  // Show result
+  const area = document.getElementById('import-result-area')
+  area.innerHTML = `
+    <div class="import-result-box">
+      <div class="import-result-icon">🎉</div>
+      <div class="import-result-title">${lang === 'el' ? 'Εισαγωγή Ολοκληρώθηκε!' : 'Import Complete!'}</div>
+      <div class="import-result-stats">
+        <div class="import-stat">
+          <div class="import-stat-num">${imported}</div>
+          <div class="import-stat-lbl">${lang === 'el' ? 'Νέοι' : 'New patients'}</div>
+        </div>
+        <div class="import-stat">
+          <div class="import-stat-num amber">${updated}</div>
+          <div class="import-stat-lbl">${lang === 'el' ? 'Ενημερώθηκαν' : 'Updated'}</div>
+        </div>
+        <div class="import-stat">
+          <div class="import-stat-num">${PATIENTS.length}</div>
+          <div class="import-stat-lbl">${lang === 'el' ? 'Σύνολο' : 'Total in registry'}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:8px">
+        ${lang === 'el' ? 'Όλοι οι ασθενείς είναι πλέον διαθέσιμοι στη βάση δεδομένων.' : 'All patients are now available in the registry and Patient Charts.'}
+      </div>
+    </div>
+  `
+
+  // Change footer buttons for done state
+  document.getElementById('import-next-btn').textContent = lang === 'el' ? 'Κλείσιμο' : 'Close'
+  document.getElementById('import-next-btn').onclick = closeImportOverlay
+  document.getElementById('import-back-btn').style.display = 'none'
+  document.getElementById('import-cancel-btn').style.display = 'none'
+}
+
+// ── Open / Close ──────────────────────────────────────────────────────────
+function openImportOverlay() {
+  _importStep = 1; _importRows = []; _importCols = []; _importColMap = {}; _importFileName = ''
+  goImportStep(1)
+  document.getElementById('import-result-area').innerHTML = ''
+  document.getElementById('import-next-btn').textContent = 'Next →'
+  document.getElementById('import-next-btn').onclick = null
+  document.getElementById('import-cancel-btn').style.display = ''
+  document.getElementById('import-overlay').classList.add('open')
+}
+function closeImportOverlay() {
+  document.getElementById('import-overlay').classList.remove('open')
+}
+
+// ── Wire up the import UI ─────────────────────────────────────────────────
+document.getElementById('import-patients-btn').addEventListener('click', openImportOverlay)
+document.getElementById('import-close').addEventListener('click', closeImportOverlay)
+document.getElementById('import-cancel-btn').addEventListener('click', closeImportOverlay)
+document.getElementById('import-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeImportOverlay()
+})
+document.getElementById('import-back-btn').addEventListener('click', () => {
+  if (_importStep > 1) goImportStep(_importStep - 1)
+})
+
+document.getElementById('import-next-btn').addEventListener('click', function() {
+  if (this.onclick) return // handled by executeImport assignment
+  if (_importStep === 1) {
+    // Must have a file loaded — trigger browse
+    if (_importRows.length === 0) {
+      document.getElementById('import-file-input').click()
+    } else {
+      goImportStep(2)
+    }
+  } else if (_importStep === 2) {
+    const hasMapped = Object.values(_importColMap).some(v => v !== '__skip')
+    if (!hasMapped) { showToast(lang === 'el' ? 'Αντιστοιχίστε τουλάχιστον μία στήλη' : 'Please map at least one column'); return }
+    goImportStep(3)
+  } else if (_importStep === 3) {
+    executeImport()
+  }
+})
+
+// Drag & drop
+const _uploadZone = document.getElementById('upload-zone')
+_uploadZone.addEventListener('dragover',  e => { e.preventDefault(); _uploadZone.classList.add('dragover') })
+_uploadZone.addEventListener('dragleave', () => _uploadZone.classList.remove('dragover'))
+_uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); _uploadZone.classList.remove('dragover')
+  const file = e.dataTransfer.files[0]
+  if (file) processImportFile(file)
+})
+_uploadZone.addEventListener('click', () => document.getElementById('import-file-input').click())
+document.getElementById('upload-browse-btn').addEventListener('click', e => {
+  e.stopPropagation()
+  document.getElementById('import-file-input').click()
+})
+document.getElementById('import-file-input').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return
+  processImportFile(file)
+  e.target.value = ''
+})
 
 // ── Contact panel ─────────────────────────────────────────────────────────
 const _cp = document.getElementById('contact-panel')
