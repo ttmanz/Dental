@@ -2304,6 +2304,17 @@ function buildMonthGrid(container, year, month, compact) {
       cell.appendChild(more)
     }
 
+    // Click on a day cell → jump to week view for that date
+    cell.addEventListener('click', () => {
+      const monday      = getMonday(d)
+      const todayMonday = getMonday(today)
+      weekOffset = Math.round((monday.getTime() - todayMonday.getTime()) / (7 * 24 * 60 * 60 * 1000))
+      currentView = 'week'
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'))
+      document.getElementById('vbtn-week').classList.add('active')
+      renderCalendar()
+    })
+
     grid.appendChild(cell)
   }
 
@@ -2984,20 +2995,49 @@ document.getElementById('af-save').addEventListener('click', () => {
 
 // Question list (voice mode iterates through these, write mode shows all)
 const PATIENT_QS = [
-  { key:'fullName',      label:'What is your full name?',                     hint:'First and last name',                     type:'text'     },
-  { key:'dob',           label:'What is your date of birth?',                 hint:'Day / Month / Year',                      type:'text'     },
-  { key:'phone',         label:'What is your phone number?',                  hint:'Include country code if needed',           type:'text'     },
-  { key:'email',         label:'What is your email address?',                 hint:'We\'ll send appointment confirmations here',type:'text'    },
-  { key:'address',       label:'What is your home address?',                  hint:'Street and city',                         type:'text'     },
-  { key:'gender',        label:'How do you identify your gender?',            hint:'Male, Female, or Other',                  type:'text'     },
-  { key:'emergName',     label:'Who should we contact in an emergency?',      hint:'Name of a family member or friend',       type:'text'     },
-  { key:'emergPhone',    label:'What is their phone number?',                 hint:'Emergency contact phone',                 type:'text'     },
-  { key:'allergies',     label:'Do you have any known allergies?',            hint:'Medications, latex, anaesthetic, etc. Say "None" if not', type:'text' },
-  { key:'medications',   label:'Are you currently taking any medications?',   hint:'Name and dosage, or say "None"',           type:'text'     },
-  { key:'conditions',    label:'Do you have any medical conditions?',         hint:'Diabetes, heart disease, blood pressure…', type:'text'    },
-  { key:'lastVisit',     label:'When was your last dental visit?',            hint:'Approximate is fine — e.g. "2 years ago"', type:'text'    },
-  { key:'prevWork',      label:'Have you had any previous dental work?',      hint:'Fillings, extractions, crowns, braces…',   type:'text'    },
-  { key:'chiefComplaint',label:'What brings you in today?',                   hint:'Your main concern or reason for the visit',type:'text'    },
+  { key:'fullName',
+    label:'What is your full name?',                     labelEl:'Ποιο είναι το πλήρες όνομά σας;',
+    hint:'First and last name',                          hintEl:'Όνομα και επώνυμο',                           type:'text' },
+  { key:'dob',
+    label:'What is your date of birth?',                 labelEl:'Ποια είναι η ημερομηνία γέννησής σας;',
+    hint:'Day / Month / Year',                           hintEl:'Ημέρα / Μήνας / Χρόνος',                     type:'text' },
+  { key:'phone',
+    label:'What is your phone number?',                  labelEl:'Ποιος είναι ο αριθμός τηλεφώνου σας;',
+    hint:'Include country code if needed',               hintEl:'Συμπεριλάβετε κωδικό χώρας αν χρειάζεται',   type:'text' },
+  { key:'email',
+    label:'What is your email address?',                 labelEl:'Ποια είναι η διεύθυνση email σας;',
+    hint:'We\'ll send appointment confirmations here',   hintEl:'Εδώ θα στέλνουμε επιβεβαιώσεις ραντεβού',    type:'text' },
+  { key:'address',
+    label:'What is your home address?',                  labelEl:'Ποια είναι η διεύθυνση κατοικίας σας;',
+    hint:'Street and city',                              hintEl:'Οδός και πόλη',                               type:'text' },
+  { key:'gender',
+    label:'How do you identify your gender?',            labelEl:'Ποιο είναι το φύλο σας;',
+    hint:'Male, Female, or Other',                       hintEl:'Άνδρας, Γυναίκα ή Άλλο',                     type:'text' },
+  { key:'emergName',
+    label:'Who should we contact in an emergency?',      labelEl:'Ποιον να καλέσουμε σε επείγον περιστατικό;',
+    hint:'Name of a family member or friend',            hintEl:'Όνομα μέλους οικογένειας ή φίλου',            type:'text' },
+  { key:'emergPhone',
+    label:'What is their phone number?',                 labelEl:'Ποιος είναι ο αριθμός τηλεφώνου τους;',
+    hint:'Emergency contact phone',                      hintEl:'Τηλέφωνο επείγουσας επαφής',                  type:'text' },
+  { key:'allergies',
+    label:'Do you have any known allergies?',            labelEl:'Έχετε γνωστές αλλεργίες;',
+    hint:'Medications, latex, anaesthetic, etc. Say "None" if not',
+    hintEl:'Φάρμακα, λάτεξ, αναισθησία κ.λπ. Πείτε «Όχι» αν δεν έχετε',                                     type:'text' },
+  { key:'medications',
+    label:'Are you currently taking any medications?',   labelEl:'Παίρνετε φάρμακα αυτή τη στιγμή;',
+    hint:'Name and dosage, or say "None"',               hintEl:'Όνομα και δοσολογία, ή πείτε «Όχι»',         type:'text' },
+  { key:'conditions',
+    label:'Do you have any medical conditions?',         labelEl:'Έχετε κάποιο ιατρικό πρόβλημα;',
+    hint:'Diabetes, heart disease, blood pressure…',     hintEl:'Διαβήτης, καρδιά, πίεση αίματος…',           type:'text' },
+  { key:'lastVisit',
+    label:'When was your last dental visit?',            labelEl:'Πότε ήταν η τελευταία σας οδοντιατρική επίσκεψη;',
+    hint:'Approximate is fine — e.g. "2 years ago"',     hintEl:'Κατά προσέγγιση — π.χ. «πριν 2 χρόνια»',    type:'text' },
+  { key:'prevWork',
+    label:'Have you had any previous dental work?',      labelEl:'Έχετε κάνει οδοντιατρική εργασία στο παρελθόν;',
+    hint:'Fillings, extractions, crowns, braces…',       hintEl:'Σφραγίσματα, εξαγωγές, στεφάνες, σιδεράκια…',type:'text' },
+  { key:'chiefComplaint',
+    label:'What brings you in today?',                   labelEl:'Τι σας φέρνει σήμερα;',
+    hint:'Your main concern or reason for the visit',    hintEl:'Το κύριο παράπονό σας ή ο λόγος επίσκεψης',  type:'text' },
 ]
 
 // Patient data store
@@ -3039,7 +3079,7 @@ function switchPmMode(mode) {
   document.getElementById('pm-footer').style.display    = isWrite ? '' : 'none'
   document.getElementById('pm-mode-write').classList.toggle('active', isWrite)
   document.getElementById('pm-mode-voice').classList.toggle('active', !isWrite)
-  if (!isWrite) stopRecognition()
+  if (!isWrite) { stopRecognition(); renderVoiceQuestion() }
 }
 document.getElementById('pm-mode-write').addEventListener('click', () => switchPmMode('write'))
 document.getElementById('pm-mode-voice').addEventListener('click', () => switchPmMode('voice'))
@@ -3086,11 +3126,16 @@ function renderVoiceQuestion() {
   const total   = PATIENT_QS.length
   const pct     = ((voiceQIdx) / total * 100).toFixed(0)
 
+  const isEl = lang === 'el'
   document.getElementById('voice-progress-fill').style.width  = pct + '%'
   document.getElementById('voice-progress-text').textContent  = `${voiceQIdx + 1} / ${total}`
-  document.getElementById('voice-q-num').textContent          = `QUESTION ${voiceQIdx + 1}`
-  document.getElementById('voice-q-text').textContent         = q.label
-  document.getElementById('voice-q-hint').textContent         = q.hint
+  document.getElementById('voice-q-num').textContent          = isEl ? `ΕΡΩΤΗΣΗ ${voiceQIdx + 1}` : `QUESTION ${voiceQIdx + 1}`
+  document.getElementById('voice-q-text').textContent         = (isEl && q.labelEl) ? q.labelEl : q.label
+  document.getElementById('voice-q-hint').textContent         = (isEl && q.hintEl)  ? q.hintEl  : q.hint
+  document.getElementById('voice-answer-box').placeholder     = isEl ? 'Η απάντησή σας θα εμφανιστεί εδώ…' : 'Your answer will appear here…'
+  document.getElementById('voice-mic-label').textContent      = isEl ? 'Πατήστε για ομιλία' : 'Tap to speak'
+  document.getElementById('voice-back').textContent           = isEl ? '← Πίσω' : '← Back'
+  document.getElementById('voice-skip').textContent           = isEl ? 'Παράλειψη ερώτησης' : 'Skip this question'
 
   // Pre-fill from patientData if answer already given
   document.getElementById('voice-answer-box').value           = patientData[q.key] || ''
@@ -3098,7 +3143,9 @@ function renderVoiceQuestion() {
 
   // Update Next button label on last question
   const nextBtn = document.getElementById('voice-next')
-  nextBtn.textContent  = voiceQIdx === total - 1 ? '✓ Finish' : 'Next →'
+  nextBtn.textContent  = voiceQIdx === total - 1
+    ? (isEl ? '✓ Τέλος' : '✓ Finish')
+    : (isEl ? 'Επόμενο →' : 'Next →')
   nextBtn.className    = 'voice-nav-btn ' + (voiceQIdx === total - 1 ? 'finish' : 'next')
   document.getElementById('voice-back').style.visibility = voiceQIdx === 0 ? 'hidden' : 'visible'
 }
