@@ -1217,6 +1217,226 @@
     .pc-btn.primary:hover { background: #2D8B7A; }
     /* Hidden file inputs */
     #pc-photo-input, #pf-photo-input, #pf-camera-input { display: none; }
+
+    /* ── AI Chair-Side Assistant ────────────────────────────────────────── */
+    .ai-wrap {
+      position: fixed; bottom: 24px; right: 24px;
+      z-index: 2000; display: flex; flex-direction: column;
+      align-items: flex-end; gap: 10px;
+    }
+    /* Floating bubble — always visible, toggles the panel */
+    .ai-bubble {
+      width: 54px; height: 54px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, #2D8B7A 100%);
+      border: none; cursor: pointer; color: #fff;
+      box-shadow: 0 4px 18px rgba(61,158,143,.38);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 1px; transition: transform .15s, box-shadow .15s;
+      flex-shrink: 0;
+    }
+    .ai-bubble:hover { transform: scale(1.09); box-shadow: 0 6px 24px rgba(61,158,143,.5); }
+    .ai-bubble .ai-b-icon { font-size: 20px; line-height: 1; }
+    .ai-bubble .ai-b-lbl  { font-size: 8px; font-weight: 800; letter-spacing: .06em; opacity: .9; }
+    .ai-bubble.listening   { animation: ai-bubble-ring 1.4s ease-in-out infinite; }
+    @keyframes ai-bubble-ring {
+      0%,100% { box-shadow: 0 4px 18px rgba(61,158,143,.38); }
+      50% { box-shadow: 0 4px 30px rgba(61,158,143,.65),
+                        0 0 0 10px rgba(61,158,143,.12); }
+    }
+
+    /* Main panel */
+    .ai-panel {
+      width: 360px; background: var(--white);
+      border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: 0 10px 48px rgba(44,42,39,.16);
+      display: flex; flex-direction: column; overflow: hidden;
+      max-height: 560px;
+    }
+    .ai-panel.hidden, .ai-cfg.hidden { display: none; }
+
+    /* Header stripe */
+    .ai-head {
+      display: flex; align-items: center; gap: 9px;
+      padding: 14px 14px 12px;
+      background: linear-gradient(135deg, var(--primary) 0%, #2D8B7A 100%);
+      color: #fff; flex-shrink: 0;
+    }
+    .ai-head-icon { font-size: 22px; }
+    .ai-head-info { flex: 1; }
+    .ai-head-title { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+    .ai-head-sub   { font-size: 10px; opacity: .75; margin-top: 1px; }
+    .ai-hbtn {
+      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.14);
+      color: #fff; cursor: pointer; font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .ai-hbtn:hover { background: rgba(255,255,255,.28); }
+
+    /* Status bar */
+    .ai-status-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 14px; background: var(--cream);
+      border-bottom: 1px solid var(--border); min-height: 34px; flex-shrink: 0;
+    }
+    .ai-sdot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transition: background .3s;
+    }
+    .ai-sdot.idle      { background: var(--text-muted); }
+    .ai-sdot.listening { background: #22C47A; animation: sdot-pulse 1s ease-in-out infinite; }
+    .ai-sdot.thinking  { background: var(--amber); animation: sdot-pulse .5s ease-in-out infinite; }
+    .ai-sdot.speaking  { background: var(--primary); animation: sdot-pulse .7s ease-in-out infinite; }
+    .ai-sdot.error     { background: #D95F5F; }
+    @keyframes sdot-pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .45; transform: scale(1.5); }
+    }
+    #ai-stext    { font-size: 11px; font-weight: 500; color: var(--text-mid); flex: 1; }
+    #ai-interim  { font-size: 10px; color: var(--text-muted); font-style: italic; max-width: 190px;
+                   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Quick chips */
+    .ai-chips {
+      display: flex; flex-wrap: wrap; gap: 5px;
+      padding: 8px 12px; border-bottom: 1px solid var(--border);
+      background: var(--cream-dark); flex-shrink: 0;
+    }
+    .ai-chip {
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      background: var(--white); border: 1px solid var(--border); color: var(--text-mid);
+      cursor: pointer; transition: all .12s; white-space: nowrap;
+    }
+    .ai-chip:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+
+    /* Conversation log */
+    .ai-log {
+      flex: 1; overflow-y: auto; padding: 12px 12px 6px;
+      display: flex; flex-direction: column; gap: 10px;
+      min-height: 180px;
+    }
+    .ai-log::-webkit-scrollbar { width: 4px; }
+    .ai-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .ai-welcome {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; padding: 28px 16px; text-align: center; color: var(--text-muted); flex: 1;
+    }
+    .ai-welcome-icon { font-size: 38px; }
+    .ai-welcome-txt  { font-size: 13px; line-height: 1.55; }
+    .ai-welcome-txt em { color: var(--primary); font-style: normal; font-weight: 600; }
+
+    /* Bubbles */
+    .ai-msg { display: flex; flex-direction: column; gap: 2px; max-width: 90%; }
+    .ai-msg.user      { align-self: flex-end;  align-items: flex-end; }
+    .ai-msg.assistant { align-self: flex-start; align-items: flex-start; }
+    .ai-bub {
+      padding: 9px 13px; border-radius: 14px; font-size: 13px;
+      line-height: 1.5; white-space: pre-wrap;
+    }
+    .ai-msg.user .ai-bub {
+      background: var(--primary); color: #fff;
+      border-radius: 14px 14px 4px 14px;
+    }
+    .ai-msg.assistant .ai-bub {
+      background: var(--cream); color: var(--text);
+      border: 1px solid var(--border); border-radius: 14px 14px 14px 4px;
+    }
+    .ai-msg-t { font-size: 10px; color: var(--text-muted); padding: 0 4px; }
+
+    /* Typing indicator */
+    .ai-typing {
+      display: flex; align-items: center; gap: 4px;
+      padding: 11px 14px; background: var(--cream); border: 1px solid var(--border);
+      border-radius: 14px 14px 14px 4px; align-self: flex-start; flex-shrink: 0;
+    }
+    .ai-typing span {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);
+      animation: aibounce .9s ease-in-out infinite;
+    }
+    .ai-typing span:nth-child(2) { animation-delay: .15s; }
+    .ai-typing span:nth-child(3) { animation-delay: .30s; }
+    @keyframes aibounce {
+      0%,80%,100% { transform: translateY(0); }
+      40% { transform: translateY(-7px); }
+    }
+
+    /* Input bar */
+    .ai-input-bar {
+      display: flex; align-items: center; gap: 7px;
+      padding: 10px 12px; border-top: 1px solid var(--border);
+      background: var(--white); flex-shrink: 0;
+    }
+    .ai-mic-btn {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: var(--cream); border: 1.5px solid var(--border);
+      font-size: 19px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; color: var(--text-mid);
+    }
+    .ai-mic-btn:hover { background: var(--primary-light); border-color: var(--primary); }
+    .ai-mic-btn.active {
+      background: linear-gradient(135deg, var(--primary), #2D8B7A);
+      border-color: var(--primary); color: #fff;
+      animation: mic-ring 1.3s ease-in-out infinite;
+    }
+    @keyframes mic-ring {
+      0%,100% { box-shadow: 0 0 0 3px rgba(61,158,143,.2); }
+      50% { box-shadow: 0 0 0 8px rgba(61,158,143,.1); }
+    }
+    .ai-txt-in {
+      flex: 1; height: 40px; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 0 12px; font-size: 13px; font-family: inherit; color: var(--text);
+      background: var(--cream); outline: none; transition: border-color .15s;
+    }
+    .ai-txt-in:focus { border-color: var(--primary); background: var(--white); }
+    .ai-send-btn {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      background: var(--primary); border: none; color: #fff;
+      font-size: 17px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .ai-send-btn:hover { background: #2D8B7A; }
+    .ai-send-btn:disabled { background: var(--border); cursor: default; }
+
+    /* Settings panel */
+    .ai-cfg {
+      width: 360px; background: var(--white);
+      border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: 0 10px 48px rgba(44,42,39,.16); overflow: hidden;
+    }
+    .ai-cfg-head {
+      display: flex; align-items: center; gap: 8px; padding: 13px 14px;
+      background: linear-gradient(135deg, var(--primary) 0%, #2D8B7A 100%);
+      color: #fff; font-size: 14px; font-weight: 700;
+    }
+    .ai-cfg-head span { flex: 1; }
+    .ai-cfg-head button {
+      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.14);
+      color: #fff; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ai-cfg-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .ai-cfg-lbl  { font-size: 12px; font-weight: 600; color: var(--text-mid); }
+    .ai-cfg-in {
+      width: 100%; height: 38px; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 0 10px; font-size: 13px; font-family: inherit; background: var(--cream);
+      color: var(--text); outline: none;
+    }
+    .ai-cfg-in:focus { border-color: var(--primary); background: var(--white); }
+    .ai-cfg-chk { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+    .ai-cfg-chk input { accent-color: var(--primary); cursor: pointer; }
+    .ai-cfg-save {
+      width: 100%; height: 40px; border-radius: 10px; border: none; margin-top: 4px;
+      background: var(--primary); color: #fff; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background .15s;
+    }
+    .ai-cfg-save:hover { background: #2D8B7A; }
+    .ai-cfg-note {
+      font-size: 11px; color: var(--text-muted); line-height: 1.5; text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -1976,6 +2196,77 @@
     <a class="cp-action" id="cp-email-btn" href="#"><span class="cp-action-icon">✉️</span> <span data-en="Email" data-el="Email">Email</span></a>
     <a class="cp-action" id="cp-sms"      href="#"><span class="cp-action-icon">💬</span> <span data-en="SMS" data-el="SMS">SMS</span></a>
   </div>
+</div>
+
+<!-- ── AI Chair-Side Assistant ──────────────────────────────────────────── -->
+<div id="ai-wrap" class="ai-wrap">
+
+  <!-- Settings panel (shown instead of main panel) -->
+  <div class="ai-cfg hidden" id="ai-cfg">
+    <div class="ai-cfg-head">
+      <span>⚙ Assistant Settings</span>
+      <button id="ai-cfg-close" title="Close">✕</button>
+    </div>
+    <div class="ai-cfg-body">
+      <label class="ai-cfg-lbl">Anthropic API Key</label>
+      <input class="ai-cfg-in" type="password" id="ai-api-key" placeholder="sk-ant-api03-…" />
+      <label class="ai-cfg-lbl">Wake phrase</label>
+      <input class="ai-cfg-in" type="text" id="ai-wake" value="hey denta" />
+      <label class="ai-cfg-chk">
+        <input type="checkbox" id="ai-voice-on" checked /> Speak responses aloud
+      </label>
+      <label class="ai-cfg-chk">
+        <input type="checkbox" id="ai-continuous-on" /> Always listening (uses wake phrase)
+      </label>
+      <button class="ai-cfg-save" id="ai-cfg-save">Save Settings</button>
+      <p class="ai-cfg-note">Your API key is stored only in this browser's local storage and sent directly to Anthropic — nowhere else.</p>
+    </div>
+  </div>
+
+  <!-- Main panel -->
+  <div class="ai-panel hidden" id="ai-panel">
+    <div class="ai-head">
+      <span class="ai-head-icon">🦷</span>
+      <div class="ai-head-info">
+        <div class="ai-head-title">Chair-Side Assistant</div>
+        <div class="ai-head-sub">Hands-free voice charting</div>
+      </div>
+      <button class="ai-hbtn" id="ai-cfg-btn" title="Settings">⚙</button>
+      <button class="ai-hbtn" id="ai-panel-close" title="Minimize">—</button>
+    </div>
+    <div class="ai-status-bar">
+      <div class="ai-sdot idle" id="ai-sdot"></div>
+      <span id="ai-stext">Ready — tap mic or type a command</span>
+      <span id="ai-interim"></span>
+    </div>
+    <div class="ai-chips" id="ai-chips">
+      <span class="ai-chip" data-cmd="What's on my schedule today?">📅 Today's schedule</span>
+      <span class="ai-chip" data-cmd="Who is my next patient?">👤 Next patient</span>
+      <span class="ai-chip" data-cmd="How many appointments do I have today?">🔢 Count</span>
+      <span class="ai-chip" data-cmd="Book a new appointment">📝 Book</span>
+    </div>
+    <div class="ai-log" id="ai-log">
+      <div class="ai-welcome" id="ai-welcome">
+        <div class="ai-welcome-icon">🦷</div>
+        <div class="ai-welcome-txt">
+          Chair-Side Assistant ready.<br>
+          Say <em>"Hey Denta"</em> or tap the mic<br>
+          for hands-free charting.
+        </div>
+      </div>
+    </div>
+    <div class="ai-input-bar">
+      <button class="ai-mic-btn" id="ai-mic-btn" title="Tap to speak">🎙</button>
+      <input class="ai-txt-in" id="ai-txt-in" type="text" placeholder="Type a command…" autocomplete="off" />
+      <button class="ai-send-btn" id="ai-send-btn" title="Send">↑</button>
+    </div>
+  </div>
+
+  <!-- Floating toggle bubble -->
+  <button class="ai-bubble" id="ai-bubble" title="Chair-Side Assistant">
+    <span class="ai-b-icon">🎙</span>
+    <span class="ai-b-lbl">AI</span>
+  </button>
 </div>
 
 <script>
@@ -4007,6 +4298,540 @@ setTimeout(() => {
 
 // Refresh current-time line every minute
 setInterval(renderCalendar, 60000)
+
+// ── AI Chair-Side Assistant ────────────────────────────────────────────────
+;(function initAI() {
+
+  // ── Config ────────────────────────────────────────────────────────────────
+  const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
+  const AI_MODEL      = 'claude-sonnet-4-5'
+
+  let aiKey        = localStorage.getItem('ai_key')        || ''
+  let aiWake       = localStorage.getItem('ai_wake')       || 'hey denta'
+  let aiVoice      = localStorage.getItem('ai_voice')      !== 'false'
+  let aiContinuous = localStorage.getItem('ai_continuous') === 'true'
+  let aiHistory    = []   // [{role, content}] sent to Claude
+  let aiListening  = false
+  let aiPanelOpen  = false
+  let recognizer   = null
+  let contRec      = null   // separate instance for continuous/wake-word listening
+  let contRunning  = false
+
+  // ── DOM ───────────────────────────────────────────────────────────────────
+  const $  = id => document.getElementById(id)
+  const bubble     = $('ai-bubble')
+  const panel      = $('ai-panel')
+  const cfgPanel   = $('ai-cfg')
+  const sdot       = $('ai-sdot')
+  const stext      = $('ai-stext')
+  const interim    = $('ai-interim')
+  const logEl      = $('ai-log')
+  const micBtn     = $('ai-mic-btn')
+  const txtIn      = $('ai-txt-in')
+  const sendBtn    = $('ai-send-btn')
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function setStatus(state, label, interimText) {
+    sdot.className = 'ai-sdot ' + state
+    stext.textContent = label
+    if (interimText !== undefined) interim.textContent = interimText
+    bubble.classList.toggle('listening', state === 'listening')
+    micBtn.classList.toggle('active', state === 'listening')
+  }
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\n/g,'<br>')
+  }
+
+  function fmtHour(h, m) {
+    const hh = h > 12 ? h - 12 : h
+    return `${hh}:${String(m||0).padStart(2,'0')} ${h >= 12 ? 'pm' : 'am'}`
+  }
+
+  function resolveDate(raw) {
+    const s = (raw || 'today').toLowerCase().trim()
+    const d = new Date(today)
+    if (s === 'today')     return toISODate(d)
+    if (s === 'tomorrow')  { d.setDate(d.getDate()+1); return toISODate(d) }
+    if (s === 'yesterday') { d.setDate(d.getDate()-1); return toISODate(d) }
+    const dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
+    const di = dayNames.indexOf(s)
+    if (di !== -1) {
+      let diff = di - d.getDay()
+      if (diff <= 0) diff += 7
+      d.setDate(d.getDate() + diff); return toISODate(d)
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+    if (/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(s)) {
+      const p = s.split(/[\/\-]/)
+      return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`
+    }
+    return toISODate(d)
+  }
+
+  function nowLabel() {
+    const now = new Date()
+    return `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`
+  }
+
+  function addMsg(role, text) {
+    $('ai-welcome')?.remove()
+    const wrap = document.createElement('div')
+    wrap.className = 'ai-msg ' + role
+    const bub = document.createElement('div')
+    bub.className = 'ai-bub'
+    bub.innerHTML = escHtml(text)
+    const ts = document.createElement('div')
+    ts.className = 'ai-msg-t'
+    ts.textContent = nowLabel()
+    wrap.append(bub, ts)
+    logEl.appendChild(wrap)
+    logEl.scrollTop = logEl.scrollHeight
+  }
+
+  function showTyping() {
+    removeTyping()
+    const el = document.createElement('div')
+    el.className = 'ai-typing'; el.id = 'ai-typing'
+    el.innerHTML = '<span></span><span></span><span></span>'
+    logEl.appendChild(el); logEl.scrollTop = logEl.scrollHeight
+  }
+  function removeTyping() { $('ai-typing')?.remove() }
+
+  // ── Tool definitions (sent to Claude) ────────────────────────────────────
+  const AI_TOOLS = [
+    {
+      name: 'get_schedule',
+      description: 'Get the list of appointments for a given date.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          date:    { type: 'string', description: "YYYY-MM-DD or 'today', 'tomorrow', day name" },
+          dentist: { type: 'string', description: 'Optional: filter by dentist name' }
+        },
+        required: ['date']
+      }
+    },
+    {
+      name: 'create_appointment',
+      description: 'Book a new appointment and add it to the calendar.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          patient:  { type: 'string'  },
+          date:     { type: 'string',  description: "YYYY-MM-DD or natural date" },
+          hour:     { type: 'number',  description: '24-hour clock, 8–19' },
+          minute:   { type: 'number',  description: '0, 15, 30 or 45' },
+          dentist:  { type: 'string',  description: 'Dentist name (partial match OK)' },
+          type:     { type: 'string',  description: 'cleaning | consultation | treatment | or any type key' },
+          duration: { type: 'number',  description: 'Minutes (default 45)' },
+          notes:    { type: 'string'  }
+        },
+        required: ['patient', 'date', 'hour', 'dentist', 'type']
+      }
+    },
+    {
+      name: 'update_appointment',
+      description: 'Add clinical notes or change the status of an existing appointment.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          patient_name: { type: 'string', description: 'Patient name to identify the appointment' },
+          date:         { type: 'string', description: 'Date of the appointment' },
+          notes:        { type: 'string', description: 'Clinical notes to append' },
+          status:       { type: 'string', enum: ['confirmed','pending','cancelled'] }
+        },
+        required: ['patient_name', 'date']
+      }
+    },
+    {
+      name: 'find_patient',
+      description: 'Find all appointments for a patient by name (partial match).',
+      input_schema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' }
+        },
+        required: ['name']
+      }
+    }
+  ]
+
+  // ── Tool execution (runs locally against calendar data) ──────────────────
+  function execTool(name, inp) {
+    if (name === 'get_schedule') {
+      const date  = resolveDate(inp.date)
+      const appts = APPTS
+        .filter(a => {
+          if (apptRealDate(a).toISOString().slice(0,10) !== date) return false
+          if (inp.dentist && !a.dentist.toLowerCase().includes(inp.dentist.toLowerCase())) return false
+          return true
+        })
+        .sort((a,b) => (a.hour*60+a.min) - (b.hour*60+b.min))
+
+      if (!appts.length) return `No appointments scheduled for ${date}.`
+      return `Appointments on ${date}:\n` + appts.map(a =>
+        `• ${fmtHour(a.hour,a.min)} — ${a.patient} | ${a.dentist} | ${TYPE_LABELS.en[a.type]||a.type} (${a.dur}min) [${a.status}]`
+      ).join('\n')
+    }
+
+    if (name === 'create_appointment') {
+      const date = resolveDate(inp.date)
+      // Match dentist
+      const dentistName = Object.values(DENTIST_MAP).find(d =>
+        d.toLowerCase().includes((inp.dentist||'').toLowerCase())
+      ) || Object.values(DENTIST_MAP)[0] || ''
+      // Match type key
+      const typeKey = Object.keys(TYPE_COLORS).find(k =>
+        k.toLowerCase() === (inp.type||'').toLowerCase() ||
+        (TYPE_LABELS.en[k]||'').toLowerCase() === (inp.type||'').toLowerCase()
+      ) || Object.keys(TYPE_COLORS)[0] || 'consultation'
+
+      const appt = {
+        id: Date.now() + Math.random(),
+        patient: inp.patient, type: typeKey, dentist: dentistName,
+        date, hour: +inp.hour, min: +(inp.minute||0),
+        dur: +(inp.duration||45), notes: inp.notes||'',
+        status: 'confirmed', confirmStatus: 'confirmed'
+      }
+      APPTS.push(appt)
+      saveAppts()
+      renderCalendar()
+      return `Appointment booked: ${inp.patient} on ${date} at ${fmtHour(appt.hour,appt.min)} with ${dentistName} — ${TYPE_LABELS.en[typeKey]||typeKey}, ${appt.dur} min.`
+    }
+
+    if (name === 'update_appointment') {
+      const date = resolveDate(inp.date)
+      const appt = APPTS.find(a => {
+        const d = apptRealDate(a).toISOString().slice(0,10)
+        return d === date && a.patient.toLowerCase().includes((inp.patient_name||'').toLowerCase())
+      })
+      if (!appt) return `No appointment found for "${inp.patient_name}" on ${date}.`
+      if (inp.notes)  appt.notes = (appt.notes ? appt.notes + '\n' : '') + inp.notes
+      if (inp.status) {
+        appt.status = inp.status
+        appt.confirmStatus = inp.status === 'cancelled' ? 'declined' : inp.status
+      }
+      saveAppts(); renderCalendar()
+      const changes = [inp.notes && 'note added', inp.status && `status → ${inp.status}`].filter(Boolean)
+      return `Updated ${appt.patient}'s appointment: ${changes.join(', ')}.`
+    }
+
+    if (name === 'find_patient') {
+      const q = (inp.name||'').toLowerCase()
+      const matches = APPTS
+        .filter(a => a.patient.toLowerCase().includes(q))
+        .sort((a,b) => new Date(a.date) - new Date(b.date))
+      if (!matches.length) return `No appointments found for "${inp.name}".`
+      return `Found ${matches.length} appointment(s) for "${inp.name}":\n` +
+        matches.slice(0,6).map(a => `• ${a.date} ${fmtHour(a.hour,a.min)} — ${a.dentist} (${a.status})`).join('\n')
+    }
+    return 'Unknown tool.'
+  }
+
+  // ── System prompt (rebuilt each call with current context) ───────────────
+  function buildSystem() {
+    const now      = new Date()
+    const dateStr  = toISODate(now)
+    const timeStr  = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`
+    const dentists = Object.values(DENTIST_MAP).join(', ') || '(none)'
+    const types    = Object.keys(TYPE_COLORS).map(k => `${k} (${TYPE_LABELS.en[k]||k})`).join(', ') || '(none)'
+    const todayAppts = APPTS
+      .filter(a => apptRealDate(a).toISOString().slice(0,10) === dateStr)
+      .sort((a,b) => (a.hour*60+a.min) - (b.hour*60+b.min))
+    const schedule = todayAppts.length
+      ? todayAppts.map(a => `  ${fmtHour(a.hour,a.min)} ${a.patient} / ${a.dentist} / ${TYPE_LABELS.en[a.type]||a.type} [${a.status}]`).join('\n')
+      : '  (no appointments today)'
+
+    return `You are a hands-free chair-side dental assistant. You help practitioners manage appointments and add clinical notes during procedures using voice — all without touching the screen.
+
+Today: ${dateStr} | Time: ${timeStr}
+Dentists: ${dentists}
+Appointment types: ${types}
+Today's schedule:
+${schedule}
+
+Rules:
+• Responses will be spoken aloud — keep them SHORT (1–3 sentences, conversational).
+• Use tools to read or modify the calendar. Always confirm what was done.
+• If required info is missing (patient, time, dentist, type), ask ONE short clarifying question.
+• Accept standard dental notation: tooth numbers 1–32 or FDI, surfaces (M D B L O), procedure names.
+• Partial dentist name matches are fine — pick the closest match from the roster.
+• Respond in ${lang === 'el' ? 'Greek' : 'English'}.`
+  }
+
+  // ── Claude API call with tool use ─────────────────────────────────────────
+  async function askClaude(userText) {
+    if (!aiKey) return 'Please add your Anthropic API key in the assistant settings first — tap the ⚙ button.'
+
+    aiHistory.push({ role: 'user', content: userText })
+    if (aiHistory.length > 24) aiHistory = aiHistory.slice(-24)
+
+    const callClaude = async (messages) => {
+      const r = await fetch(ANTHROPIC_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': aiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: AI_MODEL, max_tokens: 1024,
+          system: buildSystem(), messages, tools: AI_TOOLS
+        })
+      })
+      if (!r.ok) {
+        const e = await r.json().catch(()=>({}))
+        if (r.status === 401) throw new Error('Invalid API key — check your settings.')
+        throw new Error(`API error ${r.status}: ${e?.error?.message || 'unknown'}`)
+      }
+      return r.json()
+    }
+
+    let data = await callClaude(aiHistory)
+
+    // If Claude wants to call tools, run them then follow up
+    if (data.stop_reason === 'tool_use') {
+      const toolUses = data.content.filter(c => c.type === 'tool_use')
+      const results  = toolUses.map(tu => ({
+        type: 'tool_result', tool_use_id: tu.id, content: execTool(tu.name, tu.input)
+      }))
+      aiHistory.push({ role: 'assistant', content: data.content })
+      aiHistory.push({ role: 'user',      content: results })
+      data = await callClaude(aiHistory)
+    }
+
+    const text = data.content.filter(c => c.type === 'text').map(c => c.text).join('').trim()
+    aiHistory.push({ role: 'assistant', content: data.content })
+    return text || 'Done.'
+  }
+
+  // ── Text-to-speech ────────────────────────────────────────────────────────
+  function speak(text) {
+    if (!aiVoice || !window.speechSynthesis) return
+    speechSynthesis.cancel()
+    const utt  = new SpeechSynthesisUtterance(text)
+    utt.lang   = lang === 'el' ? 'el-GR' : 'en-US'
+    utt.rate   = 1.05
+    utt.onstart  = () => setStatus('speaking', 'Speaking…', '')
+    utt.onend    = () => resetStatus()
+    utt.onerror  = () => resetStatus()
+    speechSynthesis.speak(utt)
+  }
+
+  function resetStatus() {
+    setStatus('idle', aiContinuous ? `Listening for "${aiWake}"…` : 'Ready — tap mic or type a command', '')
+    if (aiContinuous && !contRunning) startContRec()
+  }
+
+  // ── Main process flow ──────────────────────────────────────────────────────
+  async function process(text) {
+    if (!text.trim()) return
+    stopOneShot()
+    addMsg('user', text)
+    setStatus('thinking', 'Thinking…', '')
+    showTyping()
+
+    let reply
+    try {
+      reply = await askClaude(text)
+    } catch (err) {
+      reply = err.message || 'Something went wrong — please try again.'
+    }
+
+    removeTyping()
+    addMsg('assistant', reply)
+    speak(reply)
+    if (!aiVoice) resetStatus()
+  }
+
+  // ── One-shot speech recognition ───────────────────────────────────────────
+  function getSR() {
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null
+  }
+
+  function startOneShot() {
+    const SR = getSR()
+    if (!SR) { setStatus('error', 'Voice not supported in this browser', ''); return }
+    if (aiListening) { stopOneShot(); return }
+
+    // Pause continuous listener
+    stopContRec()
+
+    // Also stop the existing patient-form recognition if running
+    if (typeof stopRecognition === 'function') stopRecognition()
+
+    const r = new SR()
+    r.lang = lang === 'el' ? 'el-GR' : 'en-US'
+    r.interimResults = true
+    r.maxAlternatives = 1
+    recognizer = r; aiListening = true
+
+    let finalText = ''
+    r.onresult = e => {
+      let inter = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript
+        else inter = e.results[i][0].transcript
+      }
+      interim.textContent = finalText || inter
+    }
+    r.onerror = e => {
+      if (e.error !== 'no-speech') setStatus('error', 'Mic error — check permissions', '')
+      else resetStatus()
+      aiListening = false; micBtn.classList.remove('active')
+    }
+    r.onend = () => {
+      aiListening = false; micBtn.classList.remove('active')
+      if (finalText.trim()) process(finalText.trim())
+      else { interim.textContent = ''; resetStatus() }
+    }
+    r.start()
+    setStatus('listening', 'Listening…', '')
+    micBtn.classList.add('active')
+  }
+
+  function stopOneShot() {
+    if (recognizer) { try { recognizer.stop() } catch(e){} recognizer = null }
+    aiListening = false; micBtn.classList.remove('active')
+  }
+
+  // ── Continuous / wake-phrase recognition ──────────────────────────────────
+  function startContRec() {
+    const SR = getSR()
+    if (!SR || contRunning || aiListening) return
+    contRunning = true
+    const r = new SR()
+    r.lang = lang === 'el' ? 'el-GR' : 'en-US'
+    r.continuous = true; r.interimResults = false
+    contRec = r; let buf = ''
+
+    r.onresult = e => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (!e.results[i].isFinal) continue
+        const t = e.results[i][0].transcript.toLowerCase().trim()
+        buf = (buf + ' ' + t).slice(-250)
+        const wi = buf.lastIndexOf(aiWake.toLowerCase())
+        if (wi === -1) continue
+        // Wake phrase found
+        const cmd = buf.slice(wi + aiWake.length).trim()
+        buf = ''; r.stop()
+        if (cmd.length > 2) {
+          process(cmd)
+        } else {
+          setStatus('listening', 'Listening for command…', '')
+          setTimeout(() => startOneShot(), 250)
+        }
+      }
+    }
+    r.onerror = () => {
+      contRunning = false
+      if (aiContinuous) setTimeout(startContRec, 2000)
+    }
+    r.onend = () => {
+      contRunning = false
+      if (aiContinuous && !aiListening) setTimeout(startContRec, 600)
+    }
+    try {
+      r.start()
+      setStatus('idle', `Listening for "${aiWake}"…`, '')
+    } catch(e) { contRunning = false }
+  }
+
+  function stopContRec() {
+    contRunning = false
+    if (contRec) { try { contRec.stop() } catch(e){} contRec = null }
+  }
+
+  // ── Panel open/close ──────────────────────────────────────────────────────
+  function openPanel() {
+    aiPanelOpen = true
+    panel.classList.remove('hidden')
+    cfgPanel.classList.add('hidden')
+    txtIn.focus()
+  }
+  function closePanel() {
+    aiPanelOpen = false
+    panel.classList.add('hidden')
+    cfgPanel.classList.add('hidden')
+    stopOneShot()
+    if (aiContinuous && !contRunning) startContRec()
+  }
+
+  // ── Wiring ────────────────────────────────────────────────────────────────
+  // Bubble toggle
+  bubble.addEventListener('click', () => { if (aiPanelOpen) closePanel(); else openPanel() })
+
+  // Panel header controls
+  $('ai-panel-close').addEventListener('click', closePanel)
+  $('ai-cfg-btn').addEventListener('click', () => {
+    $('ai-api-key').value = aiKey
+    $('ai-wake').value    = aiWake
+    $('ai-voice-on').checked     = aiVoice
+    $('ai-continuous-on').checked = aiContinuous
+    cfgPanel.classList.remove('hidden')
+    panel.classList.add('hidden')
+  })
+
+  // Config panel
+  $('ai-cfg-close').addEventListener('click', () => {
+    cfgPanel.classList.add('hidden')
+    panel.classList.remove('hidden')
+  })
+  $('ai-cfg-save').addEventListener('click', () => {
+    aiKey  = $('ai-api-key').value.trim()
+    aiWake = $('ai-wake').value.trim() || 'hey denta'
+    aiVoice = $('ai-voice-on').checked
+    const newCont = $('ai-continuous-on').checked
+
+    localStorage.setItem('ai_key',       aiKey)
+    localStorage.setItem('ai_wake',      aiWake)
+    localStorage.setItem('ai_voice',     aiVoice)
+    localStorage.setItem('ai_continuous', newCont)
+
+    if (newCont && !aiContinuous) { aiContinuous = true;  startContRec() }
+    if (!newCont && aiContinuous) { aiContinuous = false; stopContRec() }
+    aiContinuous = newCont
+
+    cfgPanel.classList.add('hidden')
+    panel.classList.remove('hidden')
+    resetStatus()
+  })
+
+  // Mic button
+  micBtn.addEventListener('click', () => {
+    if (aiListening) stopOneShot()
+    else startOneShot()
+  })
+
+  // Text input
+  sendBtn.addEventListener('click', () => {
+    const t = txtIn.value.trim(); if (!t) return
+    txtIn.value = ''; process(t)
+  })
+  txtIn.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendBtn.click() }
+  })
+
+  // Quick-command chips
+  $('ai-chips').addEventListener('click', e => {
+    const c = e.target.closest('.ai-chip')
+    if (c) process(c.dataset.cmd)
+  })
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  if (aiContinuous) startContRec()
+  if (!aiKey) {
+    // Show a gentle nudge after a moment
+    setTimeout(() => {
+      if (aiPanelOpen) setStatus('idle', 'Tap ⚙ to add your API key', '')
+    }, 800)
+  }
+
+})()
 </script>
 </body>
 </html>
