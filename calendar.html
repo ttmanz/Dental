@@ -1437,6 +1437,72 @@
     .ai-cfg-note {
       font-size: 11px; color: var(--text-muted); line-height: 1.5; text-align: center;
     }
+
+    /* ── Treatment Session Banner ────────────────────────────────────────── */
+    .session-banner {
+      background: linear-gradient(90deg, #1a6e54 0%, #2D8B7A 100%);
+      color: #fff; display: flex; align-items: center; gap: 14px;
+      padding: 9px 24px; flex-shrink: 0; z-index: 90;
+      border-bottom: 2px solid rgba(74,222,128,.35);
+    }
+    .session-banner.hidden { display: none; }
+    .sb-dot {
+      width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+      background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,.28);
+      animation: sb-ring 2s ease-in-out infinite;
+    }
+    @keyframes sb-ring {
+      0%,100% { box-shadow: 0 0 0 3px rgba(74,222,128,.28); }
+      50%     { box-shadow: 0 0 0 8px rgba(74,222,128,.08); }
+    }
+    .sb-inner { display: flex; flex-direction: column; gap: 1px; }
+    .sb-label  { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
+    .sb-name   { font-weight: 800; font-size: 15px; letter-spacing: -.01em; }
+    .sb-detail { font-size: 12px; opacity: .78; margin-left: 10px; }
+    .sb-row    { display: flex; align-items: center; }
+    .sb-end {
+      margin-left: auto; padding: 5px 14px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12);
+      color: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background .15s; white-space: nowrap;
+    }
+    .sb-end:hover { background: rgba(255,255,255,.28); }
+
+    /* Treat button on appointment blocks (hover reveal) */
+    .appt-treat-btn {
+      position: absolute; bottom: 5px; right: 28px;
+      width: 20px; height: 20px; border-radius: 5px;
+      background: rgba(255,255,255,.2); border: none;
+      color: #fff; font-size: 9px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .15s, background .15s; z-index: 8;
+      letter-spacing: .02em;
+    }
+    .appt:hover .appt-treat-btn { opacity: 1; }
+    .appt-treat-btn:hover { background: rgba(255,255,255,.42); }
+
+    /* Green ring on the appointment currently being treated */
+    .appt.session-active {
+      outline: 2.5px solid #4ade80; outline-offset: 1px;
+    }
+
+    /* Notes in modal — one timestamped entry per row */
+    .modal-notes-wrap  { display: flex; flex-direction: column; gap: 0; }
+    .modal-note-row {
+      display: flex; gap: 8px; padding: 5px 0;
+      border-bottom: 1px solid var(--border); font-size: 12.5px; line-height: 1.45;
+    }
+    .modal-note-row:last-child { border-bottom: none; }
+    .modal-note-ts  { font-size: 10px; color: var(--text-muted); flex-shrink: 0; padding-top: 2px; }
+    .modal-note-txt { color: var(--text); flex: 1; }
+    .modal-notes-empty { color: var(--text-muted); font-style: italic; font-size: 13px; }
+
+    /* Treat button style in modal */
+    .modal-btn.treat {
+      background: linear-gradient(135deg, var(--primary), #2D8B7A);
+      color: #fff; border: none;
+    }
+    .modal-btn.treat:hover { background: #2D8B7A; }
   </style>
 </head>
 <body>
@@ -1473,6 +1539,19 @@
     <div class="avatar" title="Dr. Maria Papadopoulos">MP</div>
   </div>
 </header>
+
+<!-- ── Treatment session banner ──────────────────────────────────────── -->
+<div id="session-banner" class="session-banner hidden">
+  <div class="sb-dot"></div>
+  <div class="sb-inner">
+    <div class="sb-label">Now Treating</div>
+    <div class="sb-row">
+      <span class="sb-name" id="sb-name">—</span>
+      <span class="sb-detail" id="sb-detail"></span>
+    </div>
+  </div>
+  <button class="sb-end" id="sb-end">■ End Session</button>
+</div>
 
 <!-- ── Body ───────────────────────────────────────────────────────────── -->
 <div class="body-wrap">
@@ -1652,6 +1731,7 @@
       </div>
     </div>
     <div class="modal-actions">
+      <button class="modal-btn treat" id="modal-treat-btn" data-en="▶ Treat" data-el="▶ Θεραπεία">▶ Treat</button>
       <button class="modal-btn secondary" data-en="Edit" data-el="Επεξεργασία">Edit</button>
       <button class="modal-btn primary" data-en="Patient Chart" data-el="Φάκελος">Patient Chart</button>
       <button class="modal-btn danger" data-en="Cancel" data-el="Ακύρωση">Cancel</button>
@@ -2524,6 +2604,24 @@ function makeApptBlock(a, date) {
     block.appendChild(badge)
   }
 
+  // ▶ Treat button (hover-reveal) — starts a treatment session for this patient
+  if (!isCancelled) {
+    const treatBtn = document.createElement('button')
+    treatBtn.className = 'appt-treat-btn'
+    treatBtn.title = lang === 'el' ? 'Έναρξη θεραπείας' : 'Start treatment session'
+    treatBtn.textContent = '▶ TREAT'
+    treatBtn.addEventListener('click', e => {
+      e.stopPropagation()
+      if (window.aiStartSession) window.aiStartSession(a)
+    })
+    block.appendChild(treatBtn)
+  }
+
+  // Green ring when this appointment is the active treatment session
+  if (activeSession && activeSession.apptId === a.id) {
+    block.classList.add('session-active')
+  }
+
   // Click on the block body (not avatar/name/dot) → appointment detail modal
   block.addEventListener('click', e => { e.stopPropagation(); openModal(a, date) })
   return block
@@ -2959,27 +3057,46 @@ function renderMiniCal() {
 
 // ── Modal ────────────────────────────────────────────────────────────────
 function openModal(a, date) {
+  _modalAppt = a   // store so modal action buttons can reference it
+
   const overlay = document.getElementById('modal-overlay')
-  const badge = document.getElementById('modal-badge')
+  const badge   = document.getElementById('modal-badge')
 
   badge.textContent = TYPE_LABELS[lang][a.type] || a.type
   badge.style.background = TYPE_COLORS[a.type] || '#888'
   document.getElementById('modal-patient').textContent = a.patient
 
-  const days = lang === 'en' ? ['Mon','Tue','Wed','Thu','Fri','Sat'] : ['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ']
+  const days   = lang === 'en' ? ['Mon','Tue','Wed','Thu','Fri','Sat'] : ['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ']
   const months = lang === 'en' ? MONTHS_SHORT_EN : MONTHS_SHORT_EL
   document.getElementById('modal-datetime').textContent =
     `${days[date.getDay()-1 < 0 ? 6 : date.getDay()-1]} ${date.getDate()} ${months[date.getMonth()]} — ${a.hour}:${String(a.min).padStart(2,'0')} – ${endTime(a)}`
 
-  const durLbl = lang === 'en' ? `${a.dur} minutes` : `${a.dur} λεπτά`
-  document.getElementById('modal-duration').textContent = durLbl
+  document.getElementById('modal-duration').textContent =
+    lang === 'en' ? `${a.dur} minutes` : `${a.dur} λεπτά`
   document.getElementById('modal-dentist').textContent = a.dentist
-  document.getElementById('modal-notes').textContent = a.notes
 
-  const statusEl = document.getElementById('modal-status')
+  // Notes — render each timestamped line as its own row
+  const notesEl = document.getElementById('modal-notes')
+  const lines   = (a.notes || '').split('\n').filter(Boolean)
+  if (!lines.length) {
+    notesEl.innerHTML = `<span class="modal-notes-empty">${lang === 'el' ? 'Χωρίς σημειώσεις' : 'No notes yet'}</span>`
+  } else {
+    notesEl.innerHTML = '<div class="modal-notes-wrap">' + lines.map(line => {
+      const m = line.match(/^\[(\d{1,2}:\d{2})\]\s*(.+)$/)
+      return m
+        ? `<div class="modal-note-row"><span class="modal-note-ts">${m[1]}</span><span class="modal-note-txt">${escModal(m[2])}</span></div>`
+        : `<div class="modal-note-row"><span class="modal-note-txt">${escModal(line)}</span></div>`
+    }).join('') + '</div>'
+  }
+
+  const statusEl  = document.getElementById('modal-status')
   const statusTxt = document.getElementById('modal-status-text')
   statusEl.className = `status-badge ${a.status}`
   statusTxt.textContent = STATUS_LABELS[lang][a.status]
+
+  // Show/hide Treat button
+  const treatBtn = document.getElementById('modal-treat-btn')
+  if (treatBtn) treatBtn.style.display = a.status === 'cancelled' ? 'none' : ''
 
   overlay.classList.add('open')
 }
@@ -4204,6 +4321,14 @@ document.querySelector('.modal-btn.primary[data-en="Patient Chart"]').addEventLi
   openPatientChart(patientName)
 })
 
+// Wire "▶ Treat" button in appointment detail modal
+document.getElementById('modal-treat-btn').addEventListener('click', () => {
+  if (_modalAppt && window.aiStartSession) {
+    document.getElementById('modal-overlay').classList.remove('open')
+    window.aiStartSession(_modalAppt)
+  }
+})
+
 // ── View toggle buttons ───────────────────────────────────────────────────
 document.querySelectorAll('.view-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -4286,6 +4411,14 @@ if (localStorage.getItem('dental_seed_v') !== SEED_V) {
   )
   saveAppts(); savePatients()
   localStorage.setItem('dental_seed_v', SEED_V)
+}
+
+// ── Treatment session state (read by AI module + makeApptBlock) ──────────
+let activeSession = null   // { apptId, patient, dentist, type, hour, min } | null
+let _modalAppt    = null   // appointment currently shown in detail modal
+
+function escModal(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 }
 
 renderCalendar()
@@ -4400,8 +4533,50 @@ setInterval(renderCalendar, 60000)
   }
   function removeTyping() { $('ai-typing')?.remove() }
 
+  // ── Session management ────────────────────────────────────────────────────
+  function startSession(appt) {
+    activeSession = {
+      apptId: appt.id, patient: appt.patient, dentist: appt.dentist,
+      type: appt.type, hour: appt.hour, min: appt.min
+    }
+    $('sb-name').textContent   = appt.patient
+    $('sb-detail').textContent = `${appt.dentist} · ${TYPE_LABELS.en[appt.type] || appt.type} · ${fmtHour(appt.hour, appt.min)}`
+    $('session-banner').classList.remove('hidden')
+    renderCalendar()
+    openPanel()
+    addMsg('assistant', `🟢 Session started — treating ${appt.patient}.\nI'm ready. Just speak your findings, procedures, or observations and I'll record them instantly.`)
+    setStatus('idle', `Treating ${appt.patient} — say anything to chart`, '')
+  }
+
+  function endSession() {
+    const name = activeSession?.patient
+    activeSession = null
+    $('session-banner').classList.add('hidden')
+    renderCalendar()
+    if (name) addMsg('assistant', `Session ended for ${name}. Notes have been saved to the appointment.`)
+    resetStatus()
+  }
+
+  // Expose to global scope so makeApptBlock and modal button can call them
+  window.aiStartSession = startSession
+  window.aiEndSession   = endSession
+
+  // Wire session banner End button
+  $('sb-end').addEventListener('click', endSession)
+
   // ── Tool definitions (sent to Claude) ────────────────────────────────────
   const AI_TOOLS = [
+    {
+      name: 'add_clinical_note',
+      description: 'ALWAYS use this when in an active treatment session and the practitioner dictates any clinical information — procedures performed, findings, tooth numbers, surfaces, materials, medications, patient reactions, instructions given. Record it immediately without asking for confirmation or patient name. This is the primary tool during treatment.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          note: { type: 'string', description: 'The clinical note exactly as dictated, cleaned up for the record' }
+        },
+        required: ['note']
+      }
+    },
     {
       name: 'get_schedule',
       description: 'Get the list of appointments for a given date.',
@@ -4461,6 +4636,21 @@ setInterval(renderCalendar, 60000)
 
   // ── Tool execution (runs locally against calendar data) ──────────────────
   function execTool(name, inp) {
+
+    if (name === 'add_clinical_note') {
+      if (!activeSession) return 'No active treatment session. Start a session by clicking ▶ Treat on an appointment.'
+      const appt = APPTS.find(a => a.id === activeSession.apptId)
+      if (!appt) return 'Could not find the active session appointment.'
+      const now   = new Date()
+      const ts    = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`
+      const entry = `[${ts}] ${inp.note}`
+      appt.notes  = appt.notes ? appt.notes + '\n' + entry : entry
+      saveAppts()
+      // If modal is open for this appointment, refresh notes live
+      if (_modalAppt && _modalAppt.id === appt.id) _modalAppt.notes = appt.notes
+      return `Recorded for ${activeSession.patient}: "${inp.note}"`
+    }
+
     if (name === 'get_schedule') {
       const date  = resolveDate(inp.date)
       const appts = APPTS
@@ -4545,20 +4735,37 @@ setInterval(renderCalendar, 60000)
       ? todayAppts.map(a => `  ${fmtHour(a.hour,a.min)} ${a.patient} / ${a.dentist} / ${TYPE_LABELS.en[a.type]||a.type} [${a.status}]`).join('\n')
       : '  (no appointments today)'
 
+    let sessionBlock = ''
+    if (activeSession) {
+      sessionBlock = `
+
+━━━ ACTIVE TREATMENT SESSION ━━━
+Patient in chair : ${activeSession.patient}
+Dentist          : ${activeSession.dentist}
+Procedure        : ${TYPE_LABELS.en[activeSession.type] || activeSession.type}
+Started          : ${fmtHour(activeSession.hour, activeSession.min)}
+
+CHARTING MODE — CRITICAL RULES:
+1. ANY clinical dictation (tooth numbers, procedures, materials, findings, medications, patient reactions) → call add_clinical_note IMMEDIATELY. Do NOT ask "should I record this?" or "which patient?" — you already know.
+2. Keep spoken confirmations to 3 words max: "Noted.", "Recorded.", "Done."
+3. Only ask a question if the dictation is genuinely ambiguous and you need one specific detail.
+4. When the practitioner says something non-clinical (scheduling, questions), handle normally.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+    }
+
     return `You are a hands-free chair-side dental assistant. You help practitioners manage appointments and add clinical notes during procedures using voice — all without touching the screen.
 
 Today: ${dateStr} | Time: ${timeStr}
 Dentists: ${dentists}
 Appointment types: ${types}
 Today's schedule:
-${schedule}
+${schedule}${sessionBlock}
 
-Rules:
+General rules (non-session):
 • Responses will be spoken aloud — keep them SHORT (1–3 sentences, conversational).
 • Use tools to read or modify the calendar. Always confirm what was done.
-• If required info is missing (patient, time, dentist, type), ask ONE short clarifying question.
+• If required info is missing, ask ONE short clarifying question.
 • Accept standard dental notation: tooth numbers 1–32 or FDI, surfaces (M D B L O), procedure names.
-• Partial dentist name matches are fine — pick the closest match from the roster.
 • Respond in ${lang === 'el' ? 'Greek' : 'English'}.`
   }
 
