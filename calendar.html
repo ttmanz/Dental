@@ -1297,13 +1297,13 @@
           <div class="dentist-name" data-en="All Dentists" data-el="Όλοι">All Dentists</div>
           <div class="dentist-count" id="count-all">12</div>
         </div>
-        <div class="dentist-item checked" data-dentist="maria" style="color:#E07850">
+        <div class="dentist-item" data-dentist="maria" style="color:#E07850">
           <div class="dentist-check"></div>
           <div class="dentist-dot" style="background:#E07850"></div>
           <div class="dentist-name">Dr. M. Papadopoulos</div>
           <div class="dentist-count" id="count-maria">7</div>
         </div>
-        <div class="dentist-item checked" data-dentist="nikos" style="color:#8B7CC8">
+        <div class="dentist-item" data-dentist="nikos" style="color:#8B7CC8">
           <div class="dentist-check"></div>
           <div class="dentist-dot" style="background:#8B7CC8"></div>
           <div class="dentist-name">Dr. N. Konstantinou</div>
@@ -2117,7 +2117,7 @@ const DENTIST_MAP = {
   maria: 'Dr. M. Papadopoulos',
   nikos: 'Dr. N. Konstantinou',
 }
-let activeDentists = new Set(['maria', 'nikos'])  // all on by default
+let activeDentists = new Set()  // empty = show all; non-empty = show only selected
 
 // ── Appointment date helper ───────────────────────────────────────────────
 // New appointments store a real ISO `date` string; legacy entries use `day` offset
@@ -2132,8 +2132,9 @@ function getApptsForDate(date) {
   return APPTS.filter(a => {
     const d = apptRealDate(a)
     if (d.toDateString() !== date.toDateString()) return false
+    if (activeDentists.size === 0) return true   // no filter — show all
     const key = Object.keys(DENTIST_MAP).find(k => DENTIST_MAP[k] === a.dentist)
-    return !key || activeDentists.has(key)
+    return key ? activeDentists.has(key) : true
   })
 }
 // Format a Date as YYYY-MM-DD for storage
@@ -2378,8 +2379,10 @@ function renderDayView() {
   targetDate.setDate(today.getDate() + dayOffset)
   const isToday = targetDate.toDateString() === today.toDateString()
 
-  // Active dentist keys (preserve sidebar order)
-  const dentistKeys = Object.keys(DENTIST_MAP).filter(k => activeDentists.has(k))
+  // Active dentist keys (preserve sidebar order); empty set = show all
+  const dentistKeys = activeDentists.size === 0
+    ? Object.keys(DENTIST_MAP)
+    : Object.keys(DENTIST_MAP).filter(k => activeDentists.has(k))
   const cols = Math.max(dentistKeys.length, 1)
 
   const h = document.getElementById('cal-header')
@@ -2724,10 +2727,13 @@ function buildSwatches(containerId, defaultColor, onPick) {
 
 // ── Dentist filter — event delegation ────────────────────────────────────
 function updateDentistCounts() {
-  const totalVisible = APPTS.filter(a => {
-    const key = Object.keys(DENTIST_MAP).find(k => DENTIST_MAP[k] === a.dentist)
-    return !key || activeDentists.has(key)
-  }).length
+  // "All" shows total visible count; individual rows show per-dentist totals
+  const totalVisible = activeDentists.size === 0
+    ? APPTS.length
+    : APPTS.filter(a => {
+        const key = Object.keys(DENTIST_MAP).find(k => DENTIST_MAP[k] === a.dentist)
+        return key ? activeDentists.has(key) : true
+      }).length
   document.getElementById('count-all').textContent = totalVisible
   Object.keys(DENTIST_MAP).forEach(key => {
     const el = document.getElementById(`count-${key}`)
@@ -2741,21 +2747,23 @@ document.getElementById('dentist-list').addEventListener('click', e => {
   const key = item.dataset.dentist
 
   if (key === 'all') {
-    if (activeDentists.size === Object.keys(DENTIST_MAP).length) return
-    activeDentists = new Set(Object.keys(DENTIST_MAP))
-    document.querySelectorAll('.dentist-item[data-dentist]').forEach(i => i.classList.add('checked'))
+    // Clear filter — show everyone
+    activeDentists = new Set()
+    document.querySelectorAll('.dentist-item[data-dentist]').forEach(i => {
+      i.classList.toggle('checked', i.dataset.dentist === 'all')
+    })
   } else {
+    // Toggle this dentist in/out of the filter set
     if (activeDentists.has(key)) {
-      if (activeDentists.size === 1) return
       activeDentists.delete(key)
       item.classList.remove('checked')
     } else {
       activeDentists.add(key)
       item.classList.add('checked')
     }
+    // "All" is checked only when the filter is clear
     const allItem = document.querySelector('.dentist-item[data-dentist="all"]')
-    if (activeDentists.size === Object.keys(DENTIST_MAP).length) allItem.classList.add('checked')
-    else allItem.classList.remove('checked')
+    allItem.classList.toggle('checked', activeDentists.size === 0)
   }
   updateDentistCounts()
   renderCalendar()
