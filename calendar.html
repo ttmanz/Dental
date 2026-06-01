@@ -249,6 +249,21 @@
       margin: 2px auto 0; font-size: 18px;
     }
 
+    /* Day view — dentist-per-column header */
+    .cal-day-header.dentist-header {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px;
+    }
+    .dentist-col-dot {
+      width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dentist-col-name {
+      font-size: 11px; font-weight: 700; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--text-mid);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      max-width: 95%; text-align: center;
+    }
+
     /* Calendar scroll body */
     .cal-body {
       flex: 1; overflow-y: auto; position: relative;
@@ -2358,67 +2373,103 @@ function renderCalendar() {
 // ── Day view ──────────────────────────────────────────────────────────────
 function renderDayView() {
   showWeekGrid()
-  const h = document.getElementById('cal-header')
-  const b = document.getElementById('cal-body')
-  h.style.gridTemplateColumns = '56px 1fr'
-  b.style.gridTemplateColumns = '56px 1fr'
 
   const targetDate = new Date(today)
   targetDate.setDate(today.getDate() + dayOffset)
-
-  // Header
-  h.innerHTML = '<div class="cal-header-spacer"></div>'
   const isToday = targetDate.toDateString() === today.toDateString()
-  const div = document.createElement('div')
-  div.className = 'cal-day-header' + (isToday ? ' today' : '')
-  const dnames = lang === 'en' ? DAYS_EN : DAYS_EL
-  const dow = targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1
-  div.innerHTML = `<div class="cal-day-name">${dnames[dow]}</div><div class="cal-day-num">${targetDate.getDate()}</div>`
-  h.appendChild(div)
 
-  // Body
+  // Active dentist keys (preserve sidebar order)
+  const dentistKeys = Object.keys(DENTIST_MAP).filter(k => activeDentists.has(k))
+  const cols = Math.max(dentistKeys.length, 1)
+
+  const h = document.getElementById('cal-header')
+  const b = document.getElementById('cal-body')
+  h.style.gridTemplateColumns = `56px repeat(${cols}, 1fr)`
+  b.style.gridTemplateColumns = `56px repeat(${cols}, 1fr)`
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  h.innerHTML = '<div class="cal-header-spacer"></div>'
+  if (dentistKeys.length === 0) {
+    const div = document.createElement('div')
+    div.className = 'cal-day-header'
+    div.innerHTML = '<div class="cal-day-name">No dentists</div>'
+    h.appendChild(div)
+  } else {
+    dentistKeys.forEach(key => {
+      const el = document.querySelector(`.dentist-item[data-dentist="${key}"]`)
+      const color = el ? el.style.color : '#888'
+      const div = document.createElement('div')
+      div.className = 'cal-day-header dentist-header'
+      div.innerHTML =
+        `<div class="dentist-col-dot" style="background:${color}"></div>` +
+        `<div class="dentist-col-name">${DENTIST_MAP[key]}</div>`
+      h.appendChild(div)
+    })
+  }
+
+  // ── Body ────────────────────────────────────────────────────────────────
   b.innerHTML = ''
+
+  // Time gutter
   const timeCol = document.createElement('div')
   timeCol.className = 'time-col'
   for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
     const lbl = document.createElement('div')
     lbl.className = 'time-slot-label'
     const ampm = hr >= 12 ? (lang === 'en' ? 'pm' : 'μμ') : (lang === 'en' ? 'am' : 'πμ')
-    lbl.textContent = `${hr > 12 ? hr-12 : hr}${ampm}`
+    lbl.textContent = `${hr > 12 ? hr - 12 : hr}${ampm}`
     timeCol.appendChild(lbl)
   }
   b.appendChild(timeCol)
 
-  const col = document.createElement('div')
-  col.className = 'day-col'
-  for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
-    const cell = document.createElement('div')
-    cell.className = 'time-cell'
-    if (isToday) cell.style.background = 'rgba(61,158,143,.025)'
-    const _hr = hr
-    cell.addEventListener('click', () => openApptForm(new Date(targetDate), _hr, 0))
-    col.appendChild(cell)
-  }
-  if (isToday) {
-    const now = new Date()
-    const mins = (now.getHours() - START_HOUR) * 60 + now.getMinutes()
-    if (mins >= 0 && mins <= (END_HOUR - START_HOUR) * 60) {
-      const line = document.createElement('div')
-      line.className = 'now-line'
-      line.style.top = (mins / 60 * SLOT_H) + 'px'
-      line.innerHTML = '<div class="now-dot"></div>'
-      col.appendChild(line)
-    }
-  }
-  getApptsForDate(targetDate).forEach(a => {
-    const block = makeApptBlock(a, new Date(targetDate))
-    if (block) col.appendChild(block)
-  })
-  b.appendChild(col)
+  // One column per dentist
+  dentistKeys.forEach((key, idx) => {
+    const dentistName = DENTIST_MAP[key]
+    const col = document.createElement('div')
+    col.className = 'day-col'
 
+    // Time cells (slot click opens new appt pre-filled to this dentist)
+    for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
+      const cell = document.createElement('div')
+      cell.className = 'time-cell'
+      if (isToday) cell.style.background = 'rgba(61,158,143,.025)'
+      const _hr = hr
+      cell.addEventListener('click', () => openApptForm(new Date(targetDate), _hr, 0, dentistName))
+      col.appendChild(cell)
+    }
+
+    // Current-time line (today only, first dentist column)
+    if (isToday && idx === 0) {
+      const now = new Date()
+      const mins = (now.getHours() - START_HOUR) * 60 + now.getMinutes()
+      if (mins >= 0 && mins <= (END_HOUR - START_HOUR) * 60) {
+        const line = document.createElement('div')
+        line.className = 'now-line'
+        line.style.top = (mins / 60 * SLOT_H) + 'px'
+        line.innerHTML = '<div class="now-dot"></div>'
+        col.appendChild(line)
+      }
+    }
+
+    // Appointments for this dentist on the selected day
+    APPTS.filter(a => {
+      const d = apptRealDate(a)
+      return d.toDateString() === targetDate.toDateString() && a.dentist === dentistName
+    }).forEach(a => {
+      const block = makeApptBlock(a, new Date(targetDate))
+      if (block) col.appendChild(block)
+    })
+
+    b.appendChild(col)
+  })
+
+  // ── Nav title ────────────────────────────────────────────────────────────
   const months = lang === 'en' ? MONTHS_EN : MONTHS_EL
+  const dnames = lang === 'en' ? DAYS_EN : DAYS_EL
+  const dow = targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1
   document.getElementById('nav-date').textContent =
     `${dnames[dow]}, ${targetDate.getDate()} ${months[targetDate.getMonth()]} ${targetDate.getFullYear()}`
+
   renderMiniCal()
   applyLang()
 }
@@ -2902,7 +2953,7 @@ function populateApptForm() {
   }
 }
 
-function openApptForm(date, hour = null, min = 0) {
+function openApptForm(date, hour = null, min = 0, dentistPreset = null) {
   populateApptForm()
 
   // Set defaults
@@ -2936,6 +2987,12 @@ function openApptForm(date, hour = null, min = 0) {
   document.querySelectorAll('.af-status-opt').forEach(el => {
     el.className = 'af-status-opt' + (el.dataset.status === 'confirmed' ? ' selected-confirmed' : '')
   })
+
+  // Pre-select dentist when opened from a dentist column
+  if (dentistPreset) {
+    const sel = document.getElementById('af-dentist')
+    if ([...sel.options].some(o => o.value === dentistPreset)) sel.value = dentistPreset
+  }
 
   document.getElementById('af-overlay').classList.add('open')
   setTimeout(() => document.getElementById('af-patient').focus(), 120)
