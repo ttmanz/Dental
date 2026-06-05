@@ -1503,9 +1503,152 @@
       color: #fff; border: none;
     }
     .modal-btn.treat:hover { background: #2D8B7A; }
+
+    /* ── Login overlay ───────────────────────────────────────────────────── */
+    .login-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    .login-overlay.hidden { opacity: 0; pointer-events: none; transform: translateY(-10px); }
+    .login-card {
+      width: 420px; background: var(--white);
+      border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: 0 16px 60px rgba(44,42,39,.14); overflow: hidden;
+    }
+    .login-header {
+      padding: 32px 32px 26px;
+      background: linear-gradient(135deg, var(--primary) 0%, #2D8B7A 100%);
+      color: #fff; text-align: center;
+    }
+    .login-logo-icon {
+      width: 58px; height: 58px; border-radius: 16px;
+      background: rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin: 0 auto 14px;
+    }
+    .login-title   { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+    .login-sub     { font-size: 13px; opacity: .8; margin-top: 5px; }
+    .login-body    { padding: 26px 32px 30px; }
+    .login-lang-row {
+      display: flex; border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; width: fit-content; margin: 0 auto 22px;
+    }
+    .login-lang-btn {
+      padding: 5px 16px; font-size: 11px; font-weight: 700;
+      cursor: pointer; border: none; background: var(--white);
+      color: var(--text-muted); letter-spacing: .04em; transition: all .15s;
+    }
+    .login-lang-btn.active { background: var(--primary); color: #fff; }
+    .lf { margin-bottom: 15px; }
+    .lf label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--text-mid); margin-bottom: 6px; letter-spacing: .02em;
+    }
+    .lf input {
+      width: 100%; height: 44px; border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 0 14px;
+      font-size: 14px; font-family: inherit; color: var(--text);
+      background: var(--cream); outline: none; transition: all .15s;
+    }
+    .lf input:focus { border-color: var(--primary); background: var(--white); }
+    .lf-row { display: flex; gap: 12px; }
+    .lf-row .lf { flex: 1; }
+    .login-btn {
+      width: 100%; height: 46px; border-radius: 11px; border: none;
+      background: var(--primary); color: #fff;
+      font-size: 14px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: all .15s; margin-top: 6px;
+      box-shadow: 0 2px 10px rgba(61,158,143,.3);
+    }
+    .login-btn:hover:not(:disabled) { background: #2D8B7A; }
+    .login-btn:disabled { opacity: .6; cursor: default; }
+    .login-err {
+      background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px;
+      padding: 9px 14px; font-size: 12px; color: #DC2626;
+      margin-bottom: 14px; display: none;
+    }
+    .login-err.show { display: block; }
+    .login-foot {
+      text-align: center; margin-top: 18px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .login-foot a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .login-foot a:hover { text-decoration: underline; }
+    #reg-form { display: none; }
+    #reg-form.show { display: block; }
+    #login-form.hide { display: none; }
+
   </style>
 </head>
 <body>
+
+<!-- ── Login overlay ─────────────────────────────────────────────────── -->
+<div id="login-overlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo-icon">🦷</div>
+      <div class="login-title">Dental Assistant Pro</div>
+      <div class="login-sub" id="login-header-sub">Sign in to your practice</div>
+    </div>
+    <div class="login-body">
+      <div class="login-lang-row">
+        <button class="login-lang-btn active" id="login-lang-en">EN</button>
+        <button class="login-lang-btn" id="login-lang-el">ΕΛ</button>
+      </div>
+
+      <!-- Sign-in form -->
+      <div id="login-form">
+        <div class="login-err" id="login-err"></div>
+        <div class="lf">
+          <label id="lbl-email">Email</label>
+          <input type="email" id="login-email" autocomplete="email" placeholder="doctor@clinic.gr" />
+        </div>
+        <div class="lf">
+          <label id="lbl-password">Password</label>
+          <input type="password" id="login-password" autocomplete="current-password" />
+        </div>
+        <button class="login-btn" id="login-submit-btn">Sign In</button>
+        <div class="login-foot">
+          <span id="lbl-no-account">New practice?</span>
+          <a href="#" id="goto-register"> Register here</a>
+        </div>
+      </div>
+
+      <!-- Register form -->
+      <div id="reg-form">
+        <div class="login-err" id="reg-err"></div>
+        <div class="lf">
+          <label id="lbl-practice-name">Practice Name</label>
+          <input type="text" id="reg-practice" placeholder="Ιατρείο Παπαδόπουλος" />
+        </div>
+        <div class="lf-row">
+          <div class="lf">
+            <label id="lbl-first-name">First Name</label>
+            <input type="text" id="reg-first" />
+          </div>
+          <div class="lf">
+            <label id="lbl-last-name">Last Name</label>
+            <input type="text" id="reg-last" />
+          </div>
+        </div>
+        <div class="lf">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="admin@clinic.gr" />
+        </div>
+        <div class="lf">
+          <label id="lbl-create-pwd">Password</label>
+          <input type="password" id="reg-password" />
+        </div>
+        <button class="login-btn" id="reg-submit-btn">Create Practice</button>
+        <div class="login-foot">
+          <a href="#" id="goto-login">&#8592; Back to sign in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
 <header class="topbar">
@@ -1536,7 +1679,7 @@
       <span>＋</span>
       <span data-en="New Appointment" data-el="Νέο Ραντεβού">New Appointment</span>
     </button>
-    <div class="avatar" title="Dr. Maria Papadopoulos">MP</div>
+    <div class="avatar" id="user-avatar" title="User">MP</div>
   </div>
 </header>
 
@@ -2350,6 +2493,181 @@
 </div>
 
 <script>
+// ── API config ───────────────────────────────────────────────────────────
+const API_BASE = 'http://localhost:3001'  // swap to https://your-domain.com for production
+
+// ── Auth state ───────────────────────────────────────────────────────────
+const AUTH = {
+  token: null, user: null,
+  load() {
+    try {
+      this.token = localStorage.getItem('dental_jwt') || null
+      this.user  = JSON.parse(localStorage.getItem('dental_user') || 'null')
+    } catch { this.token = null; this.user = null }
+  },
+  save(token, user) {
+    this.token = token; this.user = user
+    localStorage.setItem('dental_jwt', token)
+    localStorage.setItem('dental_user', JSON.stringify(user))
+  },
+  clear() {
+    this.token = null; this.user = null
+    localStorage.removeItem('dental_jwt')
+    localStorage.removeItem('dental_user')
+  },
+  isValid() {
+    if (!this.token) return false
+    try {
+      const p = JSON.parse(atob(this.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))
+      return Date.now() / 1000 < p.exp
+    } catch { return false }
+  }
+}
+
+function apiFetch(path, options = {}) {
+  return fetch(API_BASE + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(AUTH.token ? { Authorization: 'Bearer ' + AUTH.token } : {}),
+      ...(options.headers || {})
+    },
+    body: options.body != null ? JSON.stringify(options.body) : undefined
+  })
+}
+
+// ── Login overlay ────────────────────────────────────────────────────────
+;(function initLoginOverlay() {
+  const overlay   = document.getElementById('login-overlay')
+  const loginForm = document.getElementById('login-form')
+  const regForm   = document.getElementById('reg-form')
+  const loginErr  = document.getElementById('login-err')
+  const regErr    = document.getElementById('reg-err')
+
+  const LABELS = {
+    en: {
+      headerSub:'Sign in to your practice', email:'Email', password:'Password',
+      submit:'Sign In', noAccount:'New practice?', register:' Register here',
+      practiceName:'Practice Name', firstName:'First Name', lastName:'Last Name',
+      createPwd:'Password', createPractice:'Create Practice',
+      regHeader:'Create your practice',
+    },
+    el: {
+      headerSub:'Συνδεθείτε στο ιατρείο σας', email:'Email', password:'Κωδικός',
+      submit:'Σύνδεση', noAccount:'Νέο ιατρείο;', register:' Εγγραφή εδώ',
+      practiceName:'Όνομα Ιατρείου', firstName:'Όνομα', lastName:'Επώνυμο',
+      createPwd:'Κωδικός', createPractice:'Δημιουργία Ιατρείου',
+      regHeader:'Δημιουργία ιατρείου',
+    }
+  }
+  let lLang = 'en'
+
+  function applyLLang(l) {
+    lLang = l
+    const lb = LABELS[l]
+    document.getElementById('login-lang-en').classList.toggle('active', l==='en')
+    document.getElementById('login-lang-el').classList.toggle('active', l==='el')
+    document.getElementById('login-header-sub').textContent  = lb.headerSub
+    document.getElementById('lbl-email').textContent         = lb.email
+    document.getElementById('lbl-password').textContent      = lb.password
+    document.getElementById('login-submit-btn').textContent  = lb.submit
+    document.getElementById('lbl-no-account').textContent    = lb.noAccount
+    document.getElementById('goto-register').textContent     = lb.register
+    document.getElementById('lbl-practice-name').textContent = lb.practiceName
+    document.getElementById('lbl-first-name').textContent    = lb.firstName
+    document.getElementById('lbl-last-name').textContent     = lb.lastName
+    document.getElementById('lbl-create-pwd').textContent    = lb.createPwd
+    document.getElementById('reg-submit-btn').textContent    = lb.createPractice
+  }
+
+  document.getElementById('login-lang-en').addEventListener('click', () => applyLLang('en'))
+  document.getElementById('login-lang-el').addEventListener('click', () => applyLLang('el'))
+
+  document.getElementById('goto-register').addEventListener('click', e => {
+    e.preventDefault()
+    loginForm.classList.add('hide'); regForm.classList.add('show')
+    document.getElementById('login-header-sub').textContent = LABELS[lLang].regHeader
+  })
+  document.getElementById('goto-login').addEventListener('click', e => {
+    e.preventDefault()
+    regForm.classList.remove('show'); loginForm.classList.remove('hide')
+    document.getElementById('login-header-sub').textContent = LABELS[lLang].headerSub
+  })
+
+  function showErr(el, msg) { el.textContent = msg; el.classList.add('show') }
+  function clearErr(el)     { el.classList.remove('show') }
+
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim()
+    const pwd   = document.getElementById('login-password').value
+    clearErr(loginErr)
+    if (!email || !pwd) { showErr(loginErr, 'Please enter your email and password.'); return }
+    const btn = document.getElementById('login-submit-btn')
+    btn.disabled = true; btn.textContent = '…'
+    try {
+      const res  = await apiFetch('/api/auth/login', { method:'POST', body:{ email, password:pwd } })
+      const data = await res.json()
+      if (!res.ok) { showErr(loginErr, data.error || 'Login failed'); return }
+      AUTH.save(data.token, data.user)
+      onLoginSuccess()
+    } catch { showErr(loginErr, 'Cannot reach server — is the backend running?') }
+    finally { btn.disabled = false; btn.textContent = LABELS[lLang].submit }
+  }
+
+  async function doRegister() {
+    const practice = document.getElementById('reg-practice').value.trim()
+    const first    = document.getElementById('reg-first').value.trim()
+    const last     = document.getElementById('reg-last').value.trim()
+    const email    = document.getElementById('reg-email').value.trim()
+    const pwd      = document.getElementById('reg-password').value
+    clearErr(regErr)
+    if (!practice || !first || !last || !email || !pwd) { showErr(regErr, 'All fields are required.'); return }
+    const btn = document.getElementById('reg-submit-btn')
+    btn.disabled = true; btn.textContent = '…'
+    try {
+      const res  = await apiFetch('/api/auth/register-practice', {
+        method:'POST', body:{ practiceName:practice, firstName:first, lastName:last, email, password:pwd, country:'GR', locale:lLang }
+      })
+      const data = await res.json()
+      if (!res.ok) { showErr(regErr, data.error || 'Registration failed'); return }
+      AUTH.save(data.token, { email, firstName:first, lastName:last, practiceId:data.practiceId, role:'admin' })
+      onLoginSuccess()
+    } catch { showErr(regErr, 'Cannot reach server — is the backend running?') }
+    finally { btn.disabled = false; btn.textContent = LABELS[lLang].createPractice }
+  }
+
+  window.onLoginSuccess = function() {
+    const u = AUTH.user
+    if (u) {
+      const initials = ((u.firstName||'')[0]||'') + ((u.lastName||'')[0]||'')
+      const av = document.getElementById('user-avatar')
+      if (av) { av.textContent = initials.toUpperCase(); av.title = `${u.firstName} ${u.lastName}` }
+      if (u.locale && typeof lang !== 'undefined' && u.locale !== lang) {
+        lang = u.locale; applyLang()
+      }
+    }
+    overlay.classList.add('hidden')
+  }
+
+  window.doLogout = function() {
+    AUTH.clear()
+    overlay.classList.remove('hidden')
+    loginForm.classList.remove('hide'); regForm.classList.remove('show')
+    document.getElementById('login-email').value    = ''
+    document.getElementById('login-password').value = ''
+    document.getElementById('login-header-sub').textContent = LABELS[lLang].headerSub
+  }
+
+  document.getElementById('login-submit-btn').addEventListener('click', doLogin)
+  document.getElementById('reg-submit-btn').addEventListener('click', doRegister)
+  document.getElementById('login-password').addEventListener('keydown', e => { if (e.key==='Enter') doLogin() })
+  document.getElementById('reg-password').addEventListener('keydown', e => { if (e.key==='Enter') doRegister() })
+
+  document.getElementById('user-avatar').addEventListener('click', () => {
+    if (confirm('Sign out?')) window.doLogout()
+  })
+})()
+
 // ── i18n ────────────────────────────────────────────────────────────────
 let lang = 'en'
 const DAYS_EN = ['Mon','Tue','Wed','Thu','Fri','Sat']
@@ -5039,6 +5357,12 @@ General rules (non-session):
   }
 
 })()
+
+// ── Auto-login check (runs after all declarations are initialised) ───────
+AUTH.load()
+if (AUTH.isValid()) {
+  window.onLoginSuccess()
+}
 </script>
 </body>
 </html>
