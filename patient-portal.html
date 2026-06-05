@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Portal — Dental Assistant Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Inter', sans-serif; }
+    :root {
+      --cream: #F7F4EF; --white: #FFFFFF; --primary: #3D9E8F;
+      --primary-light: #E6F4F2; --primary-mid: #B2DDD8;
+      --amber: #E8A87C; --amber-light: #FDF3EB;
+      --text: #2C2A27; --text-mid: #5C5854; --text-muted: #9C9890;
+      --border: #E5E0D8; --shadow: rgba(44,42,39,.08);
+    }
+    body { background: var(--cream); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px; display: flex; align-items: center;
+      gap: 12px; box-shadow: 0 1px 4px var(--shadow); position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-logo { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; color: var(--text); }
+    .topbar-logo span { color: var(--primary); }
+    .topbar-practice { font-size: 12px; color: var(--text-muted); flex: 1; }
+    .topbar-user { font-size: 13px; font-weight: 600; color: var(--text-mid); }
+    .topbar-logout {
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text-muted); font-family: inherit;
+    }
+    .topbar-logout:hover { background: var(--cream); }
+    .lang-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .lang-btn { padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; background: var(--white); color: var(--text-muted); transition: all .15s; }
+    .lang-btn.active { background: var(--primary); color: #fff; }
+
+    /* ── Login screen ── */
+    .login-page {
+      flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .login-card {
+      width: 420px; background: var(--white); border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden; box-shadow: 0 12px 48px var(--shadow);
+    }
+    .login-hero {
+      padding: 32px; text-align: center;
+      background: linear-gradient(135deg, var(--primary) 0%, #2D8B7A 100%); color: #fff;
+    }
+    .login-hero-icon { font-size: 40px; margin-bottom: 12px; }
+    .login-hero-title { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+    .login-hero-sub { font-size: 13px; opacity: .8; margin-top: 4px; }
+    .login-body { padding: 28px 32px 32px; }
+    .lf { margin-bottom: 16px; }
+    .lf label { display: block; font-size: 12px; font-weight: 600; color: var(--text-mid); margin-bottom: 6px; }
+    .lf input, .lf select {
+      width: 100%; height: 44px; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 0 14px; font-size: 14px; font-family: inherit; color: var(--text);
+      background: var(--cream); outline: none; transition: all .15s;
+    }
+    .lf input:focus { border-color: var(--primary); background: var(--white); }
+    .login-btn {
+      width: 100%; height: 46px; border-radius: 11px; border: none;
+      background: var(--primary); color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; font-family: inherit; margin-top: 4px; transition: background .15s;
+    }
+    .login-btn:hover:not(:disabled) { background: #2D8B7A; }
+    .login-btn:disabled { opacity: .6; cursor: default; }
+    .login-err { background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #DC2626; margin-bottom: 14px; display: none; }
+    .login-err.show { display: block; }
+    .login-hint { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 16px; line-height: 1.5; }
+
+    /* ── Portal main ── */
+    .portal-main { flex: 1; max-width: 800px; margin: 0 auto; width: 100%; padding: 24px 16px 40px; }
+    .portal-welcome { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .portal-welcome-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+    /* ── Cards ── */
+    .portal-card {
+      background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px 22px; margin-bottom: 16px;
+    }
+    .portal-card-title {
+      font-size: 13px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .portal-card-title span { font-size: 16px; }
+
+    /* ── Appointment rows ── */
+    .appt-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .appt-row:last-child { border-bottom: none; }
+    .appt-date-badge {
+      flex-shrink: 0; width: 46px; text-align: center;
+      background: var(--primary-light); border-radius: 8px; padding: 5px 4px;
+    }
+    .appt-date-day { font-size: 18px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .appt-date-mon { font-size: 9px; font-weight: 700; color: var(--primary); text-transform: uppercase; }
+    .appt-info { flex: 1; }
+    .appt-type { font-size: 13px; font-weight: 700; color: var(--text); }
+    .appt-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .appt-status {
+      padding: 3px 10px; border-radius: 10px; font-size: 10px; font-weight: 700;
+      text-transform: uppercase;
+    }
+    .appt-status.scheduled, .appt-status.confirmed { background: var(--primary-light); color: var(--primary); }
+    .appt-status.completed { background: #D1FAE5; color: #065F46; }
+    .appt-status.cancelled { background: #FEE2E2; color: #991B1B; }
+
+    /* ── Invoice rows ── */
+    .inv-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .inv-row:last-child { border-bottom: none; }
+    .inv-num { font-size: 12px; font-weight: 700; color: var(--primary); min-width: 120px; }
+    .inv-desc { flex: 1; font-size: 13px; color: var(--text-mid); }
+    .inv-amount { font-size: 15px; font-weight: 800; color: var(--text); }
+    .inv-status { padding: 3px 10px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .inv-status.paid { background: #D1FAE5; color: #065F46; }
+    .inv-status.issued, .inv-status.partial { background: #FEF3C7; color: #92400E; }
+    .inv-status.overdue { background: #FEE2E2; color: #991B1B; }
+
+    /* ── Treatment plan rows ── */
+    .plan-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .plan-row:last-child { border-bottom: none; }
+    .plan-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .plan-meta  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .plan-progress { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+    .plan-progress-fill { height: 100%; background: var(--primary); border-radius: 3px; }
+
+    /* ── Consent rows ── */
+    .consent-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .consent-row:last-child { border-bottom: none; }
+    .consent-title { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
+    .consent-signed { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; background: #D1FAE5; color: #065F46; }
+    .consent-unsigned { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; background: #FEF3C7; color: #92400E; }
+
+    /* ── Message form ── */
+    .msg-textarea {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; font-size: 13px; font-family: inherit; resize: vertical;
+      min-height: 80px; outline: none; transition: border-color .15s;
+    }
+    .msg-textarea:focus { border-color: var(--primary); background: var(--white); }
+    .msg-send-btn {
+      margin-top: 10px; padding: 10px 24px; border-radius: 9px; border: none;
+      background: var(--primary); color: #fff; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+    .msg-send-btn:hover { background: #2D8B7A; }
+    .msg-sent-notice { font-size: 13px; color: #065F46; margin-top: 8px; display: none; }
+    .msg-sent-notice.show { display: block; }
+
+    /* ── Empty state ── */
+    .portal-empty { text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted); }
+
+    /* ── Loading ── */
+    .loading-overlay {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px;
+    }
+    .loader { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- Top bar (always visible) -->
+<div class="topbar">
+  <div class="topbar-logo">🦷 Dental <span>Assistant</span> Pro</div>
+  <div class="topbar-practice" id="topbar-practice">Patient Portal</div>
+  <div class="lang-toggle" id="portal-lang-toggle" style="display:none">
+    <button class="lang-btn active" id="plang-en">EN</button>
+    <button class="lang-btn" id="plang-el">ΕΛ</button>
+  </div>
+  <div class="topbar-user" id="topbar-user" style="display:none"></div>
+  <button class="topbar-logout" id="logout-btn" style="display:none">Sign out</button>
+</div>
+
+<!-- Login page -->
+<div class="login-page" id="login-page">
+  <div class="login-card">
+    <div class="login-hero">
+      <div class="login-hero-icon">🦷</div>
+      <div class="login-hero-title" id="login-title">Patient Portal</div>
+      <div class="login-hero-sub" id="login-sub">Sign in to view your dental records</div>
+    </div>
+    <div class="login-body">
+      <div class="login-err" id="login-err"></div>
+      <div class="lf">
+        <label id="lbl-practice">Select Your Practice</label>
+        <select id="practice-select" style="display:none">
+          <option value="">Loading…</option>
+        </select>
+        <input type="text" id="practice-id-input" placeholder="Practice ID (from your clinic)" style="display:none"/>
+      </div>
+      <div class="lf">
+        <label id="lbl-email">Email Address</label>
+        <input type="email" id="portal-email" placeholder="your@email.com" autocomplete="email"/>
+      </div>
+      <div class="lf">
+        <label id="lbl-dob">Date of Birth</label>
+        <input type="date" id="portal-dob" autocomplete="bday"/>
+      </div>
+      <button class="login-btn" id="portal-login-btn">Sign In</button>
+      <div class="login-hint" id="login-hint">
+        Your email and date of birth must match what your clinic has on file.<br>Contact your clinic if you need help.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading-page" style="display:none">
+  <div class="loader"></div>
+  <div style="font-size:13px;color:var(--text-muted)">Loading your records…</div>
+</div>
+
+<!-- Portal main content -->
+<div class="portal-main" id="portal-page" style="display:none">
+
+  <div class="portal-welcome" id="portal-welcome">Hello!</div>
+  <div class="portal-welcome-sub" id="portal-sub">Here are your dental records</div>
+
+  <!-- Upcoming appointments -->
+  <div class="portal-card">
+    <div class="portal-card-title"><span>📅</span> <span id="lbl-appts">Appointments</span></div>
+    <div id="portal-appts"><div class="portal-empty">Loading…</div></div>
+  </div>
+
+  <!-- Treatment plans -->
+  <div class="portal-card">
+    <div class="portal-card-title"><span>📋</span> <span id="lbl-plans">Treatment Plans</span></div>
+    <div id="portal-plans"><div class="portal-empty">Loading…</div></div>
+  </div>
+
+  <!-- Invoices -->
+  <div class="portal-card">
+    <div class="portal-card-title"><span>🧾</span> <span id="lbl-invoices">Invoices</span></div>
+    <div id="portal-invoices"><div class="portal-empty">Loading…</div></div>
+  </div>
+
+  <!-- Consent forms -->
+  <div class="portal-card">
+    <div class="portal-card-title"><span>📝</span> <span id="lbl-consents">Consent Forms</span></div>
+    <div id="portal-consents"><div class="portal-empty">Loading…</div></div>
+  </div>
+
+  <!-- Message clinic -->
+  <div class="portal-card">
+    <div class="portal-card-title"><span>💬</span> <span id="lbl-msg">Message Your Clinic</span></div>
+    <textarea class="msg-textarea" id="msg-body" rows="3"></textarea>
+    <button class="msg-send-btn" id="msg-send-btn">Send Message</button>
+    <div class="msg-sent-notice" id="msg-sent">✓ Message sent! Your clinic will be in touch.</div>
+  </div>
+
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────
+// In production: replace with your actual API URL
+const API = (()=>{
+  const params = new URLSearchParams(window.location.search)
+  return params.get('api') || window.location.origin.includes('localhost')
+    ? 'http://localhost:3001'
+    : window.location.origin
+})()
+
+let _lang       = 'en'
+let _token      = null
+let _patient    = null
+let _practiceId = null
+
+// Read practice ID from URL query: ?practice=UUID
+;(() => {
+  const p = new URLSearchParams(window.location.search).get('practice')
+  if (p) { _practiceId = p; document.getElementById('practice-id-input').value = p }
+})()
+
+// ── i18n ──────────────────────────────────────────────────────────────────
+const L = {
+  en: {
+    loginTitle:'Patient Portal', loginSub:'Sign in to view your dental records',
+    lblPractice:'Practice', lblEmail:'Email Address', lblDob:'Date of Birth',
+    loginHint:'Your email and date of birth must match what your clinic has on file.',
+    welcome:'Hello, {name}!', sub:'Here are your dental records',
+    appts:'Appointments', plans:'Treatment Plans',
+    invoices:'Invoices', consents:'Consent Forms', msg:'Message Your Clinic',
+    noAppts:'No upcoming appointments.', noPlans:'No treatment plans.',
+    noInvoices:'No invoices.', noConsents:'No consent forms.',
+    msgSent:'✓ Message sent! Your clinic will be in touch.',
+    send:'Send Message', signout:'Sign out', balance:'Balance due',
+    paid:'Paid', issued:'Issued', partial:'Part paid', overdue:'Overdue',
+    signed:'Signed', unsigned:'Pending',
+  },
+  el: {
+    loginTitle:'Πύλη Ασθενή', loginSub:'Συνδεθείτε για να δείτε τα αρχεία σας',
+    lblPractice:'Ιατρείο', lblEmail:'Διεύθυνση Email', lblDob:'Ημερομηνία Γέννησης',
+    loginHint:'Το email και η ημερομηνία γέννησής σας πρέπει να ταιριάζουν με τα στοιχεία του ιατρείου.',
+    welcome:'Καλώς ήρθατε, {name}!', sub:'Τα οδοντιατρικά σας αρχεία',
+    appts:'Ραντεβού', plans:'Πλάνα Θεραπείας',
+    invoices:'Τιμολόγια', consents:'Φόρμες Συναίνεσης', msg:'Μήνυμα στο Ιατρείο',
+    noAppts:'Δεν υπάρχουν ραντεβού.', noPlans:'Δεν υπάρχουν πλάνα.',
+    noInvoices:'Δεν υπάρχουν τιμολόγια.', noConsents:'Δεν υπάρχουν φόρμες.',
+    msgSent:'✓ Το μήνυμα στάλθηκε! Το ιατρείο θα επικοινωνήσει μαζί σας.',
+    send:'Αποστολή Μηνύματος', signout:'Αποσύνδεση', balance:'Υπόλοιπο',
+    paid:'Εξοφλημένο', issued:'Εκδοθέν', partial:'Μερική πληρωμή', overdue:'Ληξιπρόθεσμο',
+    signed:'Υπογεγραμμένο', unsigned:'Εκκρεμεί',
+  }
+}
+
+function t(key) { return (L[_lang]||L.en)[key] || key }
+function applyLang() {
+  document.getElementById('login-title').textContent = t('loginTitle')
+  document.getElementById('login-sub').textContent   = t('loginSub')
+  document.getElementById('lbl-practice').textContent = t('lblPractice')
+  document.getElementById('lbl-email').textContent   = t('lblEmail')
+  document.getElementById('lbl-dob').textContent     = t('lblDob')
+  document.getElementById('login-hint').textContent  = t('loginHint')
+  document.getElementById('lbl-appts').textContent   = t('appts')
+  document.getElementById('lbl-plans').textContent   = t('plans')
+  document.getElementById('lbl-invoices').textContent = t('invoices')
+  document.getElementById('lbl-consents').textContent = t('consents')
+  document.getElementById('lbl-msg').textContent     = t('msg')
+  document.getElementById('msg-send-btn').textContent = t('send')
+  document.getElementById('logout-btn').textContent  = t('signout')
+  document.getElementById('plang-en').classList.toggle('active', _lang==='en')
+  document.getElementById('plang-el').classList.toggle('active', _lang==='el')
+  if (_patient) {
+    document.getElementById('portal-welcome').textContent = t('welcome').replace('{name}', _patient.firstName)
+    document.getElementById('portal-sub').textContent     = t('sub')
+  }
+}
+document.getElementById('plang-en').addEventListener('click', () => { _lang='en'; applyLang() })
+document.getElementById('plang-el').addEventListener('click', () => { _lang='el'; applyLang() })
+
+// ── API helper ────────────────────────────────────────────────────────────
+function portalFetch(path, opts={}) {
+  return fetch(API+path, {
+    ...opts,
+    headers: {
+      'Content-Type':'application/json',
+      ...(_token ? { Authorization:'Bearer '+_token } : {}),
+      ...(opts.headers||{})
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  })
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+function loadSession() {
+  try {
+    _token   = localStorage.getItem('portal_jwt') || null
+    _patient = JSON.parse(localStorage.getItem('portal_patient') || 'null')
+    if (_token && _patient) {
+      const payload = JSON.parse(atob(_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))
+      if (Date.now()/1000 > payload.exp) { clearSession(); return false }
+      _practiceId = _patient.practiceId
+      return true
+    }
+  } catch {}
+  return false
+}
+function saveSession(token, patient) {
+  _token = token; _patient = patient; _practiceId = patient.practiceId
+  localStorage.setItem('portal_jwt', token)
+  localStorage.setItem('portal_patient', JSON.stringify(patient))
+}
+function clearSession() {
+  _token = null; _patient = null
+  localStorage.removeItem('portal_jwt')
+  localStorage.removeItem('portal_patient')
+}
+
+// ── Login ─────────────────────────────────────────────────────────────────
+document.getElementById('portal-login-btn').addEventListener('click', async () => {
+  const email = document.getElementById('portal-email').value.trim()
+  const dob   = document.getElementById('portal-dob').value
+  const pid   = _practiceId || document.getElementById('practice-id-input').value.trim()
+  const errEl = document.getElementById('login-err')
+  errEl.classList.remove('show')
+  if (!pid)   { errEl.textContent = 'Please enter your Practice ID (ask your clinic).'; errEl.classList.add('show'); return }
+  if (!email) { errEl.textContent = 'Please enter your email.'; errEl.classList.add('show'); return }
+  if (!dob)   { errEl.textContent = 'Please enter your date of birth.'; errEl.classList.add('show'); return }
+  const btn = document.getElementById('portal-login-btn')
+  btn.disabled = true; btn.textContent = '…'
+  try {
+    const res  = await portalFetch('/api/portal/login', { method:'POST', body:{ practiceId:pid, email, dateOfBirth:dob }})
+    const data = await res.json()
+    if (!res.ok) { errEl.textContent = data.error || 'Login failed.'; errEl.classList.add('show'); return }
+    saveSession(data.token, data.patient)
+    showPortal()
+  } catch { errEl.textContent = 'Cannot reach the server.'; errEl.classList.add('show') }
+  finally { btn.disabled = false; btn.textContent = t('loginTitle') }
+})
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  clearSession(); showLogin()
+})
+
+// ── Show screens ──────────────────────────────────────────────────────────
+function showLogin() {
+  document.getElementById('login-page').style.display  = 'flex'
+  document.getElementById('portal-page').style.display = 'none'
+  document.getElementById('loading-page').style.display = 'none'
+  document.getElementById('topbar-user').style.display  = 'none'
+  document.getElementById('logout-btn').style.display   = 'none'
+  document.getElementById('portal-lang-toggle').style.display = 'none'
+  // Show practice ID input if not in URL
+  if (!_practiceId) {
+    document.getElementById('practice-id-input').style.display = ''
+    document.getElementById('lbl-practice').style.display = ''
+  }
+}
+
+async function showPortal() {
+  document.getElementById('login-page').style.display   = 'none'
+  document.getElementById('loading-page').style.display = 'flex'
+  document.getElementById('portal-page').style.display  = 'none'
+  document.getElementById('topbar-user').style.display  = ''
+  document.getElementById('logout-btn').style.display   = ''
+  document.getElementById('portal-lang-toggle').style.display = ''
+  document.getElementById('topbar-user').textContent    = `${_patient.firstName} ${_patient.lastName}`
+  document.getElementById('topbar-practice').textContent = _patient.practiceName || 'Dental Practice'
+  // Set lang from practice locale
+  if (_patient.locale) _lang = _patient.locale
+  applyLang()
+  await loadPortalData()
+  document.getElementById('loading-page').style.display = 'none'
+  document.getElementById('portal-page').style.display  = 'block'
+  document.getElementById('portal-welcome').textContent = t('welcome').replace('{name}', _patient.firstName)
+  document.getElementById('portal-sub').textContent     = t('sub')
+}
+
+// ── Load portal data ──────────────────────────────────────────────────────
+async function loadPortalData() {
+  await Promise.all([ loadAppts(), loadPlans(), loadInvoices(), loadConsents() ])
+}
+
+async function loadAppts() {
+  try {
+    const res = await portalFetch('/api/portal/appointments')
+    if (!res.ok) return
+    const appts = await res.json()
+    const el = document.getElementById('portal-appts')
+    if (!appts.length) { el.innerHTML = `<div class="portal-empty">${t('noAppts')}</div>`; return }
+    el.innerHTML = ''
+    appts.forEach(a => {
+      const d = new Date(a.appointment_date+'T00:00:00')
+      const [h, m] = (a.start_time||'00:00').split(':')
+      const row = document.createElement('div')
+      row.className = 'appt-row'
+      const isFuture = new Date(a.appointment_date) >= new Date(new Date().toISOString().slice(0,10))
+      row.innerHTML = `
+        <div class="appt-date-badge">
+          <div class="appt-date-day">${d.getDate()}</div>
+          <div class="appt-date-mon">${d.toLocaleString(_lang==='el'?'el-GR':'en-GB',{month:'short'}).toUpperCase()}</div>
+        </div>
+        <div class="appt-info">
+          <div class="appt-type">${a.type?.replace(/_/g,' ')}</div>
+          <div class="appt-meta">${h}:${m} · ${a.dentist_name}</div>
+        </div>
+        <span class="appt-status ${a.status}">${a.status}</span>`
+      el.appendChild(row)
+    })
+  } catch {}
+}
+
+async function loadPlans() {
+  try {
+    const res = await portalFetch('/api/portal/treatment-plans')
+    if (!res.ok) return
+    const plans = await res.json()
+    const el = document.getElementById('portal-plans')
+    if (!plans.length) { el.innerHTML = `<div class="portal-empty">${t('noPlans')}</div>`; return }
+    el.innerHTML = ''
+    plans.forEach(p => {
+      const pct = p.item_count ? Math.round(p.completed_count/p.item_count*100) : 0
+      const row = document.createElement('div')
+      row.className = 'plan-row'
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="plan-title">${p.title}</div>
+          <span style="font-size:11px;font-weight:700;color:var(--text-muted)">€${parseFloat(p.total_cost||0).toFixed(2)}</span>
+        </div>
+        <div class="plan-meta">${p.item_count} procedures · ${pct}% complete · <span style="text-transform:capitalize">${p.status?.replace('_',' ')}</span></div>
+        <div class="plan-progress"><div class="plan-progress-fill" style="width:${pct}%"></div></div>`
+      el.appendChild(row)
+    })
+  } catch {}
+}
+
+async function loadInvoices() {
+  try {
+    const res = await portalFetch('/api/portal/invoices')
+    if (!res.ok) return
+    const invs = await res.json()
+    const el = document.getElementById('portal-invoices')
+    if (!invs.length) { el.innerHTML = `<div class="portal-empty">${t('noInvoices')}</div>`; return }
+    el.innerHTML = ''
+    invs.forEach(inv => {
+      const total   = parseFloat(inv.subtotal||0)
+      const insure  = parseFloat(inv.insurance_amount||0)
+      const paid    = parseFloat(inv.amount_paid||0)
+      const balance = Math.max(0, total - insure - paid)
+      const row = document.createElement('div')
+      row.className = 'inv-row'
+      row.innerHTML = `
+        <div class="inv-num">${inv.invoice_number}</div>
+        <div class="inv-desc">${new Date(inv.invoice_date).toLocaleDateString(_lang==='el'?'el-GR':'en-GB')}</div>
+        <div class="inv-amount">€${total.toFixed(2)}</div>
+        ${balance > 0.01 ? `<div style="font-size:11px;color:#991B1B;font-weight:600">${t('balance')}: €${balance.toFixed(2)}</div>` : ''}
+        <span class="inv-status ${inv.status}">${t(inv.status)||inv.status}</span>`
+      el.appendChild(row)
+    })
+  } catch {}
+}
+
+async function loadConsents() {
+  try {
+    const res = await portalFetch('/api/portal/consents')
+    if (!res.ok) return
+    const recs = await res.json()
+    const el = document.getElementById('portal-consents')
+    if (!recs.length) { el.innerHTML = `<div class="portal-empty">${t('noConsents')}</div>`; return }
+    el.innerHTML = ''
+    recs.forEach(r => {
+      const row = document.createElement('div')
+      row.className = 'consent-row'
+      row.innerHTML = `
+        <div class="consent-title">${r.title}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${new Date(r.created_at).toLocaleDateString(_lang==='el'?'el-GR':'en-GB')}</div>
+        <span class="${r.signed_at ? 'consent-signed' : 'consent-unsigned'}">${r.signed_at ? t('signed') : t('unsigned')}</span>`
+      el.appendChild(row)
+    })
+  } catch {}
+}
+
+// ── Message form ──────────────────────────────────────────────────────────
+document.getElementById('msg-send-btn').addEventListener('click', async () => {
+  const body = document.getElementById('msg-body').value.trim()
+  if (!body) return
+  try {
+    const res = await portalFetch('/api/portal/messages', { method:'POST', body:{ body }})
+    if (res.ok) {
+      document.getElementById('msg-body').value = ''
+      const notice = document.getElementById('msg-sent')
+      notice.textContent = t('msgSent')
+      notice.classList.add('show')
+      setTimeout(() => notice.classList.remove('show'), 4000)
+    }
+  } catch {}
+})
+
+// ── Init ──────────────────────────────────────────────────────────────────
+applyLang()
+if (loadSession()) showPortal()
+else showLogin()
+</script>
+</body>
+</html>

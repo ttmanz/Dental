@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require('express')
 const cors    = require('cors')
+const path    = require('path')
 
 const app = express()
 
@@ -16,8 +17,16 @@ app.use('/api/treatment-plans',  require('./routes/treatment-plans'))
 app.use('/api/invoices',         require('./routes/invoices'))
 app.use('/api/perio',            require('./routes/perio'))
 app.use('/api/consent',         require('./routes/consent'))
+app.use('/api/reminders',       require('./routes/reminders'))
+app.use('/api/portal',          require('./routes/portal'))
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
+
+// Serve patient portal
+const ROOT = path.resolve(__dirname, '../../')
+app.get('/portal', (_, res) => res.sendFile(path.join(ROOT, 'patient-portal.html')))
+app.get('/',       (_, res) => res.sendFile(path.join(ROOT, 'calendar.html')))
+app.use(express.static(ROOT))
 
 app.use((err, req, res, _next) => {
   console.error(err)

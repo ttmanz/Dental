@@ -1504,6 +1504,126 @@
     }
     .modal-btn.treat:hover { background: #2D8B7A; }
 
+    /* ── Reminders panel ────────────────────────────────────────────────── */
+    .rem-overlay {
+      display:none; position:fixed; inset:0; z-index:3400;
+      background:rgba(44,42,39,.5); align-items:center; justify-content:center;
+    }
+    .rem-overlay.open { display:flex; }
+    .rem-modal {
+      background:var(--cream); width:min(900px,96vw); height:88vh;
+      border-radius:20px; display:flex; flex-direction:column;
+      box-shadow:0 20px 70px rgba(44,42,39,.22); overflow:hidden;
+    }
+    .rem-header {
+      display:flex; align-items:center; gap:12px; padding:16px 24px;
+      background:var(--white); border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .rem-header-title { font-size:16px; font-weight:800; color:var(--text); flex:1; }
+    .rem-close-btn {
+      width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .rem-stats {
+      display:flex; gap:1px; background:var(--border); flex-shrink:0;
+    }
+    .rem-stat {
+      flex:1; background:var(--white); padding:12px 18px; cursor:pointer;
+      transition:background .15s;
+    }
+    .rem-stat:hover { background:var(--cream); }
+    .rem-stat.active { background:var(--primary-light); }
+    .rem-stat-lbl { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+    .rem-stat-val { font-size:20px; font-weight:800; color:var(--text); margin-top:2px; }
+    .rem-stat-val.green  { color:#065F46; }
+    .rem-stat-val.amber  { color:#92400E; }
+    .rem-stat-val.blue   { color:#1E40AF; }
+
+    /* Tab bar */
+    .rem-tabs {
+      display:flex; border-bottom:1px solid var(--border); background:var(--white); flex-shrink:0;
+    }
+    .rem-tab {
+      padding:10px 20px; font-size:13px; font-weight:600; color:var(--text-muted);
+      cursor:pointer; border-bottom:2px solid transparent; transition:all .15s;
+      border:none; background:none; font-family:inherit;
+    }
+    .rem-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+
+    /* Content area */
+    .rem-content { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:10px; }
+
+    /* Upcoming appointment row */
+    .rem-appt-row {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:14px 16px; display:flex; align-items:center; gap:12px;
+    }
+    .rem-appt-date {
+      flex-shrink:0; width:52px; text-align:center;
+      background:var(--primary-light); border-radius:10px; padding:6px 4px;
+    }
+    .rem-appt-day  { font-size:20px; font-weight:800; color:var(--primary); line-height:1; }
+    .rem-appt-mon  { font-size:10px; font-weight:700; color:var(--primary); text-transform:uppercase; }
+    .rem-appt-info { flex:1; min-width:0; }
+    .rem-appt-name { font-size:14px; font-weight:700; color:var(--text); }
+    .rem-appt-meta { font-size:12px; color:var(--text-muted); margin-top:2px; }
+    .rem-appt-phone{ font-size:12px; color:var(--text-mid); margin-top:2px; }
+    .rem-appt-actions { display:flex; gap:6px; flex-shrink:0; }
+    .rem-action-btn {
+      display:flex; align-items:center; gap:5px; padding:7px 12px;
+      border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;
+      font-family:inherit; transition:all .15s; white-space:nowrap;
+    }
+    .rem-action-btn.wa   { border:1px solid #25D366; background:#F0FDF4; color:#166534; }
+    .rem-action-btn.wa:hover { background:#25D366; color:#fff; }
+    .rem-action-btn.email{ border:1px solid var(--primary); background:var(--primary-light); color:var(--primary); }
+    .rem-action-btn.done { border:1px solid var(--border); background:var(--cream-dark); color:var(--text-muted); }
+    .rem-action-btn.sent { border:1px solid #6EE7B7; background:#D1FAE5; color:#065F46; cursor:default; }
+    .rem-reminder-badge {
+      font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px;
+      background:#D1FAE5; color:#065F46; margin-left:4px;
+    }
+
+    /* Messages inbox */
+    .rem-msg-row {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:14px 16px; cursor:pointer; transition:all .15s;
+    }
+    .rem-msg-row:hover { border-color:var(--primary-mid); }
+    .rem-msg-row.unread { border-left:3px solid var(--primary); }
+    .rem-msg-header { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+    .rem-msg-name   { font-size:13px; font-weight:700; color:var(--text); flex:1; }
+    .rem-msg-time   { font-size:11px; color:var(--text-muted); }
+    .rem-msg-body   { font-size:13px; color:var(--text-mid); line-height:1.5; }
+    .rem-msg-reply  { margin-top:8px; padding:8px 12px; background:var(--primary-light); border-radius:8px; font-size:12px; color:var(--primary); }
+    .rem-reply-form { display:none; margin-top:8px; gap:8px; }
+    .rem-reply-form.open { display:flex; }
+    .rem-reply-input {
+      flex:1; border:1.5px solid var(--border); border-radius:8px; padding:8px 12px;
+      font-size:13px; font-family:inherit; resize:none; outline:none;
+    }
+    .rem-reply-input:focus { border-color:var(--primary); }
+    .rem-reply-send {
+      padding:8px 16px; border-radius:8px; border:none; background:var(--primary);
+      color:#fff; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+    }
+
+    /* Template editor */
+    .rem-tmpl-box {
+      background:var(--white); border:1.5px solid var(--border); border-radius:12px;
+      padding:16px; margin-bottom:10px;
+    }
+    .rem-tmpl-label { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+    .rem-tmpl-textarea {
+      width:100%; height:80px; border:1.5px solid var(--border); border-radius:8px;
+      padding:10px 12px; font-size:13px; font-family:inherit; resize:vertical; outline:none;
+    }
+    .rem-tmpl-textarea:focus { border-color:var(--primary); }
+    .rem-tmpl-vars { font-size:11px; color:var(--text-muted); margin-top:6px; }
+
+    .rem-empty { text-align:center; padding:48px 24px; color:var(--text-muted); font-size:13px; }
+
     /* ── Role-based visibility ───────────────────────────────────────────── */
 
     /* Role badge in topbar */
@@ -2462,6 +2582,42 @@
   </div>
 </div>
 
+<!-- ── Reminders overlay ─────────────────────────────────────────────── -->
+<div id="rem-overlay" class="rem-overlay">
+  <div class="rem-modal">
+    <div class="rem-header">
+      <span style="font-size:22px">🔔</span>
+      <div class="rem-header-title" data-en="Appointment Reminders" data-el="Υπενθυμίσεις Ραντεβού">Appointment Reminders</div>
+      <button class="rem-close-btn" id="rem-close-btn">✕</button>
+    </div>
+
+    <!-- Stats bar (clickable tabs) -->
+    <div class="rem-stats">
+      <div class="rem-stat active" data-tab="upcoming">
+        <div class="rem-stat-lbl" data-en="Upcoming (48h)" data-el="Επερχόμενα (48ω)">Upcoming (48h)</div>
+        <div class="rem-stat-val amber" id="rem-stat-upcoming">—</div>
+      </div>
+      <div class="rem-stat" data-tab="sent">
+        <div class="rem-stat-lbl" data-en="Sent Today" data-el="Στάλθηκαν Σήμερα">Sent Today</div>
+        <div class="rem-stat-val green" id="rem-stat-sent">—</div>
+      </div>
+      <div class="rem-stat" data-tab="messages">
+        <div class="rem-stat-lbl" data-en="Patient Messages" data-el="Μηνύματα">Patient Messages</div>
+        <div class="rem-stat-val blue" id="rem-stat-messages">—</div>
+      </div>
+      <div class="rem-stat" data-tab="templates">
+        <div class="rem-stat-lbl" data-en="Templates" data-el="Πρότυπα">Templates</div>
+        <div class="rem-stat-val" style="font-size:14px;margin-top:4px">✏️</div>
+      </div>
+    </div>
+
+    <!-- Tab content -->
+    <div class="rem-content" id="rem-content">
+      <!-- built by JS -->
+    </div>
+  </div>
+</div>
+
 <!-- ── Billing overlay ───────────────────────────────────────────────── -->
 <div id="bill-overlay" class="bill-overlay">
   <div class="bill-modal" style="position:relative;overflow:hidden">
@@ -2834,6 +2990,10 @@
       <button class="lang-btn active" id="lang-en">EN</button>
       <button class="lang-btn" id="lang-el">ΕΛ</button>
     </div>
+    <button class="add-appt-btn" id="reminders-nav-btn" style="background:#8B7CC8;box-shadow:0 2px 8px rgba(139,124,200,.3)">
+      <span>🔔</span>
+      <span data-en="Reminders" data-el="Υπενθυμίσεις">Reminders</span>
+    </button>
     <button class="add-appt-btn" id="billing-nav-btn" style="background:var(--amber);box-shadow:0 2px 8px rgba(232,168,124,.3)">
       <span>🧾</span>
       <span data-en="Billing" data-el="Τιμολόγηση">Billing</span>
@@ -7466,6 +7626,345 @@ General rules (non-session):
     document.getElementById('pc-overlay')?.classList.remove('open')
     openPerioChart(p.id, name)
   })
+
+})()
+
+// ── Reminders ────────────────────────────────────────────────────────────
+;(function initReminders() {
+
+  let _remTab = 'upcoming'
+  let _remTemplates = {
+    en: `Hello {name}! 👋 This is a reminder about your dental appointment at {practice} on {date} at {time} with {dentist}. Please reply to confirm or call us if you need to reschedule. Thank you! 🦷`,
+    el: `Αγαπητέ/η {name}! 👋 Σας υπενθυμίζουμε το ραντεβού σας στο {practice} την {date} στις {time} με τον/την {dentist}. Παρακαλώ απαντήστε για επιβεβαίωση ή καλέστε μας. Ευχαριστούμε! 🦷`
+  }
+
+  const overlay  = document.getElementById('rem-overlay')
+  const content  = document.getElementById('rem-content')
+
+  // ── Open ──────────────────────────────────────────────────────────────────
+  window.openReminders = async function() {
+    overlay.classList.add('open')
+    await loadStats()
+    switchTab('upcoming')
+  }
+
+  document.getElementById('reminders-nav-btn').addEventListener('click', () => window.openReminders())
+  document.getElementById('rem-close-btn').addEventListener('click', () => overlay.classList.remove('open'))
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open') })
+
+  // Stat-tab clicks
+  document.querySelector('.rem-stats').addEventListener('click', e => {
+    const stat = e.target.closest('.rem-stat')
+    if (!stat) return
+    document.querySelectorAll('.rem-stat').forEach(s => s.classList.toggle('active', s === stat))
+    switchTab(stat.dataset.tab)
+  })
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const [statsRes, upcomingRes] = await Promise.all([
+        apiFetch('/api/reminders/stats'),
+        apiFetch('/api/reminders/upcoming?hours=48')
+      ])
+      if (statsRes.ok) {
+        const s = await statsRes.json()
+        document.getElementById('rem-stat-sent').textContent     = s.sent_today   || 0
+        document.getElementById('rem-stat-messages').textContent = s.unread_messages || 0
+      }
+      if (upcomingRes.ok) {
+        const u = await upcomingRes.json()
+        document.getElementById('rem-stat-upcoming').textContent = u.length || 0
+      }
+    } catch {}
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    _remTab = tab
+    if      (tab === 'upcoming')   renderUpcoming()
+    else if (tab === 'sent')       renderSent()
+    else if (tab === 'messages')   renderMessages()
+    else if (tab === 'templates')  renderTemplates()
+  }
+
+  // ── Helper: build reminder message ───────────────────────────────────────
+  function buildMessage(appt, msgLang) {
+    const l = msgLang || lang
+    const tmpl = _remTemplates[l] || _remTemplates.en
+    const d    = new Date(appt.appointment_date + 'T00:00:00')
+    const dateStr = d.toLocaleDateString(l==='el'?'el-GR':'en-GB', { weekday:'long', day:'numeric', month:'long' })
+    const [h, m] = (appt.start_time||'00:00').split(':')
+    const timeStr = `${h}:${m}`
+    const practiceName = AUTH.user?.practiceName || 'our practice'
+    return tmpl
+      .replace('{name}',     appt.patient_name || '')
+      .replace('{practice}', practiceName)
+      .replace('{date}',     dateStr)
+      .replace('{time}',     timeStr)
+      .replace('{dentist}',  appt.dentist_name || '')
+  }
+
+  function formatPhone(phone) {
+    if (!phone) return ''
+    const digits = phone.replace(/\D/g,'')
+    // Greece: 30, Cyprus: 357; strip leading 0 if present
+    if (digits.startsWith('0')) return digits.slice(1)
+    return digits
+  }
+
+  // ── Upcoming tab ──────────────────────────────────────────────────────────
+  async function renderUpcoming() {
+    content.innerHTML = `<div class="rem-empty" style="padding:20px">Loading…</div>`
+    try {
+      const res = await apiFetch('/api/reminders/upcoming?hours=48')
+      if (!res.ok) { content.innerHTML = '<div class="rem-empty">Could not load.</div>'; return }
+      const appts = await res.json()
+      if (!appts.length) {
+        content.innerHTML = `<div class="rem-empty">
+          <div style="font-size:32px;margin-bottom:10px">🎉</div>
+          <div style="font-size:14px;font-weight:600">${lang==='el'?'Δεν υπάρχουν επερχόμενα ραντεβού':'No upcoming appointments in the next 48 hours'}</div>
+        </div>`
+        return
+      }
+
+      // Bulk remind button
+      const bulk = document.createElement('div')
+      bulk.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px'
+      bulk.innerHTML = `
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">
+          ${appts.length} appointment${appts.length!==1?'s':''} · next 48 hours
+        </div>
+        <button id="rem-bulk-btn" style="padding:7px 14px;border-radius:8px;border:1px solid #25D366;background:#F0FDF4;color:#166534;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+          📲 ${lang==='el'?'Αποστολή σε Όλους (WhatsApp)':'Remind All via WhatsApp'}
+        </button>`
+      content.innerHTML = ''
+      content.appendChild(bulk)
+
+      document.getElementById('rem-bulk-btn').addEventListener('click', async () => {
+        for (const appt of appts) {
+          if (!appt.phone) continue
+          const msg = buildMessage(appt)
+          const url = `https://wa.me/${formatPhone(appt.phone)}?text=${encodeURIComponent(msg)}`
+          window.open(url, '_blank', 'noopener')
+          await new Promise(r => setTimeout(r, 400)) // brief pause between opens
+        }
+        await markBulkSent(appts)
+      })
+
+      appts.forEach(appt => {
+        const d    = new Date(appt.appointment_date + 'T00:00:00')
+        const day  = d.getDate()
+        const mon  = d.toLocaleString(lang==='el'?'el-GR':'en-GB', { month:'short' }).toUpperCase()
+        const [h, m] = (appt.start_time||'00:00').split(':')
+        const sent = (appt.reminders||[]).some(r => r.status === 'sent')
+
+        const row = document.createElement('div')
+        row.className = 'rem-appt-row'
+        row.innerHTML = `
+          <div class="rem-appt-date">
+            <div class="rem-appt-day">${day}</div>
+            <div class="rem-appt-mon">${mon}</div>
+          </div>
+          <div class="rem-appt-info">
+            <div class="rem-appt-name">
+              ${appt.patient_name}
+              ${sent ? '<span class="rem-reminder-badge">✓ Reminded</span>' : ''}
+            </div>
+            <div class="rem-appt-meta">${h}:${m} · ${appt.dentist_name} · ${TYPE_LABELS[lang][appt.type]||appt.type}</div>
+            <div class="rem-appt-phone">${appt.phone||'No phone'} ${appt.email ? '· '+appt.email : ''}</div>
+          </div>
+          <div class="rem-appt-actions" id="rem-actions-${appt.appointment_id}">
+            ${appt.phone ? `<button class="rem-action-btn wa" data-appt='${JSON.stringify({...appt, appointment_id:appt.appointment_id})}'>
+              <span>💬</span> WhatsApp</button>` : ''}
+            ${appt.email ? `<button class="rem-action-btn email" data-appt-id="${appt.appointment_id}">
+              ✉ Email</button>` : ''}
+            ${sent ? '<span class="rem-action-btn sent">✓ Sent</span>'
+                   : `<button class="rem-action-btn done" data-mark="${appt.appointment_id}">Mark Sent</button>`}
+          </div>`
+
+        // WhatsApp button
+        row.querySelector('.rem-action-btn.wa')?.addEventListener('click', async (e) => {
+          const a    = JSON.parse(e.currentTarget.dataset.appt)
+          const msg  = buildMessage(a)
+          const url  = `https://wa.me/${formatPhone(a.phone)}?text=${encodeURIComponent(msg)}`
+          window.open(url, '_blank', 'noopener')
+          await markReminderSent(a.appointment_id, 'whatsapp', msg)
+          showToast(lang==='el'?'Υπενθύμιση WhatsApp στάλθηκε ✓':'WhatsApp opened ✓')
+          renderUpcoming()
+        })
+
+        // Email button — opens mailto
+        row.querySelector('.rem-action-btn.email')?.addEventListener('click', async () => {
+          const msg     = buildMessage(appt)
+          const subject = lang==='el'?'Υπενθύμιση Ραντεβού':'Appointment Reminder'
+          window.open(`mailto:${appt.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`, '_blank')
+          await markReminderSent(appt.appointment_id, 'email', msg)
+          renderUpcoming()
+        })
+
+        // Mark sent manually
+        row.querySelector('[data-mark]')?.addEventListener('click', async () => {
+          await markReminderSent(appt.appointment_id, 'whatsapp', '')
+          renderUpcoming()
+        })
+
+        content.appendChild(row)
+      })
+    } catch { content.innerHTML = '<div class="rem-empty">Error loading upcoming appointments.</div>' }
+  }
+
+  async function markReminderSent(appointmentId, channel, message) {
+    try {
+      // Create + immediately mark sent
+      const r1 = await apiFetch(`/api/reminders/${appointmentId}`, {
+        method:'POST', body:{ channel, message, scheduledAt: new Date().toISOString() }
+      })
+      const rem = await r1.json()
+      if (rem.id) {
+        await apiFetch(`/api/reminders/${rem.id}/sent`, { method:'PATCH', body:{} })
+      }
+    } catch {}
+  }
+
+  async function markBulkSent(appts) {
+    for (const a of appts) {
+      if (!(a.reminders||[]).some(r => r.status === 'sent')) {
+        await markReminderSent(a.appointment_id, 'whatsapp', buildMessage(a))
+      }
+    }
+    await loadStats()
+    renderUpcoming()
+  }
+
+  // ── Sent history tab ──────────────────────────────────────────────────────
+  async function renderSent() {
+    content.innerHTML = '<div class="rem-empty" style="padding:20px">Loading…</div>'
+    try {
+      const res = await apiFetch('/api/reminders?status=sent&limit=50')
+      if (!res.ok) return
+      const rems = await res.json()
+      if (!rems.length) { content.innerHTML = '<div class="rem-empty">No reminders sent yet.</div>'; return }
+      content.innerHTML = ''
+      rems.forEach(r => {
+        const row = document.createElement('div')
+        row.className = 'rem-appt-row'
+        const sentDate = new Date(r.sent_at).toLocaleString(lang==='el'?'el-GR':'en-GB')
+        row.innerHTML = `
+          <div class="rem-appt-info">
+            <div class="rem-appt-name">${r.patient_name} <span class="rem-reminder-badge">${r.channel}</span></div>
+            <div class="rem-appt-meta">${lang==='el'?'Ραντεβού':'Appointment'}: ${new Date(r.appointment_date+'T00:00:00').toLocaleDateString(lang==='el'?'el-GR':'en-GB')}</div>
+            <div class="rem-appt-phone" style="font-size:11px;margin-top:2px">${r.message?.slice(0,80)}…</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);text-align:right;flex-shrink:0">${sentDate}</div>`
+        content.appendChild(row)
+      })
+    } catch {}
+  }
+
+  // ── Messages tab ──────────────────────────────────────────────────────────
+  async function renderMessages() {
+    content.innerHTML = '<div class="rem-empty" style="padding:20px">Loading…</div>'
+    try {
+      const res = await apiFetch('/api/reminders/messages')
+      if (!res.ok) return
+      const msgs = await res.json()
+      if (!msgs.length) {
+        content.innerHTML = `<div class="rem-empty">
+          <div style="font-size:32px;margin-bottom:10px">📭</div>
+          <div style="font-size:14px;font-weight:600">${lang==='el'?'Δεν υπάρχουν μηνύματα':'No patient messages yet'}</div>
+          <div style="margin-top:6px;font-size:12px">${lang==='el'?'Μηνύματα από ασθενείς μέσω του portal':'Messages from patients via the patient portal appear here'}</div>
+        </div>`
+        return
+      }
+      content.innerHTML = ''
+      msgs.forEach(msg => {
+        const row = document.createElement('div')
+        row.className = 'rem-msg-row' + (msg.is_read ? '' : ' unread')
+        const date = new Date(msg.created_at).toLocaleString(lang==='el'?'el-GR':'en-GB')
+        row.innerHTML = `
+          <div class="rem-msg-header">
+            <div class="rem-msg-name">${msg.patient_name} ${!msg.is_read ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--primary);display:inline-block;margin-left:6px"></span>' : ''}</div>
+            <div class="rem-msg-time">${date}</div>
+          </div>
+          <div class="rem-msg-body">${msg.body}</div>
+          ${msg.reply_body ? `<div class="rem-msg-reply">✓ Replied: ${msg.reply_body}</div>` : ''}
+          ${!msg.reply_body ? `<div class="rem-reply-form" id="rrf-${msg.id}">
+            <textarea class="rem-reply-input" placeholder="${lang==='el'?'Απάντηση…':'Reply…'}" rows="2"></textarea>
+            <button class="rem-reply-send" data-msg-id="${msg.id}">Send</button>
+          </div>` : ''}`
+
+        if (!msg.is_read) {
+          apiFetch(`/api/reminders/messages/${msg.id}`, { method:'PATCH', body:{ isRead:true }}).catch(()=>{})
+        }
+        if (!msg.reply_body) {
+          row.querySelector(`#rrf-${msg.id}`)?.classList.add('open')
+          row.querySelector(`.rem-reply-send`)?.addEventListener('click', async (e) => {
+            const replyBody = row.querySelector('.rem-reply-input').value.trim()
+            if (!replyBody) return
+            try {
+              await apiFetch(`/api/reminders/messages/${msg.id}`, { method:'PATCH', body:{ replyBody }})
+              renderMessages(); loadStats()
+              showToast(lang==='el'?'Απάντηση στάλθηκε ✓':'Reply saved ✓')
+            } catch {}
+          })
+        }
+        content.appendChild(row)
+      })
+      loadStats()
+    } catch {}
+  }
+
+  // ── Templates tab ─────────────────────────────────────────────────────────
+  function renderTemplates() {
+    content.innerHTML = ''
+    const info = document.createElement('div')
+    info.style.cssText = 'font-size:12px;color:var(--text-muted);margin-bottom:12px'
+    info.textContent = lang==='el'?'Χρησιμοποιήστε {name}, {practice}, {date}, {time}, {dentist} ως μεταβλητές.':'Use {name}, {practice}, {date}, {time}, {dentist} as variables.'
+    content.appendChild(info)
+
+    ;['en', 'el'].forEach(l => {
+      const box = document.createElement('div')
+      box.className = 'rem-tmpl-box'
+      box.innerHTML = `
+        <div class="rem-tmpl-label">${l === 'en' ? '🇬🇧 English Template' : '🇬🇷 Greek Template'}</div>
+        <textarea class="rem-tmpl-textarea" id="rem-tmpl-${l}">${_remTemplates[l]}</textarea>
+        <div class="rem-tmpl-vars">Variables: {name} {practice} {date} {time} {dentist}</div>`
+      box.querySelector('textarea').addEventListener('change', e => {
+        _remTemplates[l] = e.target.value
+        localStorage.setItem(`rem_tmpl_${l}`, e.target.value)
+        showToast(lang==='el'?'Πρότυπο αποθηκεύτηκε ✓':'Template saved ✓')
+      })
+      content.appendChild(box)
+    })
+  }
+
+  // ── Load saved templates ──────────────────────────────────────────────────
+  ;['en','el'].forEach(l => {
+    const saved = localStorage.getItem(`rem_tmpl_${l}`)
+    if (saved) _remTemplates[l] = saved
+  })
+
+  // ── Unread count badge on topbar button ───────────────────────────────────
+  window.refreshReminderBadge = async function() {
+    try {
+      const res = await apiFetch('/api/reminders/stats')
+      if (!res.ok) return
+      const s = await res.json()
+      const btn = document.getElementById('reminders-nav-btn')
+      const unread = (s.unread_messages || 0)
+      const existing = btn.querySelector('.rem-topbar-badge')
+      if (unread > 0) {
+        if (!existing) {
+          const badge = document.createElement('span')
+          badge.className = 'rem-topbar-badge'
+          badge.style.cssText = 'background:#D95F5F;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px'
+          badge.textContent = unread
+          btn.appendChild(badge)
+        } else { existing.textContent = unread }
+      } else if (existing) { existing.remove() }
+    } catch {}
+  }
 
 })()
 
