@@ -14,6 +14,7 @@ app.use('/api/dentists',     require('./routes/dentists'))
 app.use('/api/treatment',        require('./routes/treatment'))
 app.use('/api/treatment-plans',  require('./routes/treatment-plans'))
 app.use('/api/invoices',         require('./routes/invoices'))
+app.use('/api/perio',            require('./routes/perio'))
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
 

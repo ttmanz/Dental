@@ -1504,6 +1504,132 @@
     }
     .modal-btn.treat:hover { background: #2D8B7A; }
 
+    /* ── Perio Chart overlay ─────────────────────────────────────────────── */
+    .perio-overlay {
+      display:none; position:fixed; inset:0; z-index:3200;
+      background:rgba(44,42,39,.55); align-items:flex-start; justify-content:center;
+      padding:20px 0; overflow-y:auto;
+    }
+    .perio-overlay.open { display:flex; }
+    .perio-modal {
+      background:var(--cream); width:min(1100px,98vw);
+      border-radius:20px; display:flex; flex-direction:column;
+      box-shadow:0 20px 70px rgba(44,42,39,.22); overflow:hidden;
+    }
+    .perio-header {
+      display:flex; align-items:center; gap:14px;
+      padding:16px 24px; background:var(--white);
+      border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .perio-header-title { font-size:16px; font-weight:800; color:var(--text); flex:1; }
+    .perio-header-patient { font-size:12px; color:var(--text-muted); }
+    .perio-close-btn {
+      width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    /* Toolbar */
+    .perio-toolbar {
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      padding:12px 20px; background:var(--white);
+      border-bottom:1px solid var(--border);
+    }
+    .perio-exam-select {
+      height:34px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 10px; font-size:13px; font-family:inherit; color:var(--text);
+      background:var(--cream); outline:none; min-width:180px;
+    }
+    .perio-btn {
+      padding:7px 14px; border-radius:8px; font-size:12px; font-weight:600;
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .perio-btn.primary { border:none; background:var(--primary); color:#fff; }
+    .perio-btn.primary:hover { background:#2D8B7A; }
+    .perio-btn.secondary { border:1px solid var(--border); background:var(--white); color:var(--text-mid); }
+    .perio-btn.secondary:hover { background:var(--cream-dark); }
+    .perio-btn.danger { border:1px solid #FECACA; background:#FEE2E2; color:#991B1B; }
+    .perio-date-input {
+      height:34px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 10px; font-size:13px; font-family:inherit;
+      background:var(--cream); outline:none;
+    }
+    /* Legend */
+    .perio-legend {
+      display:flex; align-items:center; gap:14px; margin-left:auto;
+      font-size:11px; font-weight:600; color:var(--text-muted);
+    }
+    .perio-leg-dot {
+      width:14px; height:14px; border-radius:3px; display:inline-block; margin-right:4px; vertical-align:middle;
+    }
+    /* Chart area */
+    .perio-chart-wrap { padding:16px 12px; overflow-x:auto; }
+    .perio-arch-label {
+      font-size:10px; font-weight:700; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.08em; padding:4px 8px;
+    }
+    /* Each tooth column */
+    .perio-grid {
+      display:flex; gap:3px; width:max-content; margin:0 auto;
+    }
+    .perio-midline {
+      width:16px; border-right:2px dashed var(--primary-mid); margin:0 4px; flex-shrink:0;
+    }
+    .perio-tooth-col {
+      display:flex; flex-direction:column; align-items:center; gap:2px; width:46px;
+    }
+    .perio-tooth-num {
+      font-size:10px; font-weight:700; color:var(--text-muted);
+      background:var(--cream-dark); border-radius:4px; padding:2px 5px; width:100%; text-align:center;
+    }
+    .perio-sites {
+      display:flex; gap:1px; width:100%;
+    }
+    .perio-cell {
+      flex:1; height:28px; border-radius:4px; border:1.5px solid var(--border);
+      background:var(--white); text-align:center; font-size:11px; font-weight:700;
+      color:var(--text); outline:none; transition:background .15s, border-color .15s;
+      -moz-appearance:textfield; padding:0; width:100%; font-family:inherit;
+    }
+    .perio-cell::-webkit-inner-spin-button { display:none; }
+    .perio-cell:focus { border-color:var(--primary); z-index:2; }
+    /* Depth color coding */
+    .perio-cell[data-depth="1"],.perio-cell[data-depth="2"],.perio-cell[data-depth="3"] { background:#D1FAE5; border-color:#6EE7B7; color:#065F46; }
+    .perio-cell[data-depth="4"] { background:#FEF3C7; border-color:#FCD34D; color:#92400E; }
+    .perio-cell[data-depth="5"] { background:#FFEDD5; border-color:#FCA949; color:#9A3412; }
+    .perio-cell[data-depth="6"],.perio-cell[data-depth="7"],.perio-cell[data-depth="8"],
+    .perio-cell[data-depth="9"],.perio-cell[data-depth="10"],.perio-cell[data-depth="11"],
+    .perio-cell[data-depth="12"] { background:#FEE2E2; border-color:#FCA5A5; color:#991B1B; }
+    /* BOP dots row */
+    .perio-bop-row { display:flex; gap:1px; width:100%; }
+    .perio-bop {
+      flex:1; height:12px; border-radius:50%; cursor:pointer;
+      background:var(--cream-dark); border:1.5px solid var(--border); transition:all .12s;
+    }
+    .perio-bop.bleeding { background:#D95F5F; border-color:#D95F5F; }
+    /* Mobility / furcation row */
+    .perio-mob-row { display:flex; gap:2px; width:100%; margin-top:2px; }
+    .perio-mob-cell {
+      flex:1; height:22px; border-radius:4px; border:1.5px solid var(--border);
+      background:var(--white); text-align:center; font-size:10px; font-weight:700;
+      color:var(--text-muted); outline:none; font-family:inherit; padding:0;
+    }
+    /* Arch spacer between upper and lower charts */
+    .perio-arch-gap { height:20px; }
+    /* Summary bar */
+    .perio-summary {
+      display:flex; gap:16px; padding:12px 20px;
+      background:var(--white); border-top:1px solid var(--border);
+      font-size:12px; flex-wrap:wrap;
+    }
+    .perio-summary-stat { display:flex; flex-direction:column; gap:2px; }
+    .perio-summary-lbl { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+    .perio-summary-val { font-size:16px; font-weight:800; color:var(--text); }
+    .perio-notes-input {
+      width:100%; height:36px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 12px; font-size:13px; font-family:inherit; background:var(--cream); outline:none;
+    }
+    .perio-notes-input:focus { border-color:var(--primary); background:var(--white); }
+
     /* ── Billing overlay ────────────────────────────────────────────────── */
     .bill-overlay {
       display:none; position:fixed; inset:0; z-index:3100;
@@ -1998,6 +2124,69 @@
   </style>
 </head>
 <body>
+
+<!-- ── Perio Chart overlay ───────────────────────────────────────────── -->
+<div id="perio-overlay" class="perio-overlay">
+  <div class="perio-modal">
+
+    <div class="perio-header">
+      <span style="font-size:22px">🦷</span>
+      <div>
+        <div class="perio-header-title" data-en="Periodontal Chart" data-el="Περιοδοντικό Χάρτη">Periodontal Chart</div>
+        <div class="perio-header-patient" id="perio-patient-name">—</div>
+      </div>
+      <button class="perio-close-btn" id="perio-close-btn">✕</button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="perio-toolbar">
+      <select class="perio-exam-select" id="perio-exam-select">
+        <option value="">— New Exam —</option>
+      </select>
+      <input type="date" class="perio-date-input" id="perio-exam-date" />
+      <button class="perio-btn primary" id="perio-save-btn" data-en="Save Exam" data-el="Αποθήκευση">Save Exam</button>
+      <button class="perio-btn secondary" id="perio-new-exam-btn" data-en="+ New Exam" data-el="+ Νέα Εξέταση">+ New Exam</button>
+      <button class="perio-btn danger" id="perio-delete-btn" style="display:none" data-en="Delete" data-el="Διαγραφή">Delete</button>
+      <div class="perio-legend">
+        <span><span class="perio-leg-dot" style="background:#D1FAE5;border:1px solid #6EE7B7"></span>1–3 Healthy</span>
+        <span><span class="perio-leg-dot" style="background:#FEF3C7;border:1px solid #FCD34D"></span>4 Monitor</span>
+        <span><span class="perio-leg-dot" style="background:#FFEDD5;border:1px solid #FCA949"></span>5 Concern</span>
+        <span><span class="perio-leg-dot" style="background:#FEE2E2;border:1px solid #FCA5A5"></span>6+ Critical</span>
+        <span><span class="perio-leg-dot" style="background:#D95F5F"></span>BOP</span>
+      </div>
+    </div>
+
+    <!-- Chart area -->
+    <div class="perio-chart-wrap" id="perio-chart-wrap">
+      <!-- built by JS -->
+    </div>
+
+    <!-- Notes + summary -->
+    <div class="perio-summary" id="perio-summary">
+      <div class="perio-summary-stat">
+        <div class="perio-summary-lbl">Avg Depth</div>
+        <div class="perio-summary-val" id="perio-avg">—</div>
+      </div>
+      <div class="perio-summary-stat">
+        <div class="perio-summary-lbl">Max Depth</div>
+        <div class="perio-summary-val" id="perio-max">—</div>
+      </div>
+      <div class="perio-summary-stat">
+        <div class="perio-summary-lbl">BOP %</div>
+        <div class="perio-summary-val" id="perio-bop-pct">—</div>
+      </div>
+      <div class="perio-summary-stat">
+        <div class="perio-summary-lbl">Sites ≥ 4mm</div>
+        <div class="perio-summary-val" id="perio-deep">—</div>
+      </div>
+      <div style="flex:1">
+        <div class="perio-summary-lbl" style="margin-bottom:4px">Notes</div>
+        <input class="perio-notes-input" id="perio-notes" placeholder="Exam notes…" />
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <!-- ── Billing overlay ───────────────────────────────────────────────── -->
 <div id="bill-overlay" class="bill-overlay">
@@ -2994,6 +3183,7 @@
 
     <div class="pc-footer">
       <button class="pc-btn secondary" id="pc-close-btn" data-en="Close" data-el="Κλείσιμο">Close</button>
+      <button class="pc-btn secondary" id="pc-perio-btn" data-en="🦷 Perio Chart" data-el="🦷 Περιοδοντικό">🦷 Perio Chart</button>
       <button class="pc-btn secondary" id="pc-tp-btn" data-en="📋 Treatment Plan" data-el="📋 Πλάνο Θεραπείας">📋 Treatment Plan</button>
       <button class="pc-btn primary" id="pc-new-appt-btn" data-en="+ New Appointment" data-el="+ Νέο Ραντεβού">+ New Appointment</button>
     </div>
@@ -6233,6 +6423,327 @@ General rules (non-session):
       if (aiPanelOpen) setStatus('idle', 'Tap ⚙ to add your API key', '')
     }, 800)
   }
+
+})()
+
+// ── Perio Chart ───────────────────────────────────────────────────────────
+;(function initPerio() {
+
+  // FDI tooth numbers: upper right→left | upper left→right
+  const UPPER = [18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28]
+  const LOWER = [48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38]
+  const SITES = ['mb','b','db']   // buccal 3 sites; lingual = ml,l,dl
+
+  let _pPatientId   = null
+  let _pPatientName = ''
+  let _pExamId      = null
+  let _pReadings    = {}    // { "14": { b:[mb,b,db], l:[ml,l,dl], bop:[6 bools], mob:0, furc:0 } }
+  let _pExamList    = []
+  let _pDirty       = false
+
+  const overlay   = document.getElementById('perio-overlay')
+  const chartWrap = document.getElementById('perio-chart-wrap')
+  const examSel   = document.getElementById('perio-exam-select')
+  const dateInput = document.getElementById('perio-exam-date')
+
+  // ── Open ──────────────────────────────────────────────────────────────────
+  window.openPerioChart = async function(patientId, patientName) {
+    _pPatientId   = patientId
+    _pPatientName = patientName
+    document.getElementById('perio-patient-name').textContent = patientName
+    overlay.classList.add('open')
+    await loadExamList()
+    if (_pExamList.length) {
+      await loadExam(_pExamList[0].id)
+    } else {
+      newExam()
+    }
+  }
+
+  document.getElementById('perio-close-btn').addEventListener('click', () => overlay.classList.remove('open'))
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open') })
+
+  // ── Exam list ─────────────────────────────────────────────────────────────
+  async function loadExamList() {
+    try {
+      const res = await apiFetch(`/api/perio/${_pPatientId}`)
+      if (!res.ok) return
+      _pExamList = await res.json()
+      examSel.innerHTML = '<option value="">— New Exam —</option>'
+      _pExamList.forEach(e => {
+        const opt = document.createElement('option')
+        opt.value = e.id
+        opt.textContent = new Date(e.exam_date).toLocaleDateString(lang==='el'?'el-GR':'en-GB') +
+          (e.examiner ? ` · ${e.examiner}` : '')
+        examSel.appendChild(opt)
+      })
+    } catch {}
+  }
+
+  examSel.addEventListener('change', async () => {
+    if (examSel.value) await loadExam(examSel.value)
+    else newExam()
+  })
+
+  async function loadExam(examId) {
+    try {
+      const res = await apiFetch(`/api/perio/exam/${examId}`)
+      if (!res.ok) return
+      const exam = await res.json()
+      _pExamId   = exam.id
+      _pReadings = exam.readings || {}
+      dateInput.value = (exam.exam_date||'').slice(0,10)
+      document.getElementById('perio-notes').value = exam.notes || ''
+      examSel.value = examId
+      document.getElementById('perio-delete-btn').style.display = ''
+      _pDirty = false
+      buildChart()
+      updateSummary()
+    } catch {}
+  }
+
+  function newExam() {
+    _pExamId   = null
+    _pReadings = {}
+    dateInput.value = new Date().toISOString().slice(0,10)
+    document.getElementById('perio-notes').value = ''
+    document.getElementById('perio-delete-btn').style.display = 'none'
+    examSel.value = ''
+    _pDirty = false
+    buildChart()
+    updateSummary()
+  }
+
+  document.getElementById('perio-new-exam-btn').addEventListener('click', newExam)
+
+  // ── Build chart DOM ───────────────────────────────────────────────────────
+  function buildChart() {
+    chartWrap.innerHTML = ''
+
+    // Upper arch (lingual on top, buccal on bottom — standard chart view)
+    chartWrap.appendChild(archLabel('UPPER — Lingual ↑  |  Buccal ↓'))
+    chartWrap.appendChild(buildArch(UPPER, true))
+
+    const gap = document.createElement('div')
+    gap.className = 'perio-arch-gap'
+    chartWrap.appendChild(gap)
+
+    // Lower arch (buccal on top, lingual on bottom)
+    chartWrap.appendChild(archLabel('LOWER — Buccal ↑  |  Lingual ↓'))
+    chartWrap.appendChild(buildArch(LOWER, false))
+  }
+
+  function archLabel(txt) {
+    const d = document.createElement('div')
+    d.className = 'perio-arch-label'
+    d.textContent = txt
+    return d
+  }
+
+  function buildArch(teeth, isUpper) {
+    const grid = document.createElement('div')
+    grid.className = 'perio-grid'
+
+    teeth.forEach((num, idx) => {
+      if (idx === 8) {
+        const ml = document.createElement('div')
+        ml.className = 'perio-midline'
+        grid.appendChild(ml)
+      }
+
+      const col  = document.createElement('div')
+      col.className = 'perio-tooth-col'
+      const r = getReading(num)
+
+      // For upper: lingual row first (top), then BOP, then buccal row
+      // For lower: buccal row first (top), then BOP, then lingual row
+      const row1 = isUpper ? makeSiteRow(num, 'l', r.l) : makeSiteRow(num, 'b', r.b)
+      const row2 = isUpper ? makeSiteRow(num, 'b', r.b) : makeSiteRow(num, 'l', r.l)
+
+      const bopRow = makeBopRow(num, r.bop)
+      const numEl  = document.createElement('div')
+      numEl.className = 'perio-tooth-num'
+      numEl.textContent = num
+
+      const mobRow = makeMobRow(num, r.mob, r.furc)
+
+      col.appendChild(row1)
+      col.appendChild(bopRow)
+      col.appendChild(numEl)
+      col.appendChild(row2)
+      col.appendChild(mobRow)
+
+      grid.appendChild(col)
+    })
+    return grid
+  }
+
+  function getReading(num) {
+    const key = String(num)
+    if (!_pReadings[key]) _pReadings[key] = { b:[0,0,0], l:[0,0,0], bop:[false,false,false,false,false,false], mob:0, furc:0 }
+    const r = _pReadings[key]
+    if (!r.b) r.b = [0,0,0]
+    if (!r.l) r.l = [0,0,0]
+    if (!r.bop) r.bop = [false,false,false,false,false,false]
+    return r
+  }
+
+  function makeSiteRow(toothNum, side, vals) {
+    const row = document.createElement('div')
+    row.className = 'perio-sites'
+    ;[0,1,2].forEach(i => {
+      const inp = document.createElement('input')
+      inp.type      = 'number'
+      inp.className = 'perio-cell'
+      inp.min = 0; inp.max = 12
+      inp.value = vals[i] || ''
+      inp.dataset.tooth = toothNum
+      inp.dataset.side  = side
+      inp.dataset.idx   = i
+      setDepthColor(inp, vals[i])
+      inp.addEventListener('input', () => {
+        const v = parseInt(inp.value) || 0
+        getReading(toothNum)[side][i] = v
+        setDepthColor(inp, v)
+        _pDirty = true
+        updateSummary()
+      })
+      // Tab navigation left-to-right across all cells
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); focusNext(inp) }
+      })
+      row.appendChild(inp)
+    })
+    return row
+  }
+
+  function setDepthColor(inp, v) {
+    inp.removeAttribute('data-depth')
+    if (v >= 1 && v <= 12) inp.setAttribute('data-depth', Math.min(v, 12))
+  }
+
+  function makeBopRow(toothNum, bopVals) {
+    const row = document.createElement('div')
+    row.className = 'perio-bop-row'
+    ;[0,1,2,3,4,5].forEach(i => {
+      const dot = document.createElement('div')
+      dot.className = 'perio-bop' + (bopVals[i] ? ' bleeding' : '')
+      dot.title = ['MB','B','DB','ML','L','DL'][i]
+      dot.addEventListener('click', () => {
+        getReading(toothNum).bop[i] = !getReading(toothNum).bop[i]
+        dot.classList.toggle('bleeding')
+        _pDirty = true
+        updateSummary()
+      })
+      row.appendChild(dot)
+    })
+    return row
+  }
+
+  function makeMobRow(toothNum, mob, furc) {
+    const row = document.createElement('div')
+    row.className = 'perio-mob-row'
+
+    const mobInp = document.createElement('input')
+    mobInp.type = 'number'; mobInp.min = 0; mobInp.max = 3
+    mobInp.className = 'perio-mob-cell'
+    mobInp.value = mob || ''
+    mobInp.title = 'Mobility (0-3)'
+    mobInp.placeholder = 'M'
+    mobInp.addEventListener('input', () => {
+      getReading(toothNum).mob = parseInt(mobInp.value) || 0; _pDirty = true
+    })
+
+    const furcInp = document.createElement('input')
+    furcInp.type = 'number'; furcInp.min = 0; furcInp.max = 3
+    furcInp.className = 'perio-mob-cell'
+    furcInp.value = furc || ''
+    furcInp.title = 'Furcation (0-3)'
+    furcInp.placeholder = 'F'
+    furcInp.addEventListener('input', () => {
+      getReading(toothNum).furc = parseInt(furcInp.value) || 0; _pDirty = true
+    })
+
+    row.appendChild(mobInp)
+    row.appendChild(furcInp)
+    return row
+  }
+
+  function focusNext(current) {
+    const all = [...chartWrap.querySelectorAll('.perio-cell')]
+    const idx = all.indexOf(current)
+    if (idx < all.length - 1) all[idx + 1].focus()
+  }
+
+  // ── Summary stats ─────────────────────────────────────────────────────────
+  function updateSummary() {
+    const allDepths = []; let bopCount = 0; let totalSites = 0
+
+    Object.values(_pReadings).forEach(r => {
+      ;[...r.b, ...r.l].forEach(v => { if (v > 0) allDepths.push(v) })
+      r.bop.forEach(b => { totalSites++; if (b) bopCount++ })
+    })
+
+    const avg  = allDepths.length ? (allDepths.reduce((a,b)=>a+b,0) / allDepths.length).toFixed(1) : '—'
+    const max  = allDepths.length ? Math.max(...allDepths) : '—'
+    const bopP = totalSites ? Math.round(bopCount / totalSites * 100) + '%' : '—'
+    const deep = allDepths.filter(v => v >= 4).length
+
+    document.getElementById('perio-avg').textContent   = avg
+    document.getElementById('perio-max').textContent   = max
+    document.getElementById('perio-bop-pct').textContent = bopP
+    document.getElementById('perio-deep').textContent  = deep
+  }
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+  document.getElementById('perio-save-btn').addEventListener('click', async () => {
+    const notes   = document.getElementById('perio-notes').value.trim()
+    const examDate = dateInput.value || new Date().toISOString().slice(0,10)
+
+    // Strip all-zero entries to keep payload lean
+    const cleaned = {}
+    Object.entries(_pReadings).forEach(([k, r]) => {
+      const hasData = [...r.b, ...r.l].some(v => v > 0) || r.bop.some(Boolean) || r.mob || r.furc
+      if (hasData) cleaned[k] = r
+    })
+
+    try {
+      if (_pExamId) {
+        await apiFetch(`/api/perio/exam/${_pExamId}`, { method:'PATCH', body:{ readings:cleaned, notes, examDate }})
+        showToast(lang==='el'?'Αποθηκεύτηκε ✓':'Saved ✓')
+      } else {
+        const res = await apiFetch(`/api/perio/${_pPatientId}`, { method:'POST', body:{ readings:cleaned, notes, examDate }})
+        const exam = await res.json()
+        _pExamId = exam.id
+        document.getElementById('perio-delete-btn').style.display = ''
+        await loadExamList()
+        examSel.value = _pExamId
+        showToast(lang==='el'?'Εξέταση αποθηκεύτηκε ✓':'Exam saved ✓')
+      }
+      _pDirty = false
+    } catch { showToast('Could not save exam.') }
+  })
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  document.getElementById('perio-delete-btn').addEventListener('click', async () => {
+    if (!confirm(lang==='el'?'Διαγραφή αυτής της εξέτασης;':'Delete this exam?')) return
+    try {
+      await apiFetch(`/api/perio/exam/${_pExamId}`, { method:'DELETE' })
+      await loadExamList()
+      if (_pExamList.length) await loadExam(_pExamList[0].id)
+      else newExam()
+      showToast(lang==='el'?'Διαγράφηκε':'Deleted')
+    } catch { showToast('Could not delete.') }
+  })
+
+  // ── Wire patient chart button ─────────────────────────────────────────────
+  document.getElementById('pc-perio-btn').addEventListener('click', () => {
+    const name = document.getElementById('pc-name').textContent
+    const p    = findPatientByName(name)
+    if (!p?.id) { showToast('Patient not found.'); return }
+    document.getElementById('pc-overlay')?.classList.remove('open')
+    openPerioChart(p.id, name)
+  })
 
 })()
 
