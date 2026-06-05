@@ -1739,18 +1739,7 @@
           <div class="dentist-name" data-en="All Dentists" data-el="Όλοι">All Dentists</div>
           <div class="dentist-count" id="count-all">12</div>
         </div>
-        <div class="dentist-item" data-dentist="maria" style="color:#E07850">
-          <div class="dentist-check"></div>
-          <div class="dentist-dot" style="background:#E07850"></div>
-          <div class="dentist-name">Dr. M. Papadopoulos</div>
-          <div class="dentist-count" id="count-maria">7</div>
-        </div>
-        <div class="dentist-item" data-dentist="nikos" style="color:#8B7CC8">
-          <div class="dentist-check"></div>
-          <div class="dentist-dot" style="background:#8B7CC8"></div>
-          <div class="dentist-name">Dr. N. Konstantinou</div>
-          <div class="dentist-count" id="count-nikos">5</div>
-        </div>
+        <!-- dentist rows injected by renderDentistSidebar() after API load -->
       </div>
     </div>
 
@@ -2647,6 +2636,7 @@ function apiFetch(path, options = {}) {
       }
     }
     overlay.classList.add('hidden')
+    if (typeof initAppData === 'function') initAppData()
   }
 
   window.doLogout = function() {
@@ -2704,25 +2694,116 @@ const APPTS = []
 //   smoker, pregnant, lastVisit, anxiety, prevWork, chiefComplaint, insurance,
 //   referral, createdAt }
 let PATIENTS = []
-function loadPatients() {
-  try { PATIENTS = JSON.parse(localStorage.getItem('dental_patients') || '[]') } catch(_) { PATIENTS = [] }
-}
-function savePatients() {
-  localStorage.setItem('dental_patients', JSON.stringify(PATIENTS))
-}
-loadPatients()
 
-// ── Appointments localStorage persistence ─────────────────────────────────
-function saveAppts() {
-  localStorage.setItem('dental_appts', JSON.stringify(APPTS))
+// ── API ↔ frontend data mappers ──────────────────────────────────────────
+function patientFromApi(p) {
+  return {
+    id: p.id,
+    fullName: `${p.first_name} ${p.last_name}`,
+    dob:     p.date_of_birth || '',
+    phone:   p.phone         || '',
+    email:   p.email         || '',
+    address: p.address       || '',
+    gender:  p.gender        || '',
+    photo:   p.photo_url     || '',
+    notes:   p.notes         || '',
+    createdAt: p.created_at,
+  }
 }
-function loadAppts() {
+
+function apptFromApi(a) {
+  const [h, m] = (a.start_time || '09:00').split(':').map(Number)
+  return {
+    id:      a.id,
+    patient: a.patient_name,
+    type:    a.type,
+    dentist: a.dentist_name,
+    date:    a.appointment_date,
+    hour: h, min: m,
+    dur:     a.duration_minutes || 30,
+    notes:   a.notes || '',
+    status:  a.status,
+    confirmStatus: a.status === 'confirmed' ? 'confirmed'
+                 : a.status === 'cancelled' ? 'declined' : 'pending',
+  }
+}
+
+function patientIdByName(name) {
+  const p = findPatientByName(name)
+  return p?.id || null
+}
+
+function dentistIdByName(name) {
+  return (window._DENTISTS || []).find(d => d.display_name === name)?.id || null
+}
+
+// ── Remote data loaders ──────────────────────────────────────────────────
+async function fetchDentists() {
   try {
-    const saved = JSON.parse(localStorage.getItem('dental_appts') || '[]')
-    APPTS.length = 0
-    saved.forEach(a => APPTS.push(a))
-  } catch(_) {}
+    const res = await apiFetch('/api/dentists')
+    if (!res.ok) return
+    const dentists = await res.json()
+    window._DENTISTS = dentists
+    Object.keys(DENTIST_MAP).forEach(k => delete DENTIST_MAP[k])
+    dentists.forEach(d => { DENTIST_MAP[d.id] = d.display_name })
+    renderDentistSidebar(dentists)
+  } catch(e) { console.warn('fetchDentists failed', e) }
 }
+
+async function fetchPatients() {
+  try {
+    const res = await apiFetch('/api/patients?limit=500')
+    if (!res.ok) return
+    const patients = await res.json()
+    PATIENTS.length = 0
+    patients.forEach(p => PATIENTS.push(patientFromApi(p)))
+  } catch(e) { console.warn('fetchPatients failed', e) }
+}
+
+async function fetchAppts() {
+  try {
+    const from = new Date(); from.setMonth(from.getMonth() - 3)
+    const to   = new Date(); to.setMonth(to.getMonth() + 6)
+    const res  = await apiFetch(`/api/appointments?from=${toISODate(from)}&to=${toISODate(to)}`)
+    if (!res.ok) return
+    const appts = await res.json()
+    APPTS.length = 0
+    appts.forEach(a => APPTS.push(apptFromApi(a)))
+  } catch(e) { console.warn('fetchAppts failed', e) }
+}
+
+function renderDentistSidebar(dentists) {
+  const list = document.getElementById('dentist-list')
+  // Remove any previously-injected dentist rows (keep the "all" row)
+  list.querySelectorAll('.dentist-item[data-dentist]:not([data-dentist="all"])').forEach(el => el.remove())
+  const colors = ['#E07850','#8B7CC8','#5B9ED6','#4BAE8A','#C8A830','#D95F5F']
+  dentists.forEach((d, i) => {
+    const color = d.color || colors[i % colors.length]
+    const item  = document.createElement('div')
+    item.className      = 'dentist-item'
+    item.dataset.dentist = d.id
+    item.style.color    = color
+    item.innerHTML = `
+      <div class="dentist-check"></div>
+      <div class="dentist-dot" style="background:${color}"></div>
+      <div class="dentist-name">${d.display_name}</div>
+      <div class="dentist-count" id="count-${d.id}">0</div>`
+    list.appendChild(item)
+  })
+  updateDentistCounts()
+}
+
+async function initAppData() {
+  await fetchDentists()
+  await fetchPatients()
+  await fetchAppts()
+  renderCalendar()
+  updateDentistCounts()
+}
+
+// ── No-op stubs kept so existing call-sites don't throw ─────────────────
+function savePatients() {}
+function saveAppts()    {}
 
 function findPatientByName(name) {
   if (!name) return null
@@ -2802,10 +2883,7 @@ let dayOffset   = 0        // days from today for day view
 
 // ── Dentist filter state ─────────────────────────────────────────────────
 // 'maria' → Dr. M. Papadopoulos, 'nikos' → Dr. N. Konstantinou
-const DENTIST_MAP = {
-  maria: 'Dr. M. Papadopoulos',
-  nikos: 'Dr. N. Konstantinou',
-}
+const DENTIST_MAP = {}   // populated from API by fetchDentists()
 let activeDentists = new Set()  // empty = show all; non-empty = show only selected
 
 // ── Appointment date helper ───────────────────────────────────────────────
@@ -2901,7 +2979,9 @@ function makeApptBlock(a, date) {
     a.status = a.confirmStatus === 'declined' ? 'cancelled'
              : a.confirmStatus === 'confirmed' ? 'confirmed'
              : 'pending'
-    saveAppts()
+    if (a.id && AUTH.token) {
+      apiFetch(`/api/appointments/${a.id}`, { method:'PATCH', body:{ status: a.status } }).catch(() => {})
+    }
     showToast(
       a.confirmStatus === 'confirmed' ? (lang === 'el' ? 'Επιβεβαιωμένο ✓' : 'Confirmed ✓')
     : a.confirmStatus === 'declined'  ? (lang === 'el' ? 'Ακυρώθηκε — θέση ελεύθερη' : 'Declined — slot now open')
@@ -3512,31 +3592,40 @@ document.getElementById('dentist-add-confirm').addEventListener('click', () => {
   const name = document.getElementById('dentist-name-input').value.trim()
   if (!name) { document.getElementById('dentist-name-input').focus(); return }
 
-  const key = 'dr_' + Date.now().toString(36)
-  DENTIST_MAP[key] = name
-  activeDentists.add(key)
+  const nameParts = name.split(/\s+/)
+  const firstName = nameParts[0] || name
+  const lastName  = nameParts.slice(1).join(' ') || ''
 
-  const item = document.createElement('div')
-  item.className = 'dentist-item checked'
-  item.dataset.dentist = key
-  item.style.color = _newDentistColor
-  item.innerHTML = `
-    <div class="dentist-check"></div>
-    <div class="dentist-dot" style="background:${_newDentistColor}"></div>
-    <div class="dentist-name">${name}</div>
-    <div class="dentist-count" id="count-${key}">0</div>
-  `
-  document.getElementById('dentist-list').appendChild(item)
+  apiFetch('/api/dentists', {
+    method: 'POST',
+    body: { firstName, lastName, displayName: name, color: _newDentistColor }
+  }).then(res => res.json()).then(d => {
+    if (!d.id) return
+    DENTIST_MAP[d.id] = d.display_name
+    window._DENTISTS = [...(window._DENTISTS || []), d]
+    activeDentists.add(d.id)
+
+    const item = document.createElement('div')
+    item.className      = 'dentist-item checked'
+    item.dataset.dentist = d.id
+    item.style.color    = _newDentistColor
+    item.innerHTML = `
+      <div class="dentist-check"></div>
+      <div class="dentist-dot" style="background:${_newDentistColor}"></div>
+      <div class="dentist-name">${d.display_name}</div>
+      <div class="dentist-count" id="count-${d.id}">0</div>`
+    document.getElementById('dentist-list').appendChild(item)
+
+    const usedColors = Object.keys(DENTIST_MAP).length
+    _newDentistColor = PALETTE[usedColors % PALETTE.length]
+    buildSwatches('dentist-color-row', _newDentistColor, c => { _newDentistColor = c })
+
+    updateDentistCounts()
+    renderCalendar()
+  }).catch(() => showToast('Could not add dentist — check connection.'))
 
   document.getElementById('dentist-name-input').value = ''
   document.getElementById('add-dentist-form').classList.remove('open')
-  // Pick next unused colour for next time
-  const usedColors = Object.values(DENTIST_MAP).length
-  _newDentistColor = PALETTE[usedColors % PALETTE.length]
-  buildSwatches('dentist-color-row', _newDentistColor, c => { _newDentistColor = c })
-
-  updateDentistCounts()
-  renderCalendar()
 })
 
 // ── Remove Dentist (toggle mode) ──────────────────────────────────────────
@@ -3769,17 +3858,30 @@ document.getElementById('af-save').addEventListener('click', () => {
   const notes   = document.getElementById('af-notes').value.trim()
   const status  = document.querySelector('input[name="af-status"]:checked')?.value || 'confirmed'
 
-  const newAppt = {
-    id:      Date.now(),
-    patient, type: typeKey, dentist,
-    date:    dateVal,   // YYYY-MM-DD — real calendar date
-    hour, min, dur, notes, status,
+  const patientId = patientIdByName(patient)
+  const dentistId = dentistIdByName(dentist)
+
+  if (!patientId) {
+    showToast(lang === 'el' ? 'Ο ασθενής δεν βρέθηκε — δημιουργήστε πρώτα τον ασθενή.' : 'Patient not found — create the patient first.')
+    return
+  }
+  if (!dentistId) {
+    showToast(lang === 'el' ? 'Ο οδοντίατρος δεν βρέθηκε.' : 'Dentist not found.')
+    return
   }
 
-  APPTS.push(newAppt)
-  saveAppts()
+  const startTime = `${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')}`
+  apiFetch('/api/appointments', {
+    method: 'POST',
+    body: { patientId, dentistId, appointmentDate: dateVal, startTime, durationMinutes: dur, type: typeKey, notes }
+  }).then(res => res.json()).then(data => {
+    if (data.id) {
+      APPTS.push(apptFromApi({ ...data, patient_name: patient, dentist_name: dentist }))
+      renderCalendar()
+    }
+  }).catch(() => showToast('Could not save appointment — check connection.'))
+
   closeApptForm()
-  renderCalendar()
 })
 
 // ── New Patient form ─────────────────────────────────────────────────────
@@ -3882,21 +3984,39 @@ document.getElementById('pm-save').addEventListener('click', () => {
     else patientData[el.dataset.key] = el.value
   })
 
-  // Check if patient already exists (update) or is new
-  const existing = findPatientByName(patientData.fullName)
-  if (existing) {
-    Object.assign(existing, patientData)
-    if (_pfCurrentPhoto) existing.photo = _pfCurrentPhoto
-  } else {
-    PATIENTS.push({
-      id: Date.now(),
-      photo: _pfCurrentPhoto || '',
-      ...patientData,
-      createdAt: new Date().toISOString(),
-    })
+  const nameParts = (patientData.fullName || '').trim().split(/\s+/)
+  const firstName = nameParts[0] || ''
+  const lastName  = nameParts.slice(1).join(' ') || ''
+  const body = {
+    firstName, lastName,
+    phone:       patientData.phone       || null,
+    email:       patientData.email       || null,
+    address:     patientData.address     || null,
+    dateOfBirth: patientData.dob         || null,
+    gender:      patientData.gender      || null,
+    notes:       patientData.allergies ? `Allergies: ${patientData.allergies}` : (patientData.notes || null),
+    photoUrl:    _pfCurrentPhoto         || null,
   }
-  savePatients()
-  showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
+
+  const existing = findPatientByName(patientData.fullName)
+  const url    = existing ? `/api/patients/${existing.id}` : '/api/patients'
+  const method = existing ? 'PATCH' : 'POST'
+
+  apiFetch(url, { method, body })
+    .then(res => res.json())
+    .then(data => {
+      if (data.id) {
+        const mapped = patientFromApi(data)
+        if (existing) {
+          Object.assign(existing, mapped)
+        } else {
+          PATIENTS.push(mapped)
+        }
+        showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
+      }
+    })
+    .catch(() => showToast('Could not save patient — check connection.'))
+
   closePatientForm()
 })
 
@@ -4626,7 +4746,10 @@ document.getElementById('pc-photo-input').addEventListener('change', e => {
     // Persist to patient record
     if (_pcCurrentPatientId) {
       const p = PATIENTS.find(p => p.id === _pcCurrentPatientId)
-      if (p) { p.photo = base64; savePatients() }
+      if (p) {
+        p.photo = base64
+        apiFetch(`/api/patients/${p.id}`, { method:'PATCH', body:{ photoUrl: base64 } }).catch(() => {})
+      }
     }
     showToast(lang === 'el' ? 'Φωτογραφία ενημερώθηκε ✓' : 'Photo updated ✓')
   })
@@ -4678,58 +4801,21 @@ document.getElementById('mini-next').addEventListener('click', () => { miniMonth
 document.getElementById('lang-en').addEventListener('click', () => { lang='en'; renderCalendar(); applyLang() })
 document.getElementById('lang-el').addEventListener('click', () => { lang='el'; renderCalendar(); applyLang() })
 
-// ── Init ──────────────────────────────────────────────────────────────────
-loadAppts()
-
-// Seed demo data — re-seeds whenever SEED_V changes (clears stale data)
-const SEED_V = 'v3'
-if (localStorage.getItem('dental_seed_v') !== SEED_V) {
-  localStorage.removeItem('dental_appts')
-  localStorage.removeItem('dental_patients')
-  APPTS.length = 0; PATIENTS.length = 0
-
-  // Seed appointment types
-  TYPE_COLORS['cleaning']     = '#4BAE8A'
-  TYPE_COLORS['consultation'] = '#3D9E8F'
-  TYPE_COLORS['treatment']    = '#E07850'
-  TYPE_LABELS.en['cleaning']     = 'Cleaning';      TYPE_LABELS.el['cleaning']     = 'Καθαρισμός'
-  TYPE_LABELS.en['consultation'] = 'Consultation';  TYPE_LABELS.el['consultation'] = 'Συνεννόηση'
-  TYPE_LABELS.en['treatment']    = 'Treatment';     TYPE_LABELS.el['treatment']    = 'Θεραπεία'
-
-  // Use Monday of current week as base so demo appts land in Mon–Sat view
-  const mon = getMonday(today)
-  const dayDate = (offset) => {
-    const d = new Date(mon); d.setDate(d.getDate() + offset); return toISODate(d)
-  }
-  const mk = (dayOff, h, m, dur, type, patient, dentist, confirmStatus) => ({
-    id: Date.now() + Math.random(),
-    patient, type, dentist,
-    status: confirmStatus === 'declined' ? 'cancelled' : confirmStatus === 'confirmed' ? 'confirmed' : 'pending',
-    confirmStatus,
-    date: dayDate(dayOff), hour: h, min: m, dur, notes: ''
-  })
-
-  APPTS.push(
-    mk(0,  9,  0, 45, 'cleaning',     'Maria Stavros',    'Dr. M. Papadopoulos', 'confirmed'),
-    mk(0, 10,  0, 60, 'consultation', 'Nikos Papadakis',  'Dr. M. Papadopoulos', 'pending'),
-    mk(0, 11, 30, 30, 'treatment',    'Elena Kosta',      'Dr. N. Konstantinou', 'confirmed'),
-    mk(1,  9, 30, 45, 'cleaning',     'Giorgos Alexiou',  'Dr. N. Konstantinou', 'pending'),
-    mk(2, 14,  0, 60, 'consultation', 'Sofia Dimitriou',  'Dr. M. Papadopoulos', 'declined'),
-    mk(3, 10,  0, 45, 'treatment',    'Petros Lambrou',   'Dr. N. Konstantinou', 'confirmed'),
-    mk(4, 11,  0, 30, 'cleaning',     'Anna Georgiou',    'Dr. M. Papadopoulos', 'pending')
-  )
-  PATIENTS.push(
-    { id:1, fullName:'Maria Stavros',    photo:'', phone:'+30 6912 345 678', email:'maria.stavros@gmail.com',  dob:'1985-03-14', address:'Athens',    gender:'female', createdAt: new Date().toISOString() },
-    { id:2, fullName:'Nikos Papadakis',  photo:'', phone:'+30 6934 567 890', email:'nikos.p@hotmail.com',      dob:'1979-07-22', address:'Piraeus',   gender:'male',   createdAt: new Date().toISOString() },
-    { id:3, fullName:'Elena Kosta',      photo:'', phone:'+30 6956 789 012', email:'elena.kosta@outlook.com',  dob:'1992-11-05', address:'Glyfada',   gender:'female', createdAt: new Date().toISOString() },
-    { id:4, fullName:'Giorgos Alexiou',  photo:'', phone:'+30 6978 901 234', email:'g.alexiou@gmail.com',      dob:'1988-02-28', address:'Kifisia',   gender:'male',   createdAt: new Date().toISOString() },
-    { id:5, fullName:'Sofia Dimitriou',  photo:'', phone:'+30 6901 234 567', email:'sofia.dim@yahoo.gr',       dob:'1995-09-17', address:'Chalandri', gender:'female', createdAt: new Date().toISOString() },
-    { id:6, fullName:'Petros Lambrou',   photo:'', phone:'+30 6923 456 789', email:'p.lambrou@gmail.com',      dob:'1971-12-03', address:'Marousi',   gender:'male',   createdAt: new Date().toISOString() },
-    { id:7, fullName:'Anna Georgiou',    photo:'', phone:'+30 6945 678 901', email:'anna.g@gmail.com',         dob:'1990-06-20', address:'Kolonaki',  gender:'female', createdAt: new Date().toISOString() }
-  )
-  saveAppts(); savePatients()
-  localStorage.setItem('dental_seed_v', SEED_V)
-}
+// ── Init appointment types (built-in defaults) ────────────────────────────
+TYPE_COLORS['cleaning']      = '#4BAE8A'
+TYPE_COLORS['consultation']  = '#3D9E8F'
+TYPE_COLORS['treatment']     = '#E07850'
+TYPE_COLORS['orthodontic']   = '#8B7CC8'
+TYPE_COLORS['emergency']     = '#D95F5F'
+TYPE_COLORS['whitening']     = '#C8A830'
+TYPE_COLORS['followup']      = '#5B9ED6'
+TYPE_LABELS.en['cleaning']      = 'Cleaning';      TYPE_LABELS.el['cleaning']      = 'Καθαρισμός'
+TYPE_LABELS.en['consultation']  = 'Consultation';  TYPE_LABELS.el['consultation']  = 'Συνεννόηση'
+TYPE_LABELS.en['treatment']     = 'Treatment';     TYPE_LABELS.el['treatment']     = 'Θεραπεία'
+TYPE_LABELS.en['orthodontic']   = 'Orthodontic';   TYPE_LABELS.el['orthodontic']   = 'Ορθοδοντικό'
+TYPE_LABELS.en['emergency']     = 'Emergency';     TYPE_LABELS.el['emergency']     = 'Επείγον'
+TYPE_LABELS.en['whitening']     = 'Whitening';     TYPE_LABELS.el['whitening']     = 'Λεύκανση'
+TYPE_LABELS.en['followup']      = 'Follow-up';     TYPE_LABELS.el['followup']      = 'Παρακολούθηση'
 
 // ── Treatment session state (read by AI module + makeApptBlock) ──────────
 let activeSession = null   // { apptId, patient, dentist, type, hour, min } | null
@@ -4963,7 +5049,11 @@ setInterval(renderCalendar, 60000)
       const ts    = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`
       const entry = `[${ts}] ${inp.note}`
       appt.notes  = appt.notes ? appt.notes + '\n' + entry : entry
-      saveAppts()
+      if (appt.id && AUTH.token) {
+        apiFetch(`/api/appointments/${appt.id}/notes`, {
+          method: 'POST', body: { noteText: entry, source: 'voice' }
+        }).catch(() => {})
+      }
       // If modal is open for this appointment, refresh notes live
       if (_modalAppt && _modalAppt.id === appt.id) _modalAppt.notes = appt.notes
       return `Recorded for ${activeSession.patient}: "${inp.note}"`
@@ -5005,7 +5095,17 @@ setInterval(renderCalendar, 60000)
         status: 'confirmed', confirmStatus: 'confirmed'
       }
       APPTS.push(appt)
-      saveAppts()
+      // Fire-and-forget: persist to API if patient/dentist IDs are resolvable
+      const _pid = patientIdByName(inp.patient)
+      const _did = dentistIdByName(dentistName)
+      if (_pid && _did && AUTH.token) {
+        apiFetch('/api/appointments', {
+          method: 'POST',
+          body: { patientId:_pid, dentistId:_did, appointmentDate:date,
+                  startTime:`${String(+inp.hour).padStart(2,'0')}:${String(+(inp.minute||0)).padStart(2,'0')}`,
+                  durationMinutes:+(inp.duration||45), type:typeKey, notes:inp.notes||'' }
+        }).then(r => r.json()).then(d => { if(d.id) appt.id = d.id }).catch(() => {})
+      }
       renderCalendar()
       return `Appointment booked: ${inp.patient} on ${date} at ${fmtHour(appt.hour,appt.min)} with ${dentistName} — ${TYPE_LABELS.en[typeKey]||typeKey}, ${appt.dur} min.`
     }
@@ -5022,7 +5122,10 @@ setInterval(renderCalendar, 60000)
         appt.status = inp.status
         appt.confirmStatus = inp.status === 'cancelled' ? 'declined' : inp.status
       }
-      saveAppts(); renderCalendar()
+      if (appt.id && AUTH.token) {
+        apiFetch(`/api/appointments/${appt.id}`, { method:'PATCH', body:{ status:appt.status, notes:appt.notes } }).catch(() => {})
+      }
+      renderCalendar()
       const changes = [inp.notes && 'note added', inp.status && `status → ${inp.status}`].filter(Boolean)
       return `Updated ${appt.patient}'s appointment: ${changes.join(', ')}.`
     }
