@@ -102,4 +102,13 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
+// GET /api/patients/:id/intake — read submitted intake form
+router.get('/:id/intake', async (req, res) => {
+  try {
+    const { rows: [sub] } = await query(pid(req),
+      `SELECT * FROM intake_submissions WHERE patient_id=$1`, [req.params.id])
+    res.json(sub || null)
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+})
+
 module.exports = router

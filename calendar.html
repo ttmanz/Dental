@@ -3618,6 +3618,15 @@
         </div>
       </div>
 
+      <!-- Intake form status -->
+      <div class="pc-section" id="pc-intake-section" style="display:none">
+        <div class="pc-section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span data-en="HEALTH INTAKE FORM" data-el="ΦΟΡΜΑ ΥΓΕΙΑΣ">HEALTH INTAKE FORM</span>
+          <span id="pc-intake-badge"></span>
+        </div>
+        <div id="pc-intake-body"></div>
+      </div>
+
     </div><!-- end pc-body -->
 
     <div class="pc-footer">
@@ -6128,8 +6137,45 @@ function openPatientChart(patientNameOrId) {
 
   _pcCurrentPatientId = patient?.id || null
   overlay.classList.add('open')
-  // Close the appointment modal if open
   document.getElementById('modal-overlay').classList.remove('open')
+
+  // Load intake form status asynchronously
+  const intakeSection = document.getElementById('pc-intake-section')
+  const intakeBadge   = document.getElementById('pc-intake-badge')
+  const intakeBody    = document.getElementById('pc-intake-body')
+  intakeSection.style.display = 'none'
+  if (patient?.id && AUTH.token) {
+    apiFetch(`/api/patients/${patient.id}/intake`).then(r => r.json()).then(sub => {
+      intakeSection.style.display = ''
+      if (sub?.form_data) {
+        intakeBadge.innerHTML = `<span style="background:#D1FAE5;color:#065F46;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700">✓ ${lang==='el'?'Συμπληρώθηκε':'Completed'} ${new Date(sub.completed_at).toLocaleDateString(lang==='el'?'el-GR':'en-GB')}</span>`
+        const d = sub.form_data
+        const rows = [
+          ['Phone',       d.phone],
+          ['Email',       d.email],
+          ['Address',     d.address],
+          ['Allergies',   d.allergies],
+          ['Medications', d.medications],
+          ['Conditions',  d.conditions],
+          ['Emergency',   d.emergName ? `${d.emergName}${d.emergPhone?' — '+d.emergPhone:''}` : null],
+          ['Last visit',  d.lastVisit],
+          ['Chief complaint', d.chiefComplaint],
+        ].filter(([,v]) => v)
+        intakeBody.innerHTML = rows.map(([k,v]) =>
+          `<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px">
+            <span style="min-width:120px;font-weight:600;color:var(--text-muted)">${k}</span>
+            <span style="color:var(--text)">${v}</span>
+          </div>`).join('')
+      } else {
+        const portalUrl = `${window.location.origin}/portal?practice=${AUTH.user?.practiceId}`
+        intakeBadge.innerHTML = `<span style="background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700">${lang==='el'?'Εκκρεμεί':'Pending'}</span>`
+        intakeBody.innerHTML  = `<div style="font-size:12px;color:var(--text-muted);margin-top:6px">
+          ${lang==='el'?'Ο ασθενής δεν έχει συμπληρώσει τη φόρμα υγείας.':'Patient has not completed their health intake form.'}
+          <br><a href="${portalUrl}" target="_blank" style="color:var(--primary);font-weight:600;margin-top:4px;display:inline-block">🔗 ${lang==='el'?'Αντιγραφή συνδέσμου πύλης':'Copy portal link'}</a>
+        </div>`
+      }
+    }).catch(() => {})
+  }
 }
 
 function closePatientChart() {

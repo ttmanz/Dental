@@ -222,6 +222,12 @@
   <div class="portal-welcome" id="portal-welcome">Hello!</div>
   <div class="portal-welcome-sub" id="portal-sub">Here are your dental records</div>
 
+  <!-- Health Intake Form (shown prominently when incomplete) -->
+  <div class="portal-card" id="intake-card" style="border:2px solid var(--primary);display:none">
+    <div class="portal-card-title"><span>🏥</span> <span id="lbl-intake">Your Health Form</span></div>
+    <div id="intake-status-area"></div>
+  </div>
+
   <!-- Upcoming appointments -->
   <div class="portal-card">
     <div class="portal-card-title"><span>📅</span> <span id="lbl-appts">Appointments</span></div>
@@ -286,6 +292,7 @@ const L = {
     welcome:'Hello, {name}!', sub:'Here are your dental records',
     appts:'Appointments', plans:'Treatment Plans',
     invoices:'Invoices', consents:'Consent Forms', msg:'Message Your Clinic',
+    intake:'Your Health Form',
     noAppts:'No upcoming appointments.', noPlans:'No treatment plans.',
     noInvoices:'No invoices.', noConsents:'No consent forms.',
     msgSent:'✓ Message sent! Your clinic will be in touch.',
@@ -434,7 +441,115 @@ async function showPortal() {
 
 // ── Load portal data ──────────────────────────────────────────────────────
 async function loadPortalData() {
-  await Promise.all([ loadAppts(), loadPlans(), loadInvoices(), loadConsents() ])
+  await Promise.all([ loadIntake(), loadAppts(), loadPlans(), loadInvoices(), loadConsents() ])
+}
+
+// ── Intake form ───────────────────────────────────────────────────────────
+const INTAKE_FIELDS = [
+  { key:'phone',        labelEn:'Phone Number',        labelEl:'Αριθμός Τηλεφώνου',      type:'tel' },
+  { key:'address',      labelEn:'Home Address',        labelEl:'Διεύθυνση',               type:'text' },
+  { key:'gender',       labelEn:'Gender',              labelEl:'Φύλο',                    type:'select', options:['Male / Άρρεν','Female / Θήλυ','Other / Άλλο'] },
+  { key:'allergies',    labelEn:'Known Allergies',     labelEl:'Γνωστές Αλλεργίες',       type:'text', hint:'Medications, latex, anaesthetic… or None' },
+  { key:'medications',  labelEn:'Current Medications', labelEl:'Τρέχουσα Φαρμακευτική',   type:'text', hint:'Name + dosage, or None' },
+  { key:'conditions',   labelEn:'Medical Conditions',  labelEl:'Ιατρικά Προβλήματα',      type:'text', hint:'Diabetes, heart disease, blood pressure… or None' },
+  { key:'emergName',    labelEn:'Emergency Contact',   labelEl:'Επαφή Έκτακτης Ανάγκης',  type:'text' },
+  { key:'emergPhone',   labelEn:'Emergency Phone',     labelEl:'Τηλ. Έκτακτης Ανάγκης',   type:'tel' },
+  { key:'lastVisit',    labelEn:'Last Dental Visit',   labelEl:'Τελευταία Οδοντ. Επίσκεψη',type:'text', hint:'e.g. 2 years ago' },
+  { key:'chiefComplaint',labelEn:'Reason for Visit',   labelEl:'Λόγος Επίσκεψης',         type:'text' },
+]
+
+async function loadIntake() {
+  const card   = document.getElementById('intake-card')
+  const area   = document.getElementById('intake-status-area')
+  const lbl    = document.getElementById('lbl-intake')
+  try {
+    const res = await portalFetch('/api/portal/intake')
+    if (!res.ok) return
+    const sub = await res.json()
+    card.style.display = ''
+    if (sub?.form_data) {
+      lbl.textContent = _lang==='el' ? '✓ Φόρμα Υγείας Συμπληρώθηκε' : '✓ Health Form Completed'
+      card.style.borderColor = '#22C47A'
+      const d = sub.form_data
+      const filled = INTAKE_FIELDS.filter(f => d[f.key])
+      area.innerHTML = `
+        <div style="font-size:12px;color:#065F46;margin-bottom:10px">
+          ${_lang==='el'?'Υποβλήθηκε':'Submitted'} ${new Date(sub.completed_at).toLocaleDateString(_lang==='el'?'el-GR':'en-GB')}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${filled.map(f=>`<span style="background:var(--cream-dark);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--text-mid)">✓ ${_lang==='el'?f.labelEl:f.labelEn}</span>`).join('')}
+        </div>
+        <button onclick="showIntakeForm()" style="margin-top:12px;padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:var(--white);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+          ${_lang==='el'?'Επεξεργασία':'Update my information'}
+        </button>`
+    } else {
+      lbl.textContent = _lang==='el' ? '🏥 Συμπληρώστε τη Φόρμα Υγείας' : '🏥 Please Complete Your Health Form'
+      area.innerHTML = `
+        <div style="font-size:13px;color:var(--text-mid);margin-bottom:14px;line-height:1.6">
+          ${_lang==='el'
+            ? 'Πριν από την πρώτη σας επίσκεψη, συμπληρώστε το ιατρικό σας ιστορικό. Αυτό βοηθά τον οδοντίατρο να σας παρέχει καλύτερη φροντίδα.'
+            : 'Before your first visit, please complete your medical history. This helps your dentist provide the best care.'}
+        </div>
+        <button onclick="showIntakeForm()" style="padding:10px 24px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          ${_lang==='el'?'Συμπλήρωση Φόρμας →':'Complete Health Form →'}
+        </button>`
+    }
+  } catch {}
+}
+
+function showIntakeForm() {
+  const card = document.getElementById('intake-card')
+  const me   = _patient
+  card.querySelector('button')?.remove()
+  document.getElementById('intake-status-area').innerHTML = buildIntakeFormHTML(me)
+  document.getElementById('intake-submit-btn').addEventListener('click', submitIntake)
+}
+
+function buildIntakeFormHTML(me) {
+  const fields = INTAKE_FIELDS.map(f => {
+    const label = _lang==='el' ? f.labelEl : f.labelEn
+    const hint  = f.hint ? `<div style="font-size:11px;color:var(--text-muted);margin-top:3px">${f.hint}</div>` : ''
+    if (f.type === 'select') {
+      return `<div class="lf">
+        <label>${label}</label>
+        <select id="if_${f.key}">${f.options.map(o=>`<option>${o}</option>`).join('')}</select>
+        ${hint}</div>`
+    }
+    return `<div class="lf">
+      <label>${label}${f.type==='tel'?' (include country code)':''}</label>
+      <input type="${f.type}" id="if_${f.key}" placeholder="${hint?f.hint:''}" />
+      ${hint}</div>`
+  }).join('')
+  return `<form id="intake-form" style="margin-top:4px">
+    ${fields}
+    <div id="intake-err" style="color:#DC2626;font-size:12px;margin-bottom:10px;display:none"></div>
+    <button type="button" id="intake-submit-btn" class="login-btn" style="margin-top:4px">
+      ${_lang==='el'?'Αποθήκευση Φόρμας':'Save Health Form'}
+    </button>
+  </form>`
+}
+
+async function submitIntake() {
+  const data = {}
+  INTAKE_FIELDS.forEach(f => {
+    const el = document.getElementById(`if_${f.key}`)
+    if (el?.value?.trim()) data[f.key] = el.value.trim()
+  })
+  const btn = document.getElementById('intake-submit-btn')
+  btn.disabled = true; btn.textContent = '…'
+  try {
+    const res = await portalFetch('/api/portal/intake', { method:'POST', body: data })
+    if (res.ok) {
+      await loadIntake()
+    } else {
+      document.getElementById('intake-err').textContent = 'Could not save. Please try again.'
+      document.getElementById('intake-err').style.display = ''
+      btn.disabled = false
+      btn.textContent = _lang==='el'?'Αποθήκευση Φόρμας':'Save Health Form'
+    }
+  } catch {
+    btn.disabled = false; btn.textContent = _lang==='el'?'Αποθήκευση Φόρμας':'Save Health Form'
+  }
 }
 
 async function loadAppts() {
