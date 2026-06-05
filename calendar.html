@@ -1504,6 +1504,47 @@
     }
     .modal-btn.treat:hover { background: #2D8B7A; }
 
+    /* ── Role-based visibility ───────────────────────────────────────────── */
+
+    /* Role badge in topbar */
+    .role-chip {
+      padding:3px 10px; border-radius:12px; font-size:10px; font-weight:800;
+      letter-spacing:.06em; text-transform:uppercase; flex-shrink:0;
+    }
+    .role-chip.admin       { background:#DBEAFE; color:#1E40AF; }
+    .role-chip.dentist     { background:var(--primary-light); color:var(--primary); }
+    .role-chip.receptionist{ background:#FEF3C7; color:#92400E; }
+
+    /* ── Dentist role — hide financial + admin tools ────────────────────── */
+    body[data-role="dentist"] #billing-nav-btn       { display:none !important; }
+    body[data-role="dentist"] #add-dentist-btn        { display:none !important; }
+    body[data-role="dentist"] #remove-dentist-btn     { display:none !important; }
+    body[data-role="dentist"] #add-dentist-form       { display:none !important; }
+
+    /* ── Receptionist role — hide clinical tools ────────────────────────── */
+    body[data-role="receptionist"] #pc-perio-btn      { display:none !important; }
+    body[data-role="receptionist"] #pc-consent-btn    { display:none !important; }
+    body[data-role="receptionist"] #pc-tp-btn         { display:none !important; }
+    body[data-role="receptionist"] #ai-bubble         { display:none !important; }
+    body[data-role="receptionist"] #ai-container      { display:none !important; }
+    body[data-role="receptionist"] #session-banner    { display:none !important; }
+    body[data-role="receptionist"] #modal-treat-btn   { display:none !important; }
+    body[data-role="receptionist"] #add-dentist-btn   { display:none !important; }
+    body[data-role="receptionist"] #remove-dentist-btn{ display:none !important; }
+    body[data-role="receptionist"] #add-dentist-form  { display:none !important; }
+
+    /* ── Non-admin: hide dentist management ─────────────────────────────── */
+    body:not([data-role="admin"]) .dentist-manage-only { display:none !important; }
+
+    /* ── Dentist-view filter lock indicator ─────────────────────────────── */
+    .dentist-filter-lock {
+      display:none; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:8px;
+      background:var(--primary-light); border:1px solid var(--primary-mid);
+      font-size:11px; font-weight:600; color:var(--primary); margin-top:6px;
+    }
+    body[data-role="dentist"] .dentist-filter-lock { display:flex; }
+
     /* ── Consent Forms overlay ──────────────────────────────────────────── */
     .consent-overlay {
       display:none; position:fixed; inset:0; z-index:3300;
@@ -2801,6 +2842,7 @@
       <span>＋</span>
       <span data-en="New Appointment" data-el="Νέο Ραντεβού">New Appointment</span>
     </button>
+    <span class="role-chip" id="role-chip" style="display:none"></span>
     <div class="avatar" id="user-avatar" title="User">MP</div>
   </div>
 </header>
@@ -2862,6 +2904,10 @@
           <div class="dentist-count" id="count-all">12</div>
         </div>
         <!-- dentist rows injected by renderDentistSidebar() after API load -->
+      </div>
+      <div class="dentist-filter-lock" id="dentist-filter-lock">
+        <span>🔒</span>
+        <span data-en="Filtered to your schedule" data-el="Φιλτράρισμα στο πρόγραμμά σας">Filtered to your schedule</span>
       </div>
     </div>
 
@@ -3759,6 +3805,8 @@ function apiFetch(path, options = {}) {
       if (u.locale && typeof lang !== 'undefined' && u.locale !== lang) {
         lang = u.locale; applyLang()
       }
+      // Apply role restrictions immediately so UI is correct before data loads
+      if (typeof applyRoleRestrictions === 'function') applyRoleRestrictions(u.role)
     }
     overlay.classList.add('hidden')
     if (typeof initAppData === 'function') initAppData()
@@ -3872,6 +3920,18 @@ async function fetchDentists() {
     Object.keys(DENTIST_MAP).forEach(k => delete DENTIST_MAP[k])
     dentists.forEach(d => { DENTIST_MAP[d.id] = d.display_name })
     renderDentistSidebar(dentists)
+
+    // Dentist role: auto-filter calendar to their own appointments
+    if (AUTH.user?.role === 'dentist') {
+      const myDentist = dentists.find(d => d.user_id === AUTH.user.userId)
+      if (myDentist) {
+        activeDentists = new Set([myDentist.id])
+        // Mark their row checked, uncheck "All"
+        document.querySelectorAll('.dentist-item[data-dentist]').forEach(el => {
+          el.classList.toggle('checked', el.dataset.dentist === myDentist.id)
+        })
+      }
+    }
   } catch(e) { console.warn('fetchDentists failed', e) }
 }
 
@@ -4936,11 +4996,16 @@ function openApptForm(date, hour = null, min = 0, dentistPreset = null) {
     el.className = 'af-status-opt' + (el.dataset.status === 'confirmed' ? ' selected-confirmed' : '')
   })
 
-  // Pre-select dentist when opened from a dentist column
-  if (dentistPreset) {
-    const sel = document.getElementById('af-dentist')
-    if ([...sel.options].some(o => o.value === dentistPreset)) sel.value = dentistPreset
+  // Pre-select dentist: explicit preset > dentist-role lock > first option
+  const dentistSel = document.getElementById('af-dentist')
+  const rolePreset = AUTH.user?.role === 'dentist'
+    ? (window._DENTISTS||[]).find(d => d.user_id === AUTH.user.userId)?.display_name
+    : null
+  const toPreset = dentistPreset || rolePreset
+  if (toPreset && [...dentistSel.options].some(o => o.value === toPreset)) {
+    dentistSel.value = toPreset
   }
+  dentistSel.disabled = !!rolePreset && !dentistPreset  // lock for dentist role
 
   document.getElementById('af-overlay').classList.add('open')
   setTimeout(() => document.getElementById('af-patient').focus(), 120)
@@ -8235,6 +8300,40 @@ General rules (non-session):
   })
 
 })()
+
+// ── Role-based access control ────────────────────────────────────────────
+function applyRoleRestrictions(role) {
+  document.body.dataset.role = role
+
+  // Role chip in topbar
+  const chip = document.getElementById('role-chip')
+  if (chip) {
+    const labels = { admin:'Admin', dentist:'Dentist', receptionist:'Reception' }
+    chip.textContent = labels[role] || role
+    chip.className   = `role-chip ${role}`
+    chip.style.display = ''
+  }
+
+  if (role === 'dentist') {
+    // Lock the dentist filter — dentist cannot be switched to "All" by themselves
+    const allItem = document.querySelector('.dentist-item[data-dentist="all"]')
+    if (allItem) allItem.style.pointerEvents = 'none'
+
+    // Pre-fill and lock dentist in appointment form once dentists are loaded
+    // (handled inside openApptForm via window._myDentistName)
+  }
+
+  if (role === 'receptionist') {
+    // Block access to clinical overlays via keyboard shortcut or direct call
+    const blockClinical = () => {
+      ;['perio-overlay','consent-overlay','tp-overlay'].forEach(id => {
+        const el = document.getElementById(id)
+        if (el) el.addEventListener('click', e => e.stopImmediatePropagation(), true)
+      })
+    }
+    blockClinical()
+  }
+}
 
 // ── Auto-login check (runs after all declarations are initialised) ───────
 AUTH.load()
