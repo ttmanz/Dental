@@ -1504,6 +1504,176 @@
     }
     .modal-btn.treat:hover { background: #2D8B7A; }
 
+    /* ── Consent Forms overlay ──────────────────────────────────────────── */
+    .consent-overlay {
+      display:none; position:fixed; inset:0; z-index:3300;
+      background:rgba(44,42,39,.55); align-items:center; justify-content:center;
+    }
+    .consent-overlay.open { display:flex; }
+    .consent-modal {
+      background:var(--cream); width:min(860px,96vw); height:90vh;
+      border-radius:20px; display:flex; flex-direction:column;
+      box-shadow:0 20px 70px rgba(44,42,39,.22); overflow:hidden;
+    }
+    .consent-header {
+      display:flex; align-items:center; gap:12px; padding:16px 24px;
+      background:var(--white); border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .consent-header-info { flex:1; }
+    .consent-header-title { font-size:16px; font-weight:800; color:var(--text); }
+    .consent-header-patient { font-size:12px; color:var(--text-muted); margin-top:1px; }
+    .consent-close-btn {
+      width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    /* Two-pane layout: sidebar list + main content */
+    .consent-body { flex:1; display:flex; overflow:hidden; }
+
+    /* Left pane: signed records list */
+    .consent-sidebar {
+      width:240px; flex-shrink:0; background:var(--white);
+      border-right:1px solid var(--border);
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    .consent-sidebar-top {
+      padding:12px; border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .consent-sidebar-label {
+      font-size:10px; font-weight:700; color:var(--text-muted);
+      letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px;
+    }
+    .consent-new-btn {
+      width:100%; padding:8px; border-radius:9px; border:none;
+      background:var(--primary); color:#fff; font-size:12px; font-weight:600;
+      cursor:pointer; font-family:inherit;
+    }
+    .consent-new-btn:hover { background:#2D8B7A; }
+    .consent-records-list { flex:1; overflow-y:auto; padding:8px; display:flex; flex-direction:column; gap:6px; }
+    .consent-record-item {
+      padding:10px 12px; border-radius:10px; border:1px solid var(--border);
+      cursor:pointer; transition:all .15s;
+    }
+    .consent-record-item:hover { border-color:var(--primary-mid); background:var(--cream); }
+    .consent-record-item.active { border-color:var(--primary); background:var(--primary-light); }
+    .consent-record-title { font-size:12px; font-weight:700; color:var(--text); }
+    .consent-record-date  { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .consent-record-badge {
+      display:inline-block; margin-top:4px; padding:2px 8px; border-radius:10px;
+      font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+    }
+    .consent-record-badge.signed   { background:#D1FAE5; color:#065F46; }
+    .consent-record-badge.unsigned { background:#FEF3C7; color:#92400E; }
+    .consent-empty-list { text-align:center; padding:24px 12px; font-size:12px; color:var(--text-muted); }
+
+    /* Right pane: form view or template picker */
+    .consent-main { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+
+    /* Template picker */
+    .consent-picker { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:10px; }
+    .consent-picker-label {
+      font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;
+      letter-spacing:.08em; margin-bottom:2px;
+    }
+    .consent-tmpl-card {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:14px 18px; cursor:pointer; transition:all .15s;
+      display:flex; align-items:center; gap:12px;
+    }
+    .consent-tmpl-card:hover { border-color:var(--primary); box-shadow:0 4px 16px var(--shadow); }
+    .consent-tmpl-icon { font-size:22px; flex-shrink:0; }
+    .consent-tmpl-info { flex:1; }
+    .consent-tmpl-title { font-size:14px; font-weight:700; color:var(--text); }
+    .consent-tmpl-cat   { font-size:11px; color:var(--text-muted); margin-top:2px; text-transform:capitalize; }
+
+    /* Form view */
+    .consent-form-view { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    .consent-form-topbar {
+      display:flex; align-items:center; gap:10px; padding:12px 20px;
+      background:var(--white); border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .consent-back-btn {
+      padding:6px 12px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); font-size:12px; font-weight:600;
+      cursor:pointer; color:var(--text-mid); font-family:inherit;
+    }
+    .consent-back-btn:hover { background:var(--cream-dark); }
+    .consent-form-title { font-size:14px; font-weight:800; color:var(--text); flex:1; }
+    .consent-signed-badge {
+      padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700;
+      background:#D1FAE5; color:#065F46;
+    }
+    .consent-form-scroll { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
+
+    /* Consent body text */
+    .consent-body-text {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:18px; font-size:13px; line-height:1.7; color:var(--text-mid);
+      white-space:pre-wrap;
+    }
+
+    /* Form fields */
+    .consent-fields { display:flex; flex-direction:column; gap:12px; }
+    .consent-field-item label {
+      display:block; font-size:12px; font-weight:600; color:var(--text-mid); margin-bottom:5px;
+    }
+    .consent-field-item input[type=text],
+    .consent-field-item input[type=date],
+    .consent-field-item select {
+      width:100%; height:40px; border:1.5px solid var(--border); border-radius:9px;
+      padding:0 12px; font-size:13px; font-family:inherit; color:var(--text);
+      background:var(--cream); outline:none; transition:all .15s;
+    }
+    .consent-field-item input:focus, .consent-field-item select:focus {
+      border-color:var(--primary); background:var(--white);
+    }
+    .consent-checkbox-row {
+      display:flex; align-items:flex-start; gap:10px; padding:10px 14px;
+      background:var(--cream-dark); border-radius:9px; cursor:pointer;
+    }
+    .consent-checkbox-row input[type=checkbox] { width:18px; height:18px; margin-top:1px; cursor:pointer; flex-shrink:0; accent-color:var(--primary); }
+    .consent-checkbox-row span { font-size:13px; color:var(--text); line-height:1.5; }
+
+    /* Signature pad */
+    .consent-sig-section { background:var(--white); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .consent-sig-label { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; }
+    .consent-sig-canvas {
+      width:100%; height:160px; border:2px dashed var(--border); border-radius:10px;
+      cursor:crosshair; background:var(--cream); display:block; touch-action:none;
+    }
+    .consent-sig-canvas.active { border-color:var(--primary); }
+    .consent-sig-canvas.signed-img { border:2px solid #6EE7B7; background:#F0FDF4; cursor:default; }
+    .consent-sig-actions { display:flex; gap:8px; margin-top:8px; align-items:center; }
+    .consent-sig-clear {
+      padding:6px 14px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;
+    }
+    .consent-sig-hint { font-size:11px; color:var(--text-muted); flex:1; }
+
+    /* Footer */
+    .consent-form-footer {
+      padding:14px 20px; background:var(--white); border-top:1px solid var(--border);
+      display:flex; gap:10px; align-items:center; flex-shrink:0;
+    }
+    .consent-sign-btn {
+      flex:1; height:44px; border-radius:11px; border:none;
+      background:var(--primary); color:#fff; font-size:14px; font-weight:700;
+      cursor:pointer; font-family:inherit; transition:background .15s;
+    }
+    .consent-sign-btn:hover { background:#2D8B7A; }
+    .consent-sign-btn:disabled { opacity:.5; cursor:default; }
+    .consent-print-btn {
+      padding:10px 18px; border-radius:9px; border:1px solid var(--border);
+      background:var(--white); font-size:13px; font-weight:600;
+      cursor:pointer; font-family:inherit;
+    }
+    .consent-delete-btn {
+      padding:10px 14px; border-radius:9px; border:1px solid #FECACA;
+      background:#FEE2E2; color:#991B1B; font-size:13px; font-weight:600;
+      cursor:pointer; font-family:inherit;
+    }
+
     /* ── Perio Chart overlay ─────────────────────────────────────────────── */
     .perio-overlay {
       display:none; position:fixed; inset:0; z-index:3200;
@@ -2124,6 +2294,69 @@
   </style>
 </head>
 <body>
+
+<!-- ── Consent Forms overlay ─────────────────────────────────────────── -->
+<div id="consent-overlay" class="consent-overlay">
+  <div class="consent-modal">
+
+    <div class="consent-header">
+      <span style="font-size:22px">📝</span>
+      <div class="consent-header-info">
+        <div class="consent-header-title" data-en="Consent Forms" data-el="Φόρμες Συναίνεσης">Consent Forms</div>
+        <div class="consent-header-patient" id="consent-patient-name">—</div>
+      </div>
+      <button class="consent-close-btn" id="consent-close-btn">✕</button>
+    </div>
+
+    <div class="consent-body">
+
+      <!-- Left sidebar: signed records -->
+      <div class="consent-sidebar">
+        <div class="consent-sidebar-top">
+          <div class="consent-sidebar-label" data-en="Signed Records" data-el="Υπογεγραμμένα">Signed Records</div>
+          <button class="consent-new-btn" id="consent-new-btn">＋ <span data-en="New Consent" data-el="Νέα Συναίνεση">New Consent</span></button>
+        </div>
+        <div class="consent-records-list" id="consent-records-list">
+          <div class="consent-empty-list" data-en="No records yet" data-el="Δεν υπάρχουν εγγραφές">No records yet</div>
+        </div>
+      </div>
+
+      <!-- Right main: template picker or form view -->
+      <div class="consent-main" id="consent-main">
+
+        <!-- Template picker (shown when clicking New) -->
+        <div id="consent-picker" style="display:none;flex:1;overflow-y:auto;padding:20px;flex-direction:column;gap:10px;">
+          <div class="consent-picker-label" data-en="Choose a consent form template" data-el="Επιλέξτε πρότυπο φόρμας">Choose a consent form template</div>
+          <div id="consent-tmpl-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+
+        <!-- Form fill + signature (shown when form is open) -->
+        <div class="consent-form-view" id="consent-form-view" style="display:none;">
+          <div class="consent-form-topbar">
+            <button class="consent-back-btn" id="consent-back-btn">←</button>
+            <div class="consent-form-title" id="consent-form-title">—</div>
+            <span class="consent-signed-badge" id="consent-signed-badge" style="display:none">✓ Signed</span>
+          </div>
+          <div class="consent-form-scroll" id="consent-form-scroll">
+            <!-- body text, fields, signature pad built by JS -->
+          </div>
+          <div class="consent-form-footer">
+            <button class="consent-sign-btn" id="consent-sign-btn" data-en="Sign &amp; Save Consent" data-el="Υπογραφή &amp; Αποθήκευση">Sign &amp; Save Consent</button>
+            <button class="consent-print-btn" id="consent-print-btn">🖨</button>
+            <button class="consent-delete-btn" id="consent-delete-btn">🗑</button>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="consent-empty-state" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text-muted);">
+          <div style="font-size:48px">📝</div>
+          <div style="font-size:14px;font-weight:600" data-en="Select a record or create a new consent form" data-el="Επιλέξτε εγγραφή ή δημιουργήστε νέα φόρμα">Select a record or create a new consent form</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Perio Chart overlay ───────────────────────────────────────────── -->
 <div id="perio-overlay" class="perio-overlay">
@@ -3183,6 +3416,7 @@
 
     <div class="pc-footer">
       <button class="pc-btn secondary" id="pc-close-btn" data-en="Close" data-el="Κλείσιμο">Close</button>
+      <button class="pc-btn secondary" id="pc-consent-btn" data-en="📝 Consent" data-el="📝 Συναίνεση">📝 Consent</button>
       <button class="pc-btn secondary" id="pc-perio-btn" data-en="🦷 Perio Chart" data-el="🦷 Περιοδοντικό">🦷 Perio Chart</button>
       <button class="pc-btn secondary" id="pc-tp-btn" data-en="📋 Treatment Plan" data-el="📋 Πλάνο Θεραπείας">📋 Treatment Plan</button>
       <button class="pc-btn primary" id="pc-new-appt-btn" data-en="+ New Appointment" data-el="+ Νέο Ραντεβού">+ New Appointment</button>
@@ -6423,6 +6657,429 @@ General rules (non-session):
       if (aiPanelOpen) setStatus('idle', 'Tap ⚙ to add your API key', '')
     }, 800)
   }
+
+})()
+
+// ── Consent Forms ────────────────────────────────────────────────────────
+;(function initConsent() {
+
+  const TMPL_ICONS = { general:'📋', anaesthesia:'💉', surgical:'🔧', endodontic:'🦷', cosmetic:'✨', orthodontic:'😁', gdpr:'🔒' }
+
+  let _cPatientId   = null
+  let _cPatientName = ''
+  let _cTemplates   = []
+  let _cRecords     = []
+  let _cCurrentRec  = null   // { id, template, formData, signature, signed_at }
+  let _cCurrentTmpl = null
+  let _cSigCanvas   = null
+  let _cSigCtx      = null
+  let _cSigDrawing  = false
+
+  const overlay    = document.getElementById('consent-overlay')
+  const recordsEl  = document.getElementById('consent-records-list')
+  const picker     = document.getElementById('consent-picker')
+  const formView   = document.getElementById('consent-form-view')
+  const emptyState = document.getElementById('consent-empty-state')
+  const formScroll = document.getElementById('consent-form-scroll')
+
+  // ── Open ──────────────────────────────────────────────────────────────────
+  window.openConsent = async function(patientId, patientName) {
+    _cPatientId   = patientId
+    _cPatientName = patientName
+    document.getElementById('consent-patient-name').textContent = patientName
+    overlay.classList.add('open')
+    showEmpty()
+    await Promise.all([loadTemplates(), loadRecords()])
+  }
+
+  document.getElementById('consent-close-btn').addEventListener('click', () => overlay.classList.remove('open'))
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open') })
+
+  // ── Views ─────────────────────────────────────────────────────────────────
+  function showEmpty() {
+    picker.style.display    = 'none'
+    formView.style.display  = 'none'
+    emptyState.style.display = 'flex'
+  }
+
+  function showPicker() {
+    emptyState.style.display = 'none'
+    formView.style.display   = 'none'
+    picker.style.display     = 'flex'
+    picker.style.flexDirection = 'column'
+    renderTemplateList()
+  }
+
+  function showFormView() {
+    emptyState.style.display = 'none'
+    picker.style.display     = 'none'
+    formView.style.display   = 'flex'
+  }
+
+  // ── Templates ─────────────────────────────────────────────────────────────
+  async function loadTemplates() {
+    if (_cTemplates.length) return
+    try {
+      const res = await apiFetch('/api/consent/templates')
+      if (res.ok) _cTemplates = await res.json()
+    } catch {}
+  }
+
+  function renderTemplateList() {
+    const list = document.getElementById('consent-tmpl-list')
+    list.innerHTML = ''
+    _cTemplates.forEach(t => {
+      const card = document.createElement('div')
+      card.className = 'consent-tmpl-card'
+      card.innerHTML = `
+        <div class="consent-tmpl-icon">${TMPL_ICONS[t.category] || '📄'}</div>
+        <div class="consent-tmpl-info">
+          <div class="consent-tmpl-title">${lang === 'el' ? t.title_el : t.title_en}</div>
+          <div class="consent-tmpl-cat">${t.category}</div>
+        </div>
+        <span style="color:var(--text-muted);font-size:18px">›</span>`
+      card.addEventListener('click', () => startNewForm(t))
+      list.appendChild(card)
+    })
+  }
+
+  document.getElementById('consent-new-btn').addEventListener('click', () => showPicker())
+
+  // ── Records list ──────────────────────────────────────────────────────────
+  async function loadRecords() {
+    try {
+      const res = await apiFetch(`/api/consent/${_cPatientId}`)
+      if (!res.ok) return
+      _cRecords = await res.json()
+      renderRecordsList()
+    } catch {}
+  }
+
+  function renderRecordsList() {
+    recordsEl.innerHTML = ''
+    if (!_cRecords.length) {
+      recordsEl.innerHTML = `<div class="consent-empty-list">${lang==='el'?'Δεν υπάρχουν εγγραφές':'No records yet'}</div>`
+      return
+    }
+    _cRecords.forEach(r => {
+      const item = document.createElement('div')
+      item.className = 'consent-record-item' + (_cCurrentRec?.id === r.id ? ' active' : '')
+      const date = r.signed_at ? new Date(r.signed_at).toLocaleDateString(lang==='el'?'el-GR':'en-GB') : new Date(r.created_at).toLocaleDateString(lang==='el'?'el-GR':'en-GB')
+      item.innerHTML = `
+        <div class="consent-record-title">${r.title}</div>
+        <div class="consent-record-date">${date}</div>
+        <span class="consent-record-badge ${r.signed_at ? 'signed' : 'unsigned'}">
+          ${r.signed_at ? (lang==='el'?'Υπογεγραμμένο':'Signed') : (lang==='el'?'Ανυπόγραφο':'Unsigned')}
+        </span>`
+      item.addEventListener('click', () => openRecord(r.id))
+      recordsEl.appendChild(item)
+    })
+  }
+
+  // ── Open existing record ──────────────────────────────────────────────────
+  async function openRecord(recordId) {
+    try {
+      const res = await apiFetch(`/api/consent/record/${recordId}`)
+      if (!res.ok) return
+      _cCurrentRec = await res.json()
+      _cCurrentTmpl = _cTemplates.find(t => t.id === _cCurrentRec.template_id) || null
+      document.querySelectorAll('.consent-record-item').forEach((el, i) => {
+        el.classList.toggle('active', _cRecords[i]?.id === recordId)
+      })
+      buildFormView(false)
+      showFormView()
+    } catch { showToast('Could not load consent record.') }
+  }
+
+  // ── Start new form from template ──────────────────────────────────────────
+  async function startNewForm(tmpl) {
+    try {
+      const res = await apiFetch(`/api/consent/${_cPatientId}`, {
+        method: 'POST', body: { templateId: tmpl.id, formData: {} }
+      })
+      const rec = await res.json()
+      if (!rec.id) return
+      _cCurrentRec  = { ...rec, template_id: tmpl.id, form_data: {}, signature: null }
+      _cCurrentTmpl = tmpl
+      _cRecords.unshift({ id: rec.id, title: lang==='el'?tmpl.title_el:tmpl.title_en, created_at: rec.created_at, signed_at: null })
+      renderRecordsList()
+      buildFormView(true)
+      showFormView()
+    } catch { showToast('Could not create consent form.') }
+  }
+
+  document.getElementById('consent-back-btn').addEventListener('click', () => {
+    _cCurrentRec = null; showEmpty(); renderRecordsList()
+  })
+
+  // ── Build form view ───────────────────────────────────────────────────────
+  function buildFormView(isNew) {
+    const tmpl   = _cCurrentTmpl
+    const rec    = _cCurrentRec
+    const isSigned = !!rec.signed_at
+    const titleText = lang === 'el' ? (tmpl?.title_el || rec.title) : (tmpl?.title_en || rec.title)
+    const bodyText  = lang === 'el' ? (tmpl?.body_el  || rec.body)  : (tmpl?.body_en  || rec.body)
+    const fields    = tmpl?.fields || []
+    const formData  = rec.form_data || {}
+
+    document.getElementById('consent-form-title').textContent = titleText
+    const signedBadge = document.getElementById('consent-signed-badge')
+    signedBadge.style.display = isSigned ? '' : 'none'
+    if (isSigned) signedBadge.textContent = `✓ ${lang==='el'?'Υπογεγραμμένο':'Signed'} ${new Date(rec.signed_at).toLocaleDateString(lang==='el'?'el-GR':'en-GB')}`
+
+    document.getElementById('consent-sign-btn').disabled  = isSigned
+    document.getElementById('consent-sign-btn').textContent = isSigned
+      ? (lang==='el'?'✓ Υπογεγραμμένο':'✓ Already Signed')
+      : (lang==='el'?'Υπογραφή & Αποθήκευση':'Sign & Save Consent')
+    document.getElementById('consent-delete-btn').style.display = ''
+
+    formScroll.innerHTML = ''
+
+    // Consent body text
+    const bodyEl = document.createElement('div')
+    bodyEl.className = 'consent-body-text'
+    bodyEl.textContent = bodyText
+    formScroll.appendChild(bodyEl)
+
+    // Pre-fill patient name in form data
+    if (!formData.patient_name) formData.patient_name = _cPatientName
+
+    // Dynamic fields
+    if (fields.length) {
+      const fieldsWrap = document.createElement('div')
+      fieldsWrap.className = 'consent-fields'
+
+      fields.forEach(f => {
+        const item = document.createElement('div')
+        item.className = 'consent-field-item'
+        const label = lang === 'el' ? (f.label_el || f.label_en) : f.label_en
+
+        if (f.type === 'checkbox') {
+          item.className = ''
+          const row = document.createElement('label')
+          row.className = 'consent-checkbox-row'
+          const cb = document.createElement('input')
+          cb.type = 'checkbox'
+          cb.id   = `cf_${f.key}`
+          cb.checked = !!formData[f.key]
+          cb.disabled = isSigned
+          cb.addEventListener('change', () => { formData[f.key] = cb.checked })
+          const span = document.createElement('span')
+          span.textContent = label + (f.required ? ' *' : '')
+          row.appendChild(cb); row.appendChild(span)
+          item.appendChild(row)
+        } else {
+          const lbl = document.createElement('label')
+          lbl.htmlFor = `cf_${f.key}`
+          lbl.textContent = label + (f.required ? ' *' : '')
+          let inp
+          if (f.type === 'select') {
+            inp = document.createElement('select')
+            inp.innerHTML = '<option value="">—</option>' + (f.options||[]).map(o=>`<option>${o}</option>`).join('')
+            inp.value = formData[f.key] || ''
+          } else {
+            inp = document.createElement('input')
+            inp.type  = f.type === 'date' ? 'date' : 'text'
+            inp.value = formData[f.key] || ''
+            inp.placeholder = label
+          }
+          inp.id = `cf_${f.key}`
+          inp.disabled = isSigned
+          inp.addEventListener('input', () => { formData[f.key] = inp.value })
+          item.appendChild(lbl); item.appendChild(inp)
+        }
+        fieldsWrap.appendChild(item)
+      })
+      formScroll.appendChild(fieldsWrap)
+    }
+
+    // Signature pad
+    const sigSection = document.createElement('div')
+    sigSection.className = 'consent-sig-section'
+    sigSection.innerHTML = `
+      <div class="consent-sig-label">${lang==='el'?'ΥΠΟΓΡΑΦΗ ΑΣΘΕΝΗ':'PATIENT SIGNATURE'}</div>`
+
+    const canvas = document.createElement('canvas')
+    canvas.className = 'consent-sig-canvas'
+    canvas.width  = 780
+    canvas.height = 160
+    _cSigCanvas = canvas
+    _cSigCtx    = canvas.getContext('2d')
+
+    if (rec.signature) {
+      // Show existing signature
+      const img = new Image()
+      img.onload = () => { _cSigCtx.drawImage(img, 0, 0) }
+      img.src = rec.signature
+      canvas.className = 'consent-sig-canvas signed-img'
+    } else {
+      setupSignaturePad(canvas)
+    }
+
+    const actions = document.createElement('div')
+    actions.className = 'consent-sig-actions'
+    if (!isSigned) {
+      const clearBtn = document.createElement('button')
+      clearBtn.className = 'consent-sig-clear'
+      clearBtn.textContent = lang==='el'?'Καθαρισμός':'Clear'
+      clearBtn.addEventListener('click', () => {
+        _cSigCtx.clearRect(0, 0, canvas.width, canvas.height)
+      })
+      actions.appendChild(clearBtn)
+    }
+    const hint = document.createElement('span')
+    hint.className = 'consent-sig-hint'
+    hint.textContent = isSigned
+      ? `${lang==='el'?'Υπεγράφη από':'Signed by'}: ${rec.signed_by || _cPatientName}`
+      : (lang==='el'?'Υπογράψτε στο παραπάνω πλαίσιο με το δάκτυλό σας ή το ποντίκι':'Sign above using finger or mouse')
+    actions.appendChild(hint)
+
+    sigSection.appendChild(canvas)
+    sigSection.appendChild(actions)
+    formScroll.appendChild(sigSection)
+
+    // Store formData reference for sign action
+    _cCurrentRec.form_data = formData
+  }
+
+  // ── Signature pad (canvas drawing) ────────────────────────────────────────
+  function setupSignaturePad(canvas) {
+    let drawing = false
+    let lastX = 0, lastY = 0
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width  / rect.width
+      const scaleY = canvas.height / rect.height
+      const src = e.touches ? e.touches[0] : e
+      return [(src.clientX - rect.left) * scaleX, (src.clientY - rect.top) * scaleY]
+    }
+
+    function startDraw(e) {
+      e.preventDefault(); drawing = true
+      canvas.classList.add('active')
+      ;[lastX, lastY] = getPos(e)
+    }
+    function draw(e) {
+      if (!drawing) return; e.preventDefault()
+      const [x, y] = getPos(e)
+      _cSigCtx.beginPath()
+      _cSigCtx.moveTo(lastX, lastY)
+      _cSigCtx.lineTo(x, y)
+      _cSigCtx.strokeStyle = '#1a1a1a'
+      _cSigCtx.lineWidth   = 2.5
+      _cSigCtx.lineCap     = 'round'
+      _cSigCtx.lineJoin    = 'round'
+      _cSigCtx.stroke()
+      ;[lastX, lastY] = [x, y]
+    }
+    function endDraw() { drawing = false; canvas.classList.remove('active') }
+
+    canvas.addEventListener('mousedown',  startDraw)
+    canvas.addEventListener('mousemove',  draw)
+    canvas.addEventListener('mouseup',    endDraw)
+    canvas.addEventListener('mouseleave', endDraw)
+    canvas.addEventListener('touchstart', startDraw, { passive:false })
+    canvas.addEventListener('touchmove',  draw,      { passive:false })
+    canvas.addEventListener('touchend',   endDraw)
+  }
+
+  // ── Sign & Save ───────────────────────────────────────────────────────────
+  document.getElementById('consent-sign-btn').addEventListener('click', async () => {
+    if (!_cCurrentRec || _cCurrentRec.signed_at) return
+    const tmpl   = _cCurrentTmpl
+    const fields = tmpl?.fields || []
+    const data   = _cCurrentRec.form_data || {}
+
+    // Validate required fields
+    for (const f of fields) {
+      if (f.required && !data[f.key]) {
+        showToast(lang==='el'?`Συμπληρώστε: ${f.label_el||f.label_en}`:`Please complete: ${f.label_en}`)
+        return
+      }
+    }
+
+    // Check signature is not empty
+    const imgData = _cSigCtx?.getImageData(0, 0, _cSigCanvas.width, _cSigCanvas.height)
+    const hasSig  = imgData && imgData.data.some(v => v !== 0)
+    if (!hasSig) { showToast(lang==='el'?'Απαιτείται υπογραφή':'Please sign the form'); return }
+
+    const sigDataUrl = _cSigCanvas.toDataURL('image/png')
+    const titleText  = lang === 'el' ? (tmpl?.title_el||_cCurrentRec.title) : (tmpl?.title_en||_cCurrentRec.title)
+    const bodyText   = lang === 'el' ? (tmpl?.body_el ||_cCurrentRec.body)  : (tmpl?.body_en ||_cCurrentRec.body)
+
+    try {
+      await apiFetch(`/api/consent/record/${_cCurrentRec.id}`, { method:'PATCH', body:{
+        formData:  data,
+        signature: sigDataUrl,
+        signedBy:  data.patient_name || _cPatientName,
+        title:     titleText,
+        body:      bodyText,
+        witnessedBy: null
+      }})
+      _cCurrentRec.signed_at = new Date().toISOString()
+      _cCurrentRec.signature = sigDataUrl
+      // Update record in list
+      const idx = _cRecords.findIndex(r => r.id === _cCurrentRec.id)
+      if (idx !== -1) _cRecords[idx].signed_at = _cCurrentRec.signed_at
+      renderRecordsList()
+      buildFormView(false)
+      showToast(lang==='el'?'Υπογράφηκε ✓':'Consent signed ✓')
+    } catch { showToast('Could not save consent.') }
+  })
+
+  // ── Delete record ─────────────────────────────────────────────────────────
+  document.getElementById('consent-delete-btn').addEventListener('click', async () => {
+    if (!confirm(lang==='el'?'Διαγραφή αυτής της εγγραφής; (ΓΚΠΔ - μη αναστρέψιμο)':'Delete this consent record? (GDPR erasure — irreversible)')) return
+    try {
+      await apiFetch(`/api/consent/record/${_cCurrentRec.id}`, { method:'DELETE' })
+      _cRecords = _cRecords.filter(r => r.id !== _cCurrentRec.id)
+      _cCurrentRec = null
+      renderRecordsList()
+      showEmpty()
+      showToast(lang==='el'?'Διαγράφηκε':'Deleted')
+    } catch { showToast('Could not delete record.') }
+  })
+
+  // ── Print ─────────────────────────────────────────────────────────────────
+  document.getElementById('consent-print-btn').addEventListener('click', () => {
+    if (!_cCurrentRec) return
+    const tmpl = _cCurrentTmpl
+    const title = lang==='el' ? (tmpl?.title_el||_cCurrentRec.title) : (tmpl?.title_en||_cCurrentRec.title)
+    const body  = lang==='el' ? (tmpl?.body_el||_cCurrentRec.body)  : (tmpl?.body_en||_cCurrentRec.body)
+    const sigDate = _cCurrentRec.signed_at ? new Date(_cCurrentRec.signed_at).toLocaleDateString(lang==='el'?'el-GR':'en-GB') : '—'
+
+    document.getElementById('bill-print-area').innerHTML = `
+      <div style="font-family:Inter,sans-serif;padding:32px;max-width:700px;margin:0 auto">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;border-bottom:2px solid #E5E0D8;padding-bottom:16px">
+          <span style="font-size:28px">🦷</span>
+          <div>
+            <div style="font-size:18px;font-weight:800;color:#3D9E8F">Dental Assistant Pro</div>
+            <div style="font-size:11px;color:#9C9890">${lang==='el'?'Φόρμα Συναίνεσης':'Consent Form'}</div>
+          </div>
+        </div>
+        <h2 style="font-size:20px;margin-bottom:8px">${title}</h2>
+        <div style="font-size:12px;color:#5C5854;margin-bottom:20px">${lang==='el'?'Ασθενής':'Patient'}: <strong>${_cPatientName}</strong></div>
+        <div style="font-size:13px;line-height:1.8;color:#5C5854;margin-bottom:24px;white-space:pre-wrap">${body}</div>
+        ${_cCurrentRec.signature ? `<div style="margin-top:24px;border-top:1px solid #E5E0D8;padding-top:16px">
+          <div style="font-size:11px;font-weight:700;color:#9C9890;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${lang==='el'?'ΥΠΟΓΡΑΦΗ':'SIGNATURE'}</div>
+          <img src="${_cCurrentRec.signature}" style="max-height:80px;border:1px solid #E5E0D8;border-radius:6px" />
+          <div style="font-size:12px;color:#5C5854;margin-top:6px">${lang==='el'?'Υπεγράφη':'Signed'}: ${sigDate}</div>
+        </div>` : `<div style="margin-top:40px;border-top:1px solid #E5E0D8;padding-top:16px">
+          <div style="font-size:11px;color:#9C9890">${lang==='el'?'Υπογραφή ασθενή':'Patient Signature'}: ___________________________ &nbsp;&nbsp; ${lang==='el'?'Ημερομηνία':'Date'}: ___________</div>
+        </div>`}
+      </div>`
+    window.print()
+  })
+
+  // ── Wire patient chart button ─────────────────────────────────────────────
+  document.getElementById('pc-consent-btn').addEventListener('click', () => {
+    const name = document.getElementById('pc-name').textContent
+    const p    = findPatientByName(name)
+    if (!p?.id) { showToast('Patient not found.'); return }
+    document.getElementById('pc-overlay')?.classList.remove('open')
+    openConsent(p.id, name)
+  })
 
 })()
 
