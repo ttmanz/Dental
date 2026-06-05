@@ -11,7 +11,8 @@ app.use('/api/auth',         require('./routes/auth'))
 app.use('/api/patients',     require('./routes/patients'))
 app.use('/api/appointments', require('./routes/appointments'))
 app.use('/api/dentists',     require('./routes/dentists'))
-app.use('/api/treatment',    require('./routes/treatment'))
+app.use('/api/treatment',        require('./routes/treatment'))
+app.use('/api/treatment-plans',  require('./routes/treatment-plans'))
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
 

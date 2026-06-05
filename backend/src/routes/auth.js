@@ -79,9 +79,16 @@ router.post('/register-practice', async (req, res) => {
       [practice.id, email.toLowerCase().trim(), hash, firstName.trim(), lastName.trim()]
     )
 
-    await queryRaw(
-      `INSERT INTO ai_settings (practice_id) VALUES ($1)`,
-      [practice.id]
+    await queryRaw(`INSERT INTO ai_settings (practice_id) VALUES ($1)`, [practice.id])
+
+    // Seed default procedures catalog for new practice
+    await queryRaw(`
+      INSERT INTO procedures_catalog (practice_id, code, name_en, name_el, category, default_cost, sort_order)
+      SELECT $1, code, name_en, name_el, category::procedure_category, default_cost, sort_order
+      FROM procedures_catalog WHERE practice_id = (
+        SELECT id FROM practices WHERE id != $1 LIMIT 1
+      )
+      ON CONFLICT (practice_id, code) DO NOTHING`, [practice.id]
     )
 
     const token = jwt.sign(

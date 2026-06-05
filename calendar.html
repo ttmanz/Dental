@@ -1504,6 +1504,204 @@
     }
     .modal-btn.treat:hover { background: #2D8B7A; }
 
+    /* ── Treatment Plans overlay ────────────────────────────────────────── */
+    .tp-overlay {
+      display: none; position: fixed; inset: 0; z-index: 3000;
+      background: rgba(44,42,39,.5); align-items: center; justify-content: center;
+    }
+    .tp-overlay.open { display: flex; }
+    .tp-modal {
+      background: var(--cream); width: min(960px, 96vw); height: 90vh;
+      border-radius: 20px; display: flex; flex-direction: column;
+      box-shadow: 0 20px 70px rgba(44,42,39,.22); overflow: hidden;
+    }
+    .tp-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 18px 24px; background: var(--white);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .tp-header-icon { font-size: 22px; }
+    .tp-header-info { flex: 1; }
+    .tp-header-title { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+    .tp-header-patient { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .tp-close-btn {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); cursor: pointer; font-size: 14px; color: var(--text-mid);
+      display: flex; align-items: center; justify-content: center; transition: all .15s;
+    }
+    .tp-close-btn:hover { background: var(--cream-dark); }
+
+    /* Plan list view */
+    .tp-list-view  { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+    .tp-list-top   { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .tp-list-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; }
+    .tp-new-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 9px; border: none;
+      background: var(--primary); color: #fff;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
+    }
+    .tp-new-btn:hover { background: #2D8B7A; }
+    .tp-plan-card {
+      background: var(--white); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+      cursor: pointer; transition: all .15s;
+    }
+    .tp-plan-card:hover { border-color: var(--primary-mid); box-shadow: 0 4px 16px var(--shadow); }
+    .tp-plan-card-main { flex: 1; }
+    .tp-plan-card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .tp-plan-card-meta  { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .tp-progress-track  { height: 5px; background: var(--cream-dark); border-radius: 3px; overflow: hidden; }
+    .tp-progress-fill   { height: 100%; background: var(--primary); border-radius: 3px; transition: width .4s; }
+    .tp-status-badge {
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0;
+    }
+    .tp-status-badge.draft       { background: var(--cream-dark);   color: var(--text-muted); }
+    .tp-status-badge.proposed    { background: #FEF3C7;             color: #92400E; }
+    .tp-status-badge.approved    { background: #D1FAE5;             color: #065F46; }
+    .tp-status-badge.in_progress { background: var(--primary-light);color: var(--primary); }
+    .tp-status-badge.completed   { background: #D1FAE5;             color: #065F46; }
+    .tp-status-badge.cancelled   { background: #FEE2E2;             color: #991B1B; }
+    .tp-open-btn {
+      padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); font-size: 12px; font-weight: 600;
+      color: var(--text-mid); cursor: pointer; transition: all .15s; white-space: nowrap;
+    }
+    .tp-open-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .tp-empty { text-align: center; padding: 48px 24px; color: var(--text-muted); font-size: 13px; }
+
+    /* Editor view */
+    .tp-editor-view { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    .tp-editor-top {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 24px; background: var(--white); border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .tp-back-btn {
+      padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text-mid); transition: all .15s;
+    }
+    .tp-back-btn:hover { background: var(--cream-dark); }
+    .tp-plan-title-input {
+      flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 700;
+      color: var(--text); font-family: inherit; outline: none; padding: 4px 0;
+    }
+    .tp-plan-title-input:focus { border-bottom: 2px solid var(--primary); }
+    .tp-action-btn {
+      padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all .15s; white-space: nowrap;
+    }
+    .tp-action-btn.propose  { border: 1px solid var(--amber); background: var(--amber-light); color: #92400E; }
+    .tp-action-btn.approve  { border: 1px solid #22C47A; background: #D1FAE5; color: #065F46; }
+    .tp-action-btn.danger   { border: 1px solid #FECACA; background: #FEE2E2; color: #991B1B; }
+
+    /* Tooth diagram */
+    .tp-tooth-section {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 14px 24px; flex-shrink: 0;
+    }
+    .tp-tooth-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+    .tp-arch { display: flex; align-items: center; justify-content: center; gap: 2px; margin-bottom: 4px; }
+    .tp-arch-gap { width: 16px; border-right: 2px solid var(--border-dark, #CCC); height: 32px; margin: 0 4px; }
+    .tp-tooth {
+      width: 28px; height: 28px; border-radius: 6px; border: 1.5px solid var(--border);
+      background: var(--white); cursor: pointer; font-size: 9px; font-weight: 700;
+      color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+      transition: all .12s; position: relative; flex-shrink: 0;
+    }
+    .tp-tooth:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .tp-tooth.selected { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .tp-tooth.has-planned   { border-color: var(--amber); background: var(--amber-light); color: #92400E; }
+    .tp-tooth.has-completed { border-color: #22C47A; background: #D1FAE5; color: #065F46; }
+    .tp-tooth.selected.has-planned   { background: var(--amber); border-color: var(--amber); color: #fff; }
+    .tp-arch-label { font-size: 9px; color: var(--text-muted); width: 42px; font-weight: 600; }
+
+    /* Editor body */
+    .tp-editor-body { flex: 1; overflow-y: auto; padding: 0 24px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Phase tabs */
+    .tp-phases { display: flex; gap: 6px; padding-top: 16px; flex-shrink: 0; }
+    .tp-phase-btn {
+      padding: 7px 16px; border-radius: 9px; border: 1.5px solid var(--border);
+      background: var(--white); font-size: 12px; font-weight: 600; color: var(--text-mid);
+      cursor: pointer; transition: all .15s;
+    }
+    .tp-phase-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .tp-phase-btn:hover:not(.active) { background: var(--cream); border-color: var(--primary-mid); }
+
+    /* Items table */
+    .tp-items { display: flex; flex-direction: column; gap: 8px; }
+    .tp-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; transition: border-color .15s;
+    }
+    .tp-item.completed { opacity: .6; }
+    .tp-item-status-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .tp-item-status-dot.planned    { background: var(--text-muted); }
+    .tp-item-status-dot.in_progress{ background: var(--amber); }
+    .tp-item-status-dot.completed  { background: #22C47A; }
+    .tp-item-status-dot.declined   { background: #D95F5F; }
+    .tp-item-info { flex: 1; min-width: 0; }
+    .tp-item-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .tp-item-teeth { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .tp-item-cost { font-size: 13px; font-weight: 700; color: var(--text); min-width: 60px; text-align: right; }
+    .tp-item-actions { display: flex; gap: 6px; }
+    .tp-item-btn {
+      width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border);
+      background: var(--white); cursor: pointer; font-size: 13px;
+      display: flex; align-items: center; justify-content: center; transition: all .12s;
+    }
+    .tp-item-btn:hover { background: var(--cream); }
+    .tp-item-btn.complete:hover { background: #D1FAE5; border-color: #22C47A; }
+    .tp-item-btn.remove:hover   { background: #FEE2E2; border-color: #FECACA; }
+
+    /* Add procedure form */
+    .tp-add-toggle {
+      display: flex; align-items: center; gap: 8px; padding: 10px 0;
+      font-size: 13px; font-weight: 600; color: var(--primary);
+      cursor: pointer; border: none; background: none; font-family: inherit;
+    }
+    .tp-add-form {
+      background: var(--white); border: 1.5px dashed var(--border);
+      border-radius: 12px; padding: 18px; display: none; flex-direction: column; gap: 12px;
+    }
+    .tp-add-form.open { display: flex; }
+    .tp-add-row { display: flex; gap: 10px; }
+    .tp-add-row .tp-field { flex: 1; }
+    .tp-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-mid); margin-bottom: 5px; }
+    .tp-field select, .tp-field input {
+      width: 100%; height: 38px; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 0 10px; font-size: 13px; font-family: inherit; color: var(--text);
+      background: var(--cream); outline: none; transition: border-color .15s;
+    }
+    .tp-field select:focus, .tp-field input:focus { border-color: var(--primary); background: var(--white); }
+    .tp-add-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .tp-add-save {
+      padding: 8px 20px; border-radius: 8px; border: none;
+      background: var(--primary); color: #fff; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background .15s;
+    }
+    .tp-add-save:hover { background: #2D8B7A; }
+    .tp-add-cancel-btn {
+      padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit; color: var(--text-mid);
+    }
+
+    /* Footer total */
+    .tp-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; background: var(--white);
+      border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+    .tp-total-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .tp-total-amount { font-size: 22px; font-weight: 800; color: var(--text); margin-top: 2px; }
+    .tp-footer-actions { display: flex; gap: 8px; }
+
     /* ── Login overlay ───────────────────────────────────────────────────── */
     .login-overlay {
       position: fixed; inset: 0; z-index: 9999;
@@ -1583,6 +1781,121 @@
   </style>
 </head>
 <body>
+
+<!-- ── Treatment Plans overlay ───────────────────────────────────────── -->
+<div id="tp-overlay" class="tp-overlay">
+  <div class="tp-modal">
+
+    <!-- Header -->
+    <div class="tp-header">
+      <div class="tp-header-icon">📋</div>
+      <div class="tp-header-info">
+        <div class="tp-header-title" data-en="Treatment Plans" data-el="Πλάνα Θεραπείας">Treatment Plans</div>
+        <div class="tp-header-patient" id="tp-header-patient">—</div>
+      </div>
+      <button class="tp-close-btn" id="tp-close-btn">✕</button>
+    </div>
+
+    <!-- List view -->
+    <div class="tp-list-view" id="tp-list-view">
+      <div class="tp-list-top">
+        <div class="tp-list-label" data-en="All Plans" data-el="Όλα τα Πλάνα">All Plans</div>
+        <button class="tp-new-btn" id="tp-new-plan-btn">＋ <span data-en="New Plan" data-el="Νέο Πλάνο">New Plan</span></button>
+      </div>
+      <div id="tp-plans-list"></div>
+    </div>
+
+    <!-- Editor view (hidden until a plan is opened) -->
+    <div class="tp-editor-view" id="tp-editor-view" style="display:none;flex:1;overflow:hidden;display:none;flex-direction:column;">
+
+      <!-- Editor top bar -->
+      <div class="tp-editor-top">
+        <button class="tp-back-btn" id="tp-back-btn">← <span data-en="All Plans" data-el="Όλα">All Plans</span></button>
+        <input class="tp-plan-title-input" id="tp-plan-title-input" type="text" placeholder="Plan title…" />
+        <span class="tp-status-badge" id="tp-plan-status-badge">draft</span>
+        <button class="tp-action-btn propose" id="tp-propose-btn" data-en="Propose to Patient" data-el="Πρόταση">Propose to Patient</button>
+        <button class="tp-action-btn approve" id="tp-approve-btn" data-en="Mark Approved" data-el="Εγκρίθηκε">Mark Approved</button>
+      </div>
+
+      <!-- Tooth diagram -->
+      <div class="tp-tooth-section">
+        <div class="tp-tooth-label" data-en="CLICK TEETH TO SELECT FOR NEXT PROCEDURE" data-el="ΕΠΙΛΕΞΤΕ ΔΟΝΤΙΑ ΓΙΑ ΤΗΝ ΕΠΟΜΕΝΗ ΔΙΑΔΙΚΑΣΙΑ">CLICK TEETH TO SELECT FOR NEXT PROCEDURE</div>
+        <div class="tp-arch" id="tp-upper-arch"><!-- built by JS --></div>
+        <div style="display:flex;justify-content:center;font-size:9px;color:var(--text-muted);margin:4px 0;gap:6px">
+          <span data-en="▲ Upper" data-el="▲ Άνω">▲ Upper</span>
+          <span style="border-left:1px solid var(--border);padding-left:6px" data-en="▼ Lower" data-el="▼ Κάτω">▼ Lower</span>
+        </div>
+        <div class="tp-arch" id="tp-lower-arch"><!-- built by JS --></div>
+      </div>
+
+      <!-- Scrollable editor body -->
+      <div class="tp-editor-body" id="tp-editor-body">
+
+        <!-- Phase tabs -->
+        <div class="tp-phases" id="tp-phases">
+          <button class="tp-phase-btn active" data-phase="1" data-en="Phase 1 — Urgent"      data-el="Φάση 1 — Επείγον">Phase 1 — Urgent</button>
+          <button class="tp-phase-btn"        data-phase="2" data-en="Phase 2 — Restorative"  data-el="Φάση 2 — Αποκατάσταση">Phase 2 — Restorative</button>
+          <button class="tp-phase-btn"        data-phase="3" data-en="Phase 3 — Prosthetic"   data-el="Φάση 3 — Προσθετική">Phase 3 — Prosthetic</button>
+          <button class="tp-phase-btn"        data-phase="4" data-en="Phase 4 — Maintenance"  data-el="Φάση 4 — Συντήρηση">Phase 4 — Maintenance</button>
+        </div>
+
+        <!-- Items for current phase -->
+        <div class="tp-items" id="tp-items-list"></div>
+
+        <!-- Add procedure toggle + form -->
+        <button class="tp-add-toggle" id="tp-add-toggle">＋ <span data-en="Add Procedure" data-el="Προσθήκη Διαδικασίας">Add Procedure</span></button>
+        <div class="tp-add-form" id="tp-add-form">
+          <div class="tp-add-row">
+            <div class="tp-field" style="flex:2">
+              <label data-en="Procedure" data-el="Διαδικασία">Procedure</label>
+              <select id="tp-proc-select"><option value="">— select —</option></select>
+            </div>
+            <div class="tp-field">
+              <label data-en="Teeth (FDI)" data-el="Δόντια (FDI)">Teeth (FDI)</label>
+              <input type="text" id="tp-teeth-input" placeholder="e.g. 14 15" />
+            </div>
+            <div class="tp-field">
+              <label data-en="Phase" data-el="Φάση">Phase</label>
+              <select id="tp-phase-select">
+                <option value="1">1 — Urgent</option>
+                <option value="2">2 — Restorative</option>
+                <option value="3">3 — Prosthetic</option>
+                <option value="4">4 — Maintenance</option>
+              </select>
+            </div>
+            <div class="tp-field">
+              <label data-en="Cost (€)" data-el="Κόστος (€)">Cost (€)</label>
+              <input type="number" id="tp-cost-input" min="0" step="5" placeholder="0" />
+            </div>
+          </div>
+          <div class="tp-add-row">
+            <div class="tp-field" style="flex:1">
+              <label data-en="Notes" data-el="Σημειώσεις">Notes</label>
+              <input type="text" id="tp-item-notes-input" placeholder="Optional notes…" />
+            </div>
+          </div>
+          <div class="tp-add-actions">
+            <button class="tp-add-cancel-btn" id="tp-add-cancel-btn" data-en="Cancel" data-el="Ακύρωση">Cancel</button>
+            <button class="tp-add-save" id="tp-add-save-btn" data-en="Add to Plan" data-el="Προσθήκη στο Πλάνο">Add to Plan</button>
+          </div>
+        </div>
+
+      </div><!-- end editor body -->
+
+      <!-- Footer -->
+      <div class="tp-footer">
+        <div>
+          <div class="tp-total-label" data-en="ESTIMATED TOTAL" data-el="ΕΚΤΙΜΩΜΕΝΟ ΣΥΝΟΛΟ">ESTIMATED TOTAL</div>
+          <div class="tp-total-amount" id="tp-total-amount">€0.00</div>
+        </div>
+        <div class="tp-footer-actions">
+          <button class="tp-action-btn danger" id="tp-delete-plan-btn" data-en="Delete Plan" data-el="Διαγραφή">Delete Plan</button>
+        </div>
+      </div>
+
+    </div><!-- end editor view -->
+  </div>
+</div>
 
 <!-- ── Login overlay ─────────────────────────────────────────────────── -->
 <div id="login-overlay" class="login-overlay">
@@ -2294,6 +2607,7 @@
 
     <div class="pc-footer">
       <button class="pc-btn secondary" id="pc-close-btn" data-en="Close" data-el="Κλείσιμο">Close</button>
+      <button class="pc-btn secondary" id="pc-tp-btn" data-en="📋 Treatment Plan" data-el="📋 Πλάνο Θεραπείας">📋 Treatment Plan</button>
       <button class="pc-btn primary" id="pc-new-appt-btn" data-en="+ New Appointment" data-el="+ Νέο Ραντεβού">+ New Appointment</button>
     </div>
 
@@ -5532,6 +5846,408 @@ General rules (non-session):
       if (aiPanelOpen) setStatus('idle', 'Tap ⚙ to add your API key', '')
     }, 800)
   }
+
+})()
+
+// ── Treatment Plans ──────────────────────────────────────────────────────
+;(function initTreatmentPlans() {
+
+  // ── State ────────────────────────────────────────────────────────────────
+  let _tpPatientId   = null
+  let _tpPatientName = ''
+  let _tpCurrentPlan = null
+  let _tpCatalog     = []
+  let _tpSelectedTeeth = new Set()
+  let _tpCurrentPhase  = 1
+
+  // ── DOM ──────────────────────────────────────────────────────────────────
+  const overlay      = document.getElementById('tp-overlay')
+  const listView     = document.getElementById('tp-list-view')
+  const editorView   = document.getElementById('tp-editor-view')
+  const plansList    = document.getElementById('tp-plans-list')
+  const itemsList    = document.getElementById('tp-items-list')
+  const titleInput   = document.getElementById('tp-plan-title-input')
+  const statusBadge  = document.getElementById('tp-plan-status-badge')
+  const totalEl      = document.getElementById('tp-total-amount')
+  const addForm      = document.getElementById('tp-add-form')
+  const procSelect   = document.getElementById('tp-proc-select')
+  const teethInput   = document.getElementById('tp-teeth-input')
+  const phaseSelect  = document.getElementById('tp-phase-select')
+  const costInput    = document.getElementById('tp-cost-input')
+  const notesInput   = document.getElementById('tp-item-notes-input')
+
+  // ── Tooth diagram ─────────────────────────────────────────────────────────
+  const UPPER = [18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28]
+  const LOWER = [48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38]
+
+  function buildArch(teeth, containerId) {
+    const container = document.getElementById(containerId)
+    container.innerHTML = ''
+    teeth.forEach((num, i) => {
+      // Mid-line gap after 8 teeth
+      if (i === 8) {
+        const gap = document.createElement('div')
+        gap.style.cssText = 'width:12px;border-right:2px solid #E5E0D8;height:28px;margin:0 4px;'
+        container.appendChild(gap)
+      }
+      const el = document.createElement('div')
+      el.className = 'tp-tooth'
+      el.dataset.tooth = num
+      el.textContent = num
+      el.title = `Tooth ${num} (FDI)`
+      el.addEventListener('click', () => toggleTooth(num, el))
+      container.appendChild(el)
+    })
+  }
+
+  function toggleTooth(num, el) {
+    if (_tpSelectedTeeth.has(num)) {
+      _tpSelectedTeeth.delete(num)
+      el.classList.remove('selected')
+    } else {
+      _tpSelectedTeeth.add(num)
+      el.classList.add('selected')
+    }
+    teethInput.value = [..._tpSelectedTeeth].sort((a,b)=>a-b).join(' ')
+  }
+
+  function highlightPlanTeeth() {
+    document.querySelectorAll('.tp-tooth').forEach(el => {
+      el.classList.remove('has-planned','has-completed')
+    })
+    if (!_tpCurrentPlan?.items) return
+    _tpCurrentPlan.items.forEach(item => {
+      if (!item.tooth_numbers) return
+      item.tooth_numbers.forEach(n => {
+        const el = document.querySelector(`.tp-tooth[data-tooth="${n}"]`)
+        if (!el) return
+        if (item.status === 'completed') el.classList.add('has-completed')
+        else if (item.status === 'planned' || item.status === 'in_progress') el.classList.add('has-planned')
+      })
+    })
+  }
+
+  function clearToothSelection() {
+    _tpSelectedTeeth.clear()
+    document.querySelectorAll('.tp-tooth.selected').forEach(el => el.classList.remove('selected'))
+    teethInput.value = ''
+  }
+
+  // ── Open / Close ──────────────────────────────────────────────────────────
+  window.openTreatmentPlans = async function(patientId, patientName) {
+    _tpPatientId   = patientId
+    _tpPatientName = patientName
+    document.getElementById('tp-header-patient').textContent = patientName
+    showListView()
+    overlay.classList.add('open')
+    buildArch(UPPER, 'tp-upper-arch')
+    buildArch(LOWER, 'tp-lower-arch')
+    await Promise.all([ loadPlans(), loadCatalog() ])
+  }
+
+  document.getElementById('tp-close-btn').addEventListener('click', () => overlay.classList.remove('open'))
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open') })
+
+  // ── Views ──────────────────────────────────────────────────────────────────
+  function showListView() {
+    listView.style.display  = 'flex'
+    editorView.style.display = 'none'
+    _tpCurrentPlan = null
+  }
+
+  function showEditorView() {
+    listView.style.display   = 'none'
+    editorView.style.display = 'flex'
+    editorView.style.flexDirection = 'column'
+    editorView.style.flex    = '1'
+    editorView.style.overflow = 'hidden'
+  }
+
+  document.getElementById('tp-back-btn').addEventListener('click', async () => {
+    // Auto-save title change
+    if (_tpCurrentPlan && titleInput.value.trim() !== _tpCurrentPlan.title) {
+      await apiFetch(`/api/treatment-plans/${_tpCurrentPlan.id}`, {
+        method: 'PATCH', body: { title: titleInput.value.trim() }
+      }).catch(() => {})
+    }
+    showListView()
+    await loadPlans()
+  })
+
+  // ── Catalog ───────────────────────────────────────────────────────────────
+  async function loadCatalog() {
+    if (_tpCatalog.length) return
+    try {
+      const res = await apiFetch('/api/treatment-plans/catalog')
+      if (!res.ok) return
+      _tpCatalog = await res.json()
+      populateProcedureSelect()
+    } catch {}
+  }
+
+  function populateProcedureSelect() {
+    const byCategory = {}
+    _tpCatalog.forEach(p => {
+      if (!byCategory[p.category]) byCategory[p.category] = []
+      byCategory[p.category].push(p)
+    })
+    procSelect.innerHTML = '<option value="">— select procedure —</option>'
+    Object.entries(byCategory).forEach(([cat, procs]) => {
+      const og = document.createElement('optgroup')
+      og.label = cat.charAt(0).toUpperCase() + cat.slice(1)
+      procs.forEach(p => {
+        const opt = document.createElement('option')
+        opt.value = p.code
+        opt.dataset.nameEn = p.name_en
+        opt.dataset.nameEl = p.name_el
+        opt.dataset.cost   = p.default_cost
+        opt.textContent    = `${p.code} — ${lang === 'el' ? p.name_el : p.name_en}`
+        og.appendChild(opt)
+      })
+      procSelect.appendChild(og)
+    })
+  }
+
+  procSelect.addEventListener('change', () => {
+    const opt = procSelect.options[procSelect.selectedIndex]
+    if (opt?.dataset.cost) costInput.value = opt.dataset.cost
+    phaseSelect.value = String(_tpCurrentPhase)
+  })
+
+  // ── Plans list ────────────────────────────────────────────────────────────
+  async function loadPlans() {
+    plansList.innerHTML = '<div class="tp-empty" style="padding:24px">Loading…</div>'
+    try {
+      const res = await apiFetch(`/api/treatment-plans?patientId=${_tpPatientId}`)
+      if (!res.ok) { plansList.innerHTML = '<div class="tp-empty">Could not load plans.</div>'; return }
+      const plans = await res.json()
+      renderPlanList(plans)
+    } catch { plansList.innerHTML = '<div class="tp-empty">Could not load plans.</div>' }
+  }
+
+  function renderPlanList(plans) {
+    if (!plans.length) {
+      plansList.innerHTML = `<div class="tp-empty">
+        <div style="font-size:32px;margin-bottom:10px">📋</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">${lang==='el'?'Δεν υπάρχουν πλάνα ακόμα':'No treatment plans yet'}</div>
+        <div style="font-size:12px">${lang==='el'?'Κάντε κλικ στο «Νέο Πλάνο» για να ξεκινήσετε':'Click New Plan to get started'}</div>
+      </div>`
+      return
+    }
+    plansList.innerHTML = ''
+    plans.forEach(p => {
+      const pct = p.item_count ? Math.round((p.completed_count / p.item_count) * 100) : 0
+      const card = document.createElement('div')
+      card.className = 'tp-plan-card'
+      card.innerHTML = `
+        <div class="tp-plan-card-main">
+          <div class="tp-plan-card-title">${p.title}</div>
+          <div class="tp-plan-card-meta">${p.item_count} procedure${p.item_count!==1?'s':''} · €${parseFloat(p.total_cost||0).toFixed(2)}</div>
+          <div class="tp-progress-track"><div class="tp-progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <span class="tp-status-badge ${p.status}">${p.status.replace('_',' ')}</span>
+        <button class="tp-open-btn">${lang==='el'?'Άνοιγμα →':'Open →'}</button>`
+      card.querySelector('.tp-open-btn').addEventListener('click', () => openPlanEditor(p))
+      plansList.appendChild(card)
+    })
+  }
+
+  document.getElementById('tp-new-plan-btn').addEventListener('click', async () => {
+    try {
+      const res  = await apiFetch('/api/treatment-plans', { method:'POST', body:{ patientId: _tpPatientId } })
+      const plan = await res.json()
+      if (plan.id) {
+        _tpCurrentPlan = { ...plan, items: [] }
+        renderEditorUI()
+        showEditorView()
+      }
+    } catch { showToast('Could not create plan.') }
+  })
+
+  // ── Plan editor ───────────────────────────────────────────────────────────
+  async function openPlanEditor(planSummary) {
+    try {
+      const res = await apiFetch(`/api/treatment-plans/${planSummary.id}`)
+      if (!res.ok) return
+      _tpCurrentPlan = await res.json()
+      renderEditorUI()
+      showEditorView()
+    } catch { showToast('Could not load plan.') }
+  }
+
+  function renderEditorUI() {
+    titleInput.value      = _tpCurrentPlan.title
+    statusBadge.textContent = _tpCurrentPlan.status.replace('_',' ')
+    statusBadge.className   = `tp-status-badge ${_tpCurrentPlan.status}`
+
+    const canPropose = ['draft'].includes(_tpCurrentPlan.status)
+    const canApprove = ['proposed'].includes(_tpCurrentPlan.status)
+    document.getElementById('tp-propose-btn').style.display = canPropose ? '' : 'none'
+    document.getElementById('tp-approve-btn').style.display = canApprove ? '' : 'none'
+
+    renderPhaseItems()
+    highlightPlanTeeth()
+    renderTotal()
+    closeAddForm()
+    clearToothSelection()
+    phaseSelect.value = String(_tpCurrentPhase)
+  }
+
+  // Phase tabs
+  document.getElementById('tp-phases').addEventListener('click', e => {
+    const btn = e.target.closest('.tp-phase-btn')
+    if (!btn) return
+    _tpCurrentPhase = parseInt(btn.dataset.phase)
+    document.querySelectorAll('.tp-phase-btn').forEach(b => b.classList.toggle('active', b === btn))
+    phaseSelect.value = String(_tpCurrentPhase)
+    renderPhaseItems()
+    closeAddForm()
+  })
+
+  function renderPhaseItems() {
+    const items = (_tpCurrentPlan?.items || []).filter(i => i.phase === _tpCurrentPhase)
+    itemsList.innerHTML = ''
+    if (!items.length) {
+      itemsList.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:8px 0">${lang==='el'?'Δεν υπάρχουν διαδικασίες σε αυτή τη φάση.':'No procedures in this phase.'}</div>`
+      return
+    }
+    items.forEach(item => {
+      const row = document.createElement('div')
+      row.className = `tp-item ${item.status}`
+      const teeth = item.tooth_numbers?.length ? `Teeth: ${item.tooth_numbers.join(', ')}` : 'General'
+      const surf  = item.surfaces ? ` · Surfaces: ${item.surfaces}` : ''
+      row.innerHTML = `
+        <div class="tp-item-status-dot ${item.status}"></div>
+        <div class="tp-item-info">
+          <div class="tp-item-name">${item.procedure_name}</div>
+          <div class="tp-item-teeth">${teeth}${surf}${item.notes ? ' · '+item.notes : ''}</div>
+        </div>
+        <div class="tp-item-cost">€${parseFloat(item.cost||0).toFixed(2)}</div>
+        <div class="tp-item-actions">
+          ${item.status !== 'completed' && item.status !== 'declined'
+            ? `<button class="tp-item-btn complete" title="Mark complete" data-id="${item.id}">✓</button>` : ''}
+          <button class="tp-item-btn remove" title="Remove" data-id="${item.id}" data-remove="1">✕</button>
+        </div>`
+      row.querySelector('.tp-item-btn.complete')?.addEventListener('click', () => markItemComplete(item.id))
+      row.querySelector('[data-remove]')?.addEventListener('click', () => removeItem(item.id))
+      itemsList.appendChild(row)
+    })
+  }
+
+  function renderTotal() {
+    const total = (_tpCurrentPlan?.items || []).reduce((s, i) => s + parseFloat(i.cost || 0), 0)
+    totalEl.textContent = `€${total.toFixed(2)}`
+  }
+
+  // ── Item actions ──────────────────────────────────────────────────────────
+  async function markItemComplete(itemId) {
+    try {
+      const res = await apiFetch(`/api/treatment-plans/${_tpCurrentPlan.id}/items/${itemId}`, {
+        method:'PATCH', body:{ status:'completed' }
+      })
+      const updated = await res.json()
+      const idx = _tpCurrentPlan.items.findIndex(i => i.id === itemId)
+      if (idx !== -1) _tpCurrentPlan.items[idx] = updated
+      // Refresh plan status in case auto-completed
+      const planRes = await apiFetch(`/api/treatment-plans/${_tpCurrentPlan.id}`)
+      if (planRes.ok) { const p = await planRes.json(); _tpCurrentPlan.status = p.status }
+      renderEditorUI()
+      showToast(lang==='el'?'Ολοκληρώθηκε ✓':'Marked complete ✓')
+    } catch { showToast('Could not update item.') }
+  }
+
+  async function removeItem(itemId) {
+    if (!confirm(lang==='el'?'Διαγραφή αυτής της διαδικασίας;':'Remove this procedure?')) return
+    try {
+      await apiFetch(`/api/treatment-plans/${_tpCurrentPlan.id}/items/${itemId}`, { method:'DELETE' })
+      _tpCurrentPlan.items = _tpCurrentPlan.items.filter(i => i.id !== itemId)
+      renderEditorUI()
+    } catch { showToast('Could not remove item.') }
+  }
+
+  // ── Add procedure form ────────────────────────────────────────────────────
+  document.getElementById('tp-add-toggle').addEventListener('click', () => {
+    addForm.classList.toggle('open')
+    if (addForm.classList.contains('open')) {
+      phaseSelect.value = String(_tpCurrentPhase)
+      if (_tpSelectedTeeth.size) teethInput.value = [..._tpSelectedTeeth].sort((a,b)=>a-b).join(' ')
+    }
+  })
+  function closeAddForm() {
+    addForm.classList.remove('open')
+    procSelect.value = ''; costInput.value = ''; notesInput.value = ''
+  }
+  document.getElementById('tp-add-cancel-btn').addEventListener('click', closeAddForm)
+
+  document.getElementById('tp-add-save-btn').addEventListener('click', async () => {
+    const code = procSelect.value
+    if (!code) { procSelect.focus(); return }
+    const opt  = procSelect.options[procSelect.selectedIndex]
+    const name = lang === 'el' ? (opt.dataset.nameEl || opt.dataset.nameEn) : opt.dataset.nameEn
+    const teethArr = teethInput.value.trim()
+      ? teethInput.value.trim().split(/[\s,]+/).map(Number).filter(n => n > 0)
+      : null
+    const body = {
+      procedureCode: code,
+      procedureName: name,
+      toothNumbers:  teethArr,
+      surfaces:      null,
+      phase:         parseInt(phaseSelect.value),
+      cost:          parseFloat(costInput.value) || 0,
+      notes:         notesInput.value.trim() || null,
+    }
+    try {
+      const res  = await apiFetch(`/api/treatment-plans/${_tpCurrentPlan.id}/items`, { method:'POST', body })
+      const item = await res.json()
+      if (item.id) {
+        _tpCurrentPlan.items.push(item)
+        renderEditorUI()
+        clearToothSelection()
+        showToast(lang==='el'?'Διαδικασία προστέθηκε ✓':'Procedure added ✓')
+      }
+    } catch { showToast('Could not add procedure.') }
+  })
+
+  // ── Plan status actions ───────────────────────────────────────────────────
+  document.getElementById('tp-propose-btn').addEventListener('click', async () => {
+    try {
+      const res = await apiFetch(`/api/treatment-plans/${_tpCurrentPlan.id}`, {
+        method:'PATCH', body:{ status:'proposed' }
+      })
+      const p = await res.json(); _tpCurrentPlan.status = p.status
+      renderEditorUI(); showToast(lang==='el'?'Πρόταση εστάλη':'Proposed to patient')
+    } catch {}
+  })
+
+  document.getElementById('tp-approve-btn').addEventListener('click', async () => {
+    const name = prompt(lang==='el'?'Όνομα ασθενή για έγκριση:':'Patient name confirming approval:', _tpPatientName)
+    if (!name) return
+    try {
+      const res = await apiFetch(`/api/treatment-plans/${_tpCurrentPlan.id}/approve`, {
+        method:'POST', body:{ approvedBy: name }
+      })
+      const p = await res.json(); _tpCurrentPlan.status = p.status; _tpCurrentPlan.approved_by = p.approved_by
+      renderEditorUI(); showToast(lang==='el'?'Πλάνο εγκρίθηκε ✓':'Plan approved ✓')
+    } catch {}
+  })
+
+  document.getElementById('tp-delete-plan-btn').addEventListener('click', async () => {
+    if (!confirm(lang==='el'?'Διαγραφή αυτού του πλάνου;':'Delete this treatment plan?')) return
+    try {
+      await apiFetch(`/api/treatment-plans/${_tpCurrentPlan.id}`, { method:'DELETE' })
+      showListView(); await loadPlans()
+      showToast(lang==='el'?'Πλάνο διαγράφηκε':'Plan deleted')
+    } catch { showToast('Could not delete plan.') }
+  })
+
+  // ── Wire up "Treatment Plan" button in patient chart ──────────────────────
+  document.getElementById('pc-tp-btn').addEventListener('click', () => {
+    const name = document.getElementById('pc-name').textContent
+    const p    = findPatientByName(name)
+    if (!p?.id) { showToast('Patient not found in registry.'); return }
+    document.getElementById('pc-overlay')?.classList.remove('open')
+    openTreatmentPlans(p.id, name)
+  })
 
 })()
 
