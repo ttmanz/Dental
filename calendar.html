@@ -1504,6 +1504,223 @@
     }
     .modal-btn.treat:hover { background: #2D8B7A; }
 
+    /* ── Billing overlay ────────────────────────────────────────────────── */
+    .bill-overlay {
+      display:none; position:fixed; inset:0; z-index:3100;
+      background:rgba(44,42,39,.5); align-items:center; justify-content:center;
+    }
+    .bill-overlay.open { display:flex; }
+    .bill-modal {
+      background:var(--cream); width:min(1060px,97vw); height:92vh;
+      border-radius:20px; display:flex; flex-direction:column;
+      box-shadow:0 20px 70px rgba(44,42,39,.22); overflow:hidden;
+    }
+
+    /* Header */
+    .bill-header {
+      display:flex; align-items:center; gap:14px;
+      padding:16px 24px; background:var(--white);
+      border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .bill-header-icon { font-size:22px; }
+    .bill-header-title { font-size:16px; font-weight:800; color:var(--text); letter-spacing:-.02em; flex:1; }
+    .bill-header-actions { display:flex; gap:8px; align-items:center; }
+    .bill-new-btn {
+      display:flex; align-items:center; gap:6px; padding:8px 16px;
+      border-radius:9px; border:none; background:var(--primary); color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer; transition:all .15s;
+    }
+    .bill-new-btn:hover { background:#2D8B7A; }
+    .bill-close-btn {
+      width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; font-size:14px; color:var(--text-mid);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .bill-close-btn:hover { background:var(--cream-dark); }
+
+    /* Stats bar */
+    .bill-stats {
+      display:flex; gap:1px; background:var(--border); flex-shrink:0;
+    }
+    .bill-stat {
+      flex:1; background:var(--white); padding:14px 20px;
+    }
+    .bill-stat-label { font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase; }
+    .bill-stat-value { font-size:20px; font-weight:800; color:var(--text); margin-top:3px; }
+    .bill-stat-value.green  { color:#065F46; }
+    .bill-stat-value.amber  { color:#92400E; }
+    .bill-stat-value.red    { color:#991B1B; }
+
+    /* Body: sidebar + main */
+    .bill-body { flex:1; display:flex; overflow:hidden; }
+
+    /* Sidebar filters */
+    .bill-sidebar {
+      width:180px; flex-shrink:0; background:var(--white);
+      border-right:1px solid var(--border); padding:16px 12px;
+      display:flex; flex-direction:column; gap:4px; overflow-y:auto;
+    }
+    .bill-filter-label { font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase; padding:0 8px; margin:8px 0 4px; }
+    .bill-filter-btn {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:7px 10px; border-radius:8px; border:none; background:transparent;
+      font-size:13px; font-weight:500; color:var(--text-mid); cursor:pointer;
+      text-align:left; width:100%; transition:all .15s; font-family:inherit;
+    }
+    .bill-filter-btn:hover { background:var(--cream); }
+    .bill-filter-btn.active { background:var(--primary-light); color:var(--primary); font-weight:700; }
+    .bill-filter-count {
+      font-size:11px; font-weight:700; background:var(--cream-dark);
+      color:var(--text-muted); border-radius:10px; padding:1px 7px;
+    }
+    .bill-filter-btn.active .bill-filter-count { background:var(--primary-mid); color:var(--primary); }
+
+    /* Invoice list */
+    .bill-main { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    .bill-list { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+    .bill-inv-row {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:14px 18px; display:flex; align-items:center; gap:14px;
+      cursor:pointer; transition:all .15s;
+    }
+    .bill-inv-row:hover { border-color:var(--primary-mid); box-shadow:0 4px 16px var(--shadow); }
+    .bill-inv-num { font-size:12px; font-weight:700; color:var(--primary); min-width:120px; }
+    .bill-inv-patient { font-size:14px; font-weight:600; color:var(--text); flex:1; }
+    .bill-inv-date { font-size:12px; color:var(--text-muted); min-width:90px; text-align:right; }
+    .bill-inv-total { font-size:15px; font-weight:800; color:var(--text); min-width:90px; text-align:right; }
+    .bill-inv-balance { font-size:12px; font-weight:600; min-width:90px; text-align:right; }
+    .bill-inv-balance.owed   { color:#991B1B; }
+    .bill-inv-balance.clear  { color:#065F46; }
+    .bill-inv-status { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+    .bill-inv-status.draft    { background:var(--cream-dark);   color:var(--text-muted); }
+    .bill-inv-status.issued   { background:#DBEAFE;             color:#1E40AF; }
+    .bill-inv-status.partial  { background:#FEF3C7;             color:#92400E; }
+    .bill-inv-status.paid     { background:#D1FAE5;             color:#065F46; }
+    .bill-inv-status.overdue  { background:#FEE2E2;             color:#991B1B; }
+    .bill-inv-status.cancelled,.bill-inv-status.void { background:var(--cream-dark); color:var(--text-muted); }
+    .bill-empty { text-align:center; padding:60px 24px; color:var(--text-muted); font-size:13px; }
+
+    /* Invoice editor panel */
+    .bill-editor {
+      position:absolute; top:0; right:0; bottom:0; width:min(620px,100%);
+      background:var(--cream); border-left:1px solid var(--border);
+      display:flex; flex-direction:column; transform:translateX(100%);
+      transition:transform .25s ease; z-index:10;
+    }
+    .bill-editor.open { transform:translateX(0); }
+    .bill-editor-header {
+      display:flex; align-items:center; gap:10px;
+      padding:14px 20px; background:var(--white);
+      border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .bill-editor-back {
+      padding:6px 12px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); font-size:12px; font-weight:600;
+      cursor:pointer; color:var(--text-mid); transition:all .15s; font-family:inherit;
+    }
+    .bill-editor-back:hover { background:var(--cream-dark); }
+    .bill-editor-invnum { font-size:14px; font-weight:800; color:var(--primary); flex:1; }
+    .bill-editor-body { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
+
+    /* Invoice meta section */
+    .bill-section { background:var(--white); border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+    .bill-section-title { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:12px; }
+    .bill-meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .bill-meta-field label { display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px; }
+    .bill-meta-field input, .bill-meta-field select {
+      width:100%; height:36px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 10px; font-size:13px; font-family:inherit; color:var(--text);
+      background:var(--cream); outline:none; transition:border-color .15s;
+    }
+    .bill-meta-field input:focus, .bill-meta-field select:focus { border-color:var(--primary); background:var(--white); }
+
+    /* Line items table */
+    .bill-items-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .bill-items-table th { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; padding:6px 8px; border-bottom:1px solid var(--border); text-align:left; }
+    .bill-items-table td { padding:8px; border-bottom:1px solid var(--cream-dark); vertical-align:middle; }
+    .bill-items-table tr:last-child td { border-bottom:none; }
+    .bill-item-desc-input, .bill-item-num-input {
+      border:1.5px solid transparent; border-radius:6px; padding:4px 8px;
+      font-size:13px; font-family:inherit; color:var(--text); background:transparent;
+      width:100%; outline:none; transition:all .15s;
+    }
+    .bill-item-desc-input:focus, .bill-item-num-input:focus {
+      border-color:var(--primary); background:var(--white);
+    }
+    .bill-item-num-input { text-align:right; width:70px; }
+    .bill-item-del {
+      width:26px; height:26px; border-radius:6px; border:1px solid transparent;
+      background:transparent; cursor:pointer; color:var(--text-muted);
+      font-size:13px; display:flex; align-items:center; justify-content:center;
+      transition:all .12s;
+    }
+    .bill-item-del:hover { background:#FEE2E2; border-color:#FECACA; color:#991B1B; }
+    .bill-add-item-btn {
+      display:flex; align-items:center; gap:6px; padding:8px 12px;
+      border:1.5px dashed var(--border); border-radius:8px; background:none;
+      font-size:13px; font-weight:600; color:var(--primary); cursor:pointer;
+      width:100%; font-family:inherit; transition:all .15s;
+    }
+    .bill-add-item-btn:hover { border-color:var(--primary); background:var(--primary-light); }
+
+    /* Totals */
+    .bill-totals { display:flex; flex-direction:column; gap:6px; padding-top:4px; }
+    .bill-total-row { display:flex; justify-content:space-between; font-size:13px; color:var(--text-mid); }
+    .bill-total-row.main { font-size:16px; font-weight:800; color:var(--text); border-top:2px solid var(--border); padding-top:8px; margin-top:2px; }
+    .bill-total-row.balance { font-size:14px; font-weight:700; color:#991B1B; }
+    .bill-total-row.balance.clear { color:#065F46; }
+
+    /* Payments list */
+    .bill-pmt-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--cream-dark); }
+    .bill-pmt-row:last-child { border-bottom:none; }
+    .bill-pmt-method { font-size:11px; font-weight:700; background:var(--cream-dark); color:var(--text-mid); border-radius:6px; padding:2px 8px; text-transform:uppercase; }
+    .bill-pmt-amount { font-size:14px; font-weight:800; color:#065F46; margin-left:auto; }
+    .bill-pmt-date { font-size:11px; color:var(--text-muted); }
+
+    /* Record payment form */
+    .bill-pmt-form { display:none; flex-direction:column; gap:10px; padding-top:10px; border-top:1px solid var(--border); }
+    .bill-pmt-form.open { display:flex; }
+    .bill-pmt-row-form { display:flex; gap:10px; }
+    .bill-pmt-field { flex:1; }
+    .bill-pmt-field label { display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px; }
+    .bill-pmt-field input, .bill-pmt-field select {
+      width:100%; height:36px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 10px; font-size:13px; font-family:inherit; background:var(--cream);
+      color:var(--text); outline:none;
+    }
+    .bill-pmt-field input:focus, .bill-pmt-field select:focus { border-color:var(--primary); background:var(--white); }
+    .bill-pmt-save {
+      padding:9px 20px; border-radius:8px; border:none;
+      background:var(--primary); color:#fff; font-size:13px; font-weight:600;
+      cursor:pointer; font-family:inherit;
+    }
+
+    /* Editor footer */
+    .bill-editor-footer {
+      padding:14px 20px; background:var(--white); border-top:1px solid var(--border);
+      display:flex; gap:8px; flex-shrink:0;
+    }
+    .bill-action { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .bill-action.primary { border:none; background:var(--primary); color:#fff; }
+    .bill-action.primary:hover { background:#2D8B7A; }
+    .bill-action.secondary { border:1px solid var(--border); background:var(--white); color:var(--text-mid); }
+    .bill-action.secondary:hover { background:var(--cream-dark); }
+    .bill-action.danger { border:1px solid #FECACA; background:#FEE2E2; color:#991B1B; }
+
+    /* Print styles */
+    @media print {
+      body > *:not(#bill-print-area) { display:none !important; }
+      #bill-print-area { display:block !important; padding:32px; font-family:'Inter',sans-serif; font-size:13px; }
+      .bill-print-header { display:flex; justify-content:space-between; margin-bottom:32px; }
+      .bill-print-logo { font-size:18px; font-weight:800; color:#3D9E8F; }
+      .bill-print-table { width:100%; border-collapse:collapse; margin-bottom:16px; }
+      .bill-print-table th, .bill-print-table td { border-bottom:1px solid #E5E0D8; padding:8px 6px; text-align:left; }
+      .bill-print-table th { font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#9C9890; }
+      .bill-print-totals { width:240px; margin-left:auto; }
+      .bill-print-total-row { display:flex; justify-content:space-between; padding:4px 0; }
+      .bill-print-total-row.main { font-weight:800; border-top:2px solid #2C2A27; margin-top:6px; padding-top:8px; }
+    }
+
     /* ── Treatment Plans overlay ────────────────────────────────────────── */
     .tp-overlay {
       display: none; position: fixed; inset: 0; z-index: 3000;
@@ -1782,6 +1999,172 @@
 </head>
 <body>
 
+<!-- ── Billing overlay ───────────────────────────────────────────────── -->
+<div id="bill-overlay" class="bill-overlay">
+  <div class="bill-modal" style="position:relative;overflow:hidden">
+
+    <!-- Header -->
+    <div class="bill-header">
+      <div class="bill-header-icon">🧾</div>
+      <div class="bill-header-title" data-en="Billing & Invoices" data-el="Τιμολόγηση">Billing &amp; Invoices</div>
+      <div class="bill-header-actions">
+        <button class="bill-new-btn" id="bill-new-btn">＋ <span data-en="New Invoice" data-el="Νέο Τιμολόγιο">New Invoice</span></button>
+        <button class="bill-close-btn" id="bill-close-btn">✕</button>
+      </div>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="bill-stats" id="bill-stats">
+      <div class="bill-stat">
+        <div class="bill-stat-label" data-en="This Month" data-el="Τρέχων Μήνας">This Month</div>
+        <div class="bill-stat-value green" id="bstat-month">€—</div>
+      </div>
+      <div class="bill-stat">
+        <div class="bill-stat-label" data-en="Outstanding" data-el="Εκκρεμεί">Outstanding</div>
+        <div class="bill-stat-value amber" id="bstat-outstanding">€—</div>
+      </div>
+      <div class="bill-stat">
+        <div class="bill-stat-label" data-en="Overdue" data-el="Ληξιπρόθεσμο">Overdue</div>
+        <div class="bill-stat-value red" id="bstat-overdue">—</div>
+      </div>
+      <div class="bill-stat">
+        <div class="bill-stat-label" data-en="Total Billed" data-el="Σύνολο">Total Billed</div>
+        <div class="bill-stat-value" id="bstat-total">€—</div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="bill-body">
+
+      <!-- Sidebar filters -->
+      <div class="bill-sidebar">
+        <div class="bill-filter-label">Status</div>
+        <button class="bill-filter-btn active" data-filter="all">All <span class="bill-filter-count" id="bcount-all">0</span></button>
+        <button class="bill-filter-btn" data-filter="draft">Draft <span class="bill-filter-count" id="bcount-draft">0</span></button>
+        <button class="bill-filter-btn" data-filter="issued">Issued <span class="bill-filter-count" id="bcount-issued">0</span></button>
+        <button class="bill-filter-btn" data-filter="partial">Partial <span class="bill-filter-count" id="bcount-partial">0</span></button>
+        <button class="bill-filter-btn" data-filter="paid">Paid <span class="bill-filter-count" id="bcount-paid">0</span></button>
+        <button class="bill-filter-btn" data-filter="overdue">Overdue <span class="bill-filter-count" id="bcount-overdue">0</span></button>
+      </div>
+
+      <!-- Invoice list -->
+      <div class="bill-main">
+        <div class="bill-list" id="bill-list"></div>
+      </div>
+
+      <!-- Invoice editor panel (slides in from right) -->
+      <div class="bill-editor" id="bill-editor">
+        <div class="bill-editor-header">
+          <button class="bill-editor-back" id="bill-editor-back">← <span data-en="All Invoices" data-el="Όλα">All Invoices</span></button>
+          <div class="bill-editor-invnum" id="bill-editor-invnum">—</div>
+          <span class="bill-inv-status draft" id="bill-editor-status">draft</span>
+        </div>
+
+        <div class="bill-editor-body" id="bill-editor-body">
+
+          <!-- Patient + dates -->
+          <div class="bill-section">
+            <div class="bill-section-title">Invoice Details</div>
+            <div class="bill-meta-grid">
+              <div class="bill-meta-field">
+                <label data-en="Patient" data-el="Ασθενής">Patient</label>
+                <input type="text" id="bill-patient-display" readonly style="cursor:default;background:var(--cream-dark)" />
+              </div>
+              <div class="bill-meta-field">
+                <label data-en="Invoice Date" data-el="Ημερομηνία">Invoice Date</label>
+                <input type="date" id="bill-inv-date" />
+              </div>
+              <div class="bill-meta-field">
+                <label data-en="Due Date" data-el="Προθεσμία">Due Date</label>
+                <input type="date" id="bill-due-date" />
+              </div>
+              <div class="bill-meta-field">
+                <label data-en="Insurance / EOPYY" data-el="Ασφάλεια / ΕΟΠΥΥ">Insurance / EOPYY</label>
+                <input type="text" id="bill-insurance" placeholder="Provider name…" />
+              </div>
+              <div class="bill-meta-field">
+                <label data-en="Insurance Covers (€)" data-el="Καλύπτει (€)">Insurance Covers (€)</label>
+                <input type="number" id="bill-insurance-amount" min="0" step="5" value="0" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Line items -->
+          <div class="bill-section">
+            <div class="bill-section-title" data-en="Line Items" data-el="Υπηρεσίες">Line Items</div>
+            <table class="bill-items-table">
+              <thead>
+                <tr>
+                  <th style="width:40%">Description</th>
+                  <th style="width:12%">Code</th>
+                  <th style="width:10%">Qty</th>
+                  <th style="width:14%">Unit (€)</th>
+                  <th style="width:10%">Disc%</th>
+                  <th style="width:12%">Total</th>
+                  <th style="width:32px"></th>
+                </tr>
+              </thead>
+              <tbody id="bill-items-tbody"></tbody>
+            </table>
+            <button class="bill-add-item-btn" id="bill-add-item-btn">＋ Add line item</button>
+          </div>
+
+          <!-- Totals -->
+          <div class="bill-section">
+            <div class="bill-totals" id="bill-totals"></div>
+          </div>
+
+          <!-- Payments -->
+          <div class="bill-section">
+            <div class="bill-section-title" data-en="Payments" data-el="Πληρωμές">Payments</div>
+            <div id="bill-pmts-list"></div>
+            <button class="bill-add-item-btn" id="bill-record-pmt-btn" style="margin-top:8px">＋ Record payment</button>
+            <div class="bill-pmt-form" id="bill-pmt-form">
+              <div class="bill-pmt-row-form">
+                <div class="bill-pmt-field">
+                  <label>Amount (€)</label>
+                  <input type="number" id="bill-pmt-amount" min="0.01" step="0.01" />
+                </div>
+                <div class="bill-pmt-field">
+                  <label>Method</label>
+                  <select id="bill-pmt-method">
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="insurance">Insurance</option>
+                    <option value="cheque">Cheque</option>
+                  </select>
+                </div>
+                <div class="bill-pmt-field">
+                  <label>Reference</label>
+                  <input type="text" id="bill-pmt-ref" placeholder="Receipt / card last4…" />
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button class="bill-action secondary" id="bill-pmt-cancel-btn">Cancel</button>
+                <button class="bill-pmt-save" id="bill-pmt-save-btn">Record Payment</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end editor body -->
+
+        <!-- Editor footer actions -->
+        <div class="bill-editor-footer">
+          <button class="bill-action secondary" id="bill-save-meta-btn" data-en="Save Changes" data-el="Αποθήκευση">Save Changes</button>
+          <button class="bill-action primary" id="bill-issue-btn" data-en="Issue Invoice" data-el="Έκδοση">Issue Invoice</button>
+          <button class="bill-action secondary" id="bill-print-btn" data-en="🖨 Print" data-el="🖨 Εκτύπωση">🖨 Print</button>
+          <button class="bill-action danger" id="bill-void-btn" data-en="Void" data-el="Ακύρωση">Void</button>
+        </div>
+      </div><!-- end editor -->
+
+    </div><!-- end body -->
+  </div>
+</div>
+
+<!-- Hidden print area -->
+<div id="bill-print-area" style="display:none"></div>
+
 <!-- ── Treatment Plans overlay ───────────────────────────────────────── -->
 <div id="tp-overlay" class="tp-overlay">
   <div class="tp-modal">
@@ -1988,6 +2371,10 @@
       <button class="lang-btn active" id="lang-en">EN</button>
       <button class="lang-btn" id="lang-el">ΕΛ</button>
     </div>
+    <button class="add-appt-btn" id="billing-nav-btn" style="background:var(--amber);box-shadow:0 2px 8px rgba(232,168,124,.3)">
+      <span>🧾</span>
+      <span data-en="Billing" data-el="Τιμολόγηση">Billing</span>
+    </button>
     <button class="add-appt-btn" id="add-appt-btn">
       <span>＋</span>
       <span data-en="New Appointment" data-el="Νέο Ραντεβού">New Appointment</span>
@@ -5845,6 +6232,436 @@ General rules (non-session):
     setTimeout(() => {
       if (aiPanelOpen) setStatus('idle', 'Tap ⚙ to add your API key', '')
     }, 800)
+  }
+
+})()
+
+// ── Billing ───────────────────────────────────────────────────────────────
+;(function initBilling() {
+
+  // ── State ────────────────────────────────────────────────────────────────
+  let _billFilter  = 'all'
+  let _billAll     = []       // all loaded invoices
+  let _billCurrent = null     // invoice open in editor
+
+  // ── DOM shortcuts ────────────────────────────────────────────────────────
+  const overlay    = document.getElementById('bill-overlay')
+  const listEl     = document.getElementById('bill-list')
+  const editor     = document.getElementById('bill-editor')
+  const tbody      = document.getElementById('bill-items-tbody')
+  const totalsEl   = document.getElementById('bill-totals')
+  const pmtsList   = document.getElementById('bill-pmts-list')
+  const pmtForm    = document.getElementById('bill-pmt-form')
+
+  // ── Open / Close ──────────────────────────────────────────────────────────
+  window.openBilling = async function(patientId) {
+    overlay.classList.add('open')
+    closeEditor()
+    await Promise.all([loadStats(), loadInvoices(patientId)])
+  }
+
+  document.getElementById('billing-nav-btn').addEventListener('click', () => window.openBilling())
+  document.getElementById('bill-close-btn').addEventListener('click', () => overlay.classList.remove('open'))
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open') })
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const res = await apiFetch('/api/invoices/summary')
+      if (!res.ok) return
+      const s = await res.json()
+      document.getElementById('bstat-month').textContent       = `€${fmtAmt(s.this_month)}`
+      document.getElementById('bstat-outstanding').textContent  = `€${fmtAmt(s.total_outstanding)}`
+      document.getElementById('bstat-overdue').textContent      = s.overdue_count || '0'
+      document.getElementById('bstat-total').textContent        = `€${fmtAmt(s.total_billed)}`
+    } catch {}
+  }
+
+  function fmtAmt(n) { return parseFloat(n || 0).toFixed(2) }
+  function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString(lang === 'el' ? 'el-GR' : 'en-GB') }
+
+  // ── Invoice list ──────────────────────────────────────────────────────────
+  async function loadInvoices(patientId) {
+    listEl.innerHTML = '<div class="bill-empty">Loading…</div>'
+    try {
+      const url = patientId ? `/api/invoices?patientId=${patientId}` : '/api/invoices?limit=200'
+      const res = await apiFetch(url)
+      if (!res.ok) { listEl.innerHTML = '<div class="bill-empty">Could not load invoices.</div>'; return }
+      _billAll = await res.json()
+      renderInvoiceList()
+      updateFilterCounts()
+    } catch { listEl.innerHTML = '<div class="bill-empty">Error loading invoices.</div>' }
+  }
+
+  function renderInvoiceList() {
+    const filtered = _billFilter === 'all' ? _billAll : _billAll.filter(i => i.status === _billFilter)
+    if (!filtered.length) {
+      listEl.innerHTML = `<div class="bill-empty">
+        <div style="font-size:32px;margin-bottom:10px">🧾</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">${lang==='el'?'Δεν βρέθηκαν τιμολόγια':'No invoices found'}</div>
+      </div>`
+      return
+    }
+    listEl.innerHTML = ''
+    filtered.forEach(inv => {
+      const total   = parseFloat(inv.subtotal || 0)
+      const paid    = parseFloat(inv.amount_paid || 0)
+      const balance = total - parseFloat(inv.insurance_amount||0) - paid
+      const row = document.createElement('div')
+      row.className = 'bill-inv-row'
+      row.innerHTML = `
+        <div class="bill-inv-num">${inv.invoice_number}</div>
+        <div class="bill-inv-patient">${inv.patient_name}</div>
+        <div class="bill-inv-date">${fmtDate(inv.invoice_date)}</div>
+        <div class="bill-inv-total">€${fmtAmt(total)}</div>
+        <div class="bill-inv-balance ${balance > 0.01 ? 'owed' : 'clear'}">
+          ${balance > 0.01 ? `Balance: €${fmtAmt(balance)}` : '✓ Paid'}
+        </div>
+        <span class="bill-inv-status ${inv.status}">${inv.status}</span>`
+      row.addEventListener('click', () => openInvoiceEditor(inv.id))
+      listEl.appendChild(row)
+    })
+  }
+
+  function updateFilterCounts() {
+    const counts = { all: _billAll.length }
+    _billAll.forEach(i => { counts[i.status] = (counts[i.status]||0) + 1 })
+    ;['all','draft','issued','partial','paid','overdue'].forEach(f => {
+      const el = document.getElementById(`bcount-${f}`)
+      if (el) el.textContent = counts[f] || 0
+    })
+  }
+
+  // Sidebar filter clicks
+  document.querySelector('.bill-sidebar').addEventListener('click', e => {
+    const btn = e.target.closest('.bill-filter-btn')
+    if (!btn) return
+    _billFilter = btn.dataset.filter
+    document.querySelectorAll('.bill-filter-btn').forEach(b => b.classList.toggle('active', b === btn))
+    renderInvoiceList()
+  })
+
+  // ── New Invoice ───────────────────────────────────────────────────────────
+  document.getElementById('bill-new-btn').addEventListener('click', async () => {
+    // Prompt for patient name
+    const name = prompt(lang==='el'?'Όνομα ασθενή:':'Patient name:')
+    if (!name) return
+    const patient = findPatientByName(name)
+    if (!patient) { showToast(lang==='el'?'Ασθενής δεν βρέθηκε':'Patient not found'); return }
+    try {
+      const res = await apiFetch('/api/invoices', { method:'POST', body:{ patientId: patient.id } })
+      const inv = await res.json()
+      if (inv.id) {
+        _billAll.unshift({ ...inv, patient_name: patient.fullName, subtotal: 0, amount_paid: 0 })
+        renderInvoiceList(); updateFilterCounts(); loadStats()
+        openInvoiceEditor(inv.id)
+      }
+    } catch { showToast('Could not create invoice.') }
+  })
+
+  // ── Invoice editor ────────────────────────────────────────────────────────
+  async function openInvoiceEditor(invoiceId) {
+    try {
+      const res = await apiFetch(`/api/invoices/${invoiceId}`)
+      if (!res.ok) return
+      _billCurrent = await res.json()
+      renderEditor()
+      editor.classList.add('open')
+    } catch { showToast('Could not load invoice.') }
+  }
+
+  function closeEditor() {
+    editor.classList.remove('open')
+    _billCurrent = null
+  }
+
+  document.getElementById('bill-editor-back').addEventListener('click', () => {
+    closeEditor(); renderInvoiceList()
+  })
+
+  function renderEditor() {
+    const inv = _billCurrent
+    document.getElementById('bill-editor-invnum').textContent = inv.invoice_number
+    const sb = document.getElementById('bill-editor-status')
+    sb.textContent = inv.status; sb.className = `bill-inv-status ${inv.status}`
+
+    document.getElementById('bill-patient-display').value = inv.patient_name
+    document.getElementById('bill-inv-date').value  = (inv.invoice_date || '').slice(0,10)
+    document.getElementById('bill-due-date').value  = (inv.due_date    || '').slice(0,10)
+    document.getElementById('bill-insurance').value = inv.insurance_provider || ''
+    document.getElementById('bill-insurance-amount').value = inv.insurance_amount || 0
+
+    const isDraft = inv.status === 'draft'
+    document.getElementById('bill-issue-btn').style.display = isDraft ? '' : 'none'
+    document.getElementById('bill-void-btn').style.display  = !['void','cancelled','paid'].includes(inv.status) ? '' : 'none'
+
+    renderItems()
+    renderTotals()
+    renderPayments()
+    pmtForm.classList.remove('open')
+  }
+
+  // ── Line items ────────────────────────────────────────────────────────────
+  function renderItems() {
+    tbody.innerHTML = ''
+    ;(_billCurrent.items || []).forEach((item, idx) => {
+      const lineTotal = item.quantity * item.unit_price * (1 - item.discount_pct/100)
+      const tr = document.createElement('tr')
+      tr.innerHTML = `
+        <td><input class="bill-item-desc-input" data-idx="${idx}" data-field="description" value="${item.description}" /></td>
+        <td><input class="bill-item-num-input" data-idx="${idx}" data-field="procedure_code" value="${item.procedure_code||''}" style="width:80px" /></td>
+        <td><input class="bill-item-num-input" data-idx="${idx}" data-field="quantity" type="number" min="0.01" step="0.5" value="${item.quantity}" /></td>
+        <td><input class="bill-item-num-input" data-idx="${idx}" data-field="unit_price" type="number" min="0" step="5" value="${item.unit_price}" /></td>
+        <td><input class="bill-item-num-input" data-idx="${idx}" data-field="discount_pct" type="number" min="0" max="100" step="1" value="${item.discount_pct}" /></td>
+        <td style="font-weight:700;text-align:right;padding-right:8px">€${fmtAmt(lineTotal)}</td>
+        <td><button class="bill-item-del" data-id="${item.id}">✕</button></td>`
+      // Debounced save on blur
+      tr.querySelectorAll('[data-idx]').forEach(input => {
+        input.addEventListener('change', () => saveItemField(item.id, input.dataset.field, input.value))
+        input.addEventListener('input', () => {
+          if (input.dataset.field === 'quantity' || input.dataset.field === 'unit_price' || input.dataset.field === 'discount_pct') {
+            recalcItemRow(idx, tr)
+          }
+        })
+      })
+      tr.querySelector('.bill-item-del').addEventListener('click', () => deleteItem(item.id))
+      tbody.appendChild(tr)
+    })
+  }
+
+  function recalcItemRow(idx, tr) {
+    const qty  = parseFloat(tr.querySelector('[data-field="quantity"]').value)  || 0
+    const up   = parseFloat(tr.querySelector('[data-field="unit_price"]').value) || 0
+    const disc = parseFloat(tr.querySelector('[data-field="discount_pct"]').value) || 0
+    tr.querySelectorAll('td')[5].textContent = `€${fmtAmt(qty * up * (1 - disc/100))}`
+    renderTotals(true) // live-recalc from DOM
+  }
+
+  async function saveItemField(itemId, field, value) {
+    if (!_billCurrent) return
+    try {
+      const res = await apiFetch(`/api/invoices/${_billCurrent.id}/items/${itemId}`, {
+        method:'PATCH', body:{ [field]: value }
+      })
+      const updated = await res.json()
+      const idx = _billCurrent.items.findIndex(i => i.id === itemId)
+      if (idx !== -1) _billCurrent.items[idx] = updated
+      renderTotals()
+    } catch {}
+  }
+
+  async function deleteItem(itemId) {
+    try {
+      await apiFetch(`/api/invoices/${_billCurrent.id}/items/${itemId}`, { method:'DELETE' })
+      _billCurrent.items = _billCurrent.items.filter(i => i.id !== itemId)
+      renderItems(); renderTotals()
+    } catch { showToast('Could not remove item.') }
+  }
+
+  document.getElementById('bill-add-item-btn').addEventListener('click', async () => {
+    if (!_billCurrent) return
+    // Find catalog entry to suggest from treatment plan items
+    const desc = prompt(lang==='el'?'Περιγραφή υπηρεσίας:':'Service description:')
+    if (!desc) return
+    const price = parseFloat(prompt(lang==='el'?'Τιμή (€):':'Unit price (€):', '0') || 0)
+    try {
+      const res = await apiFetch(`/api/invoices/${_billCurrent.id}/items`, {
+        method:'POST', body:{ description: desc, unitPrice: price, quantity: 1, sortOrder: _billCurrent.items.length }
+      })
+      const item = await res.json()
+      if (item.id) { _billCurrent.items.push(item); renderItems(); renderTotals() }
+    } catch { showToast('Could not add item.') }
+  })
+
+  // ── Totals ────────────────────────────────────────────────────────────────
+  function renderTotals(fromDom = false) {
+    let subtotal = 0
+    if (fromDom) {
+      tbody.querySelectorAll('tr').forEach(tr => {
+        const qty  = parseFloat(tr.querySelector('[data-field="quantity"]')?.value)  || 0
+        const up   = parseFloat(tr.querySelector('[data-field="unit_price"]')?.value) || 0
+        const disc = parseFloat(tr.querySelector('[data-field="discount_pct"]')?.value) || 0
+        subtotal += qty * up * (1 - disc/100)
+      })
+    } else {
+      subtotal = (_billCurrent?.items||[]).reduce((s, i) =>
+        s + i.quantity * i.unit_price * (1 - i.discount_pct/100), 0)
+    }
+    const insurance = parseFloat(document.getElementById('bill-insurance-amount').value) || 0
+    const paid      = (_billCurrent?.payments||[]).reduce((s, p) => s + parseFloat(p.amount), 0)
+    const patientOwes = Math.max(0, subtotal - insurance)
+    const balance     = Math.max(0, patientOwes - paid)
+
+    totalsEl.innerHTML = `
+      <div class="bill-total-row"><span>Subtotal</span><span>€${fmtAmt(subtotal)}</span></div>
+      ${insurance ? `<div class="bill-total-row"><span>Insurance / EOPYY</span><span>− €${fmtAmt(insurance)}</span></div>` : ''}
+      <div class="bill-total-row main"><span>Patient Total</span><span>€${fmtAmt(patientOwes)}</span></div>
+      <div class="bill-total-row"><span>Paid</span><span style="color:#065F46">€${fmtAmt(paid)}</span></div>
+      <div class="bill-total-row balance ${balance < 0.01 ? 'clear' : ''}">
+        <span>${balance < 0.01 ? '✓ Fully paid' : 'Balance due'}</span>
+        <span>${balance < 0.01 ? '' : `€${fmtAmt(balance)}`}</span>
+      </div>`
+  }
+
+  document.getElementById('bill-insurance-amount').addEventListener('input', () => renderTotals())
+
+  // ── Payments ──────────────────────────────────────────────────────────────
+  function renderPayments() {
+    const pmts = _billCurrent?.payments || []
+    if (!pmts.length) { pmtsList.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">${lang==='el'?'Δεν έχουν καταχωρηθεί πληρωμές.':'No payments recorded.'}</div>`; return }
+    pmtsList.innerHTML = ''
+    pmts.forEach(p => {
+      const row = document.createElement('div')
+      row.className = 'bill-pmt-row'
+      row.innerHTML = `
+        <span class="bill-pmt-method">${p.method}</span>
+        <span class="bill-pmt-date">${fmtDate(p.paid_at)}</span>
+        ${p.reference ? `<span style="font-size:11px;color:var(--text-muted)">${p.reference}</span>` : ''}
+        <span class="bill-pmt-amount">€${fmtAmt(p.amount)}</span>`
+      pmtsList.appendChild(row)
+    })
+  }
+
+  document.getElementById('bill-record-pmt-btn').addEventListener('click', () => {
+    pmtForm.classList.toggle('open')
+    if (pmtForm.classList.contains('open')) document.getElementById('bill-pmt-amount').focus()
+  })
+  document.getElementById('bill-pmt-cancel-btn').addEventListener('click', () => pmtForm.classList.remove('open'))
+
+  document.getElementById('bill-pmt-save-btn').addEventListener('click', async () => {
+    const amount = parseFloat(document.getElementById('bill-pmt-amount').value)
+    if (!amount || amount <= 0) { document.getElementById('bill-pmt-amount').focus(); return }
+    const method = document.getElementById('bill-pmt-method').value
+    const ref    = document.getElementById('bill-pmt-ref').value.trim()
+    try {
+      const res = await apiFetch(`/api/invoices/${_billCurrent.id}/payments`, {
+        method:'POST', body:{ amount, method, reference: ref||null }
+      })
+      const pmt = await res.json()
+      if (pmt.id) {
+        _billCurrent.payments = [pmt, ...(_billCurrent.payments||[])]
+        // Re-fetch to get updated status
+        const updated = await apiFetch(`/api/invoices/${_billCurrent.id}`)
+        if (updated.ok) { _billCurrent.status = (await updated.json()).status }
+        document.getElementById('bill-editor-status').textContent = _billCurrent.status
+        document.getElementById('bill-editor-status').className = `bill-inv-status ${_billCurrent.status}`
+        renderPayments(); renderTotals()
+        pmtForm.classList.remove('open')
+        document.getElementById('bill-pmt-amount').value = ''
+        document.getElementById('bill-pmt-ref').value = ''
+        loadStats()
+        showToast(lang==='el'?'Πληρωμή καταχωρήθηκε ✓':'Payment recorded ✓')
+      }
+    } catch { showToast('Could not record payment.') }
+  })
+
+  // ── Editor actions ────────────────────────────────────────────────────────
+  document.getElementById('bill-save-meta-btn').addEventListener('click', async () => {
+    if (!_billCurrent) return
+    try {
+      await apiFetch(`/api/invoices/${_billCurrent.id}`, { method:'PATCH', body:{
+        invoiceDate:      document.getElementById('bill-inv-date').value || null,
+        dueDate:          document.getElementById('bill-due-date').value || null,
+        insuranceProvider:document.getElementById('bill-insurance').value.trim() || null,
+        insuranceAmount:  parseFloat(document.getElementById('bill-insurance-amount').value) || 0,
+      }})
+      showToast(lang==='el'?'Αποθηκεύτηκε ✓':'Saved ✓')
+    } catch { showToast('Could not save.') }
+  })
+
+  document.getElementById('bill-issue-btn').addEventListener('click', async () => {
+    if (!_billCurrent) return
+    try {
+      const res = await apiFetch(`/api/invoices/${_billCurrent.id}/issue`, { method:'POST' })
+      const inv = await res.json()
+      _billCurrent.status = inv.status
+      document.getElementById('bill-editor-status').textContent = inv.status
+      document.getElementById('bill-editor-status').className = `bill-inv-status ${inv.status}`
+      document.getElementById('bill-issue-btn').style.display = 'none'
+      showToast(lang==='el'?'Τιμολόγιο εκδόθηκε ✓':'Invoice issued ✓')
+      loadStats(); renderInvoiceList()
+    } catch { showToast('Could not issue invoice.') }
+  })
+
+  document.getElementById('bill-void-btn').addEventListener('click', async () => {
+    if (!confirm(lang==='el'?'Ακύρωση τιμολογίου;':'Void this invoice?')) return
+    try {
+      await apiFetch(`/api/invoices/${_billCurrent.id}`, { method:'PATCH', body:{ status:'void' }})
+      _billCurrent.status = 'void'
+      document.getElementById('bill-editor-status').textContent = 'void'
+      document.getElementById('bill-editor-status').className   = 'bill-inv-status void'
+      document.getElementById('bill-void-btn').style.display  = 'none'
+      document.getElementById('bill-issue-btn').style.display = 'none'
+      showToast(lang==='el'?'Ακυρώθηκε':'Voided'); loadStats()
+    } catch { showToast('Could not void invoice.') }
+  })
+
+  // ── Print ─────────────────────────────────────────────────────────────────
+  document.getElementById('bill-print-btn').addEventListener('click', () => {
+    if (!_billCurrent) return
+    const inv = _billCurrent
+    const subtotal  = (inv.items||[]).reduce((s,i) => s + i.quantity*i.unit_price*(1-i.discount_pct/100), 0)
+    const insurance = parseFloat(inv.insurance_amount||0)
+    const paid      = (inv.payments||[]).reduce((s,p)=>s+parseFloat(p.amount),0)
+    const balance   = Math.max(0, subtotal - insurance - paid)
+
+    document.getElementById('bill-print-area').innerHTML = `
+      <div class="bill-print-header">
+        <div>
+          <div class="bill-print-logo">🦷 Dental Assistant Pro</div>
+          <div style="font-size:12px;margin-top:4px;color:#5C5854">${inv.invoice_number} · ${fmtDate(inv.invoice_date)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:700">${inv.patient_name}</div>
+          <div style="font-size:12px;color:#5C5854">${inv.patient_phone||''}</div>
+          <div style="font-size:12px;color:#5C5854">${inv.patient_email||''}</div>
+        </div>
+      </div>
+      <table class="bill-print-table">
+        <thead><tr><th>Description</th><th>Code</th><th>Qty</th><th>Unit</th><th>Disc</th><th style="text-align:right">Total</th></tr></thead>
+        <tbody>${(inv.items||[]).map(i=>`
+          <tr>
+            <td>${i.description}</td>
+            <td>${i.procedure_code||'—'}</td>
+            <td>${i.quantity}</td>
+            <td>€${fmtAmt(i.unit_price)}</td>
+            <td>${i.discount_pct}%</td>
+            <td style="text-align:right">€${fmtAmt(i.quantity*i.unit_price*(1-i.discount_pct/100))}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="bill-print-totals">
+        <div class="bill-print-total-row"><span>Subtotal</span><span>€${fmtAmt(subtotal)}</span></div>
+        ${insurance ? `<div class="bill-print-total-row"><span>Insurance / EOPYY</span><span>−€${fmtAmt(insurance)}</span></div>` : ''}
+        <div class="bill-print-total-row main"><span>Patient Total</span><span>€${fmtAmt(subtotal-insurance)}</span></div>
+        <div class="bill-print-total-row"><span>Paid</span><span>€${fmtAmt(paid)}</span></div>
+        <div class="bill-print-total-row main"><span>Balance Due</span><span>€${fmtAmt(balance)}</span></div>
+      </div>
+      ${inv.insurance_provider ? `<div style="margin-top:20px;font-size:12px;color:#5C5854">Insurance: ${inv.insurance_provider}</div>` : ''}
+      ${inv.notes ? `<div style="margin-top:8px;font-size:12px;color:#5C5854">Notes: ${inv.notes}</div>` : ''}
+      <div style="margin-top:32px;border-top:1px solid #E5E0D8;padding-top:16px;font-size:11px;color:#9C9890;text-align:center">
+        Thank you for choosing our practice · ${inv.invoice_number} · ${fmtDate(inv.invoice_date)}
+      </div>`
+    window.print()
+  })
+
+  // ── "Create Invoice" shortcut from appointment modal ─────────────────────
+  window.createInvoiceFromAppointment = async function(appt) {
+    const patient = findPatientByName(appt.patient)
+    if (!patient) { showToast('Patient not found in registry.'); return }
+    try {
+      const res = await apiFetch('/api/invoices', { method:'POST', body:{
+        patientId: patient.id, appointmentId: appt.id || null
+      }})
+      const inv = await res.json()
+      if (!inv.id) return
+      // Pre-add a line item for the appointment type
+      const typeName = TYPE_LABELS[lang][appt.type] || appt.type
+      await apiFetch(`/api/invoices/${inv.id}/items`, { method:'POST', body:{
+        description: typeName, quantity: 1, unitPrice: 0
+      }})
+      window.openBilling(patient.id)
+    } catch { showToast('Could not create invoice.') }
   }
 
 })()
