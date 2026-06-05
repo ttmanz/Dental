@@ -4120,17 +4120,34 @@ document.getElementById('voice-next').addEventListener('click', () => {
   patientData[q.key] = document.getElementById('voice-answer-box').value.trim()
 
   if (voiceQIdx === PATIENT_QS.length - 1) {
-    // All done — sync back to write form and save
+    // All done — sync back to write form and save via API
     syncVoiceToWriteForm()
-    const existing = findPatientByName(patientData.fullName)
-    if (existing) {
-      Object.assign(existing, patientData)
-      if (_pfCurrentPhoto) existing.photo = _pfCurrentPhoto
-    } else {
-      PATIENTS.push({ id: Date.now(), photo: _pfCurrentPhoto || '', ...patientData, createdAt: new Date().toISOString() })
+    const nameParts = (patientData.fullName || '').trim().split(/\s+/)
+    const body = {
+      firstName:   nameParts[0] || '',
+      lastName:    nameParts.slice(1).join(' ') || '',
+      phone:       patientData.phone    || null,
+      email:       patientData.email    || null,
+      address:     patientData.address  || null,
+      dateOfBirth: patientData.dob      || null,
+      gender:      patientData.gender   || null,
+      notes:       patientData.allergies ? `Allergies: ${patientData.allergies}` : (patientData.notes || null),
+      photoUrl:    _pfCurrentPhoto      || null,
     }
-    savePatients()
-    showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
+    const existing = findPatientByName(patientData.fullName)
+    const url    = existing ? `/api/patients/${existing.id}` : '/api/patients'
+    const method = existing ? 'PATCH' : 'POST'
+    apiFetch(url, { method, body })
+      .then(r => r.json())
+      .then(data => {
+        if (data.id) {
+          const mapped = patientFromApi(data)
+          if (existing) Object.assign(existing, mapped)
+          else PATIENTS.push(mapped)
+          showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
+        }
+      })
+      .catch(() => showToast('Could not save patient — check connection.'))
     closePatientForm()
   } else {
     voiceQIdx++
@@ -4415,29 +4432,87 @@ function buildMappedPatients() {
   }).filter(p => p.fullName || p.phone || p.email)
 }
 
-// ── Execute the import ────────────────────────────────────────────────────
-function executeImport() {
+// ── Map import patient object to API request body ─────────────────────────
+function patientToApiBody(p) {
+  const nameParts = (p.fullName || '').trim().split(/\s+/)
+  const noteParts = [
+    p.allergies      && `Allergies: ${p.allergies}`,
+    p.medications    && `Medications: ${p.medications}`,
+    p.conditions     && `Conditions: ${p.conditions}`,
+    p.insurance      && `Insurance: ${p.insurance}`,
+    p.emergName      && `Emergency contact: ${p.emergName}${p.emergPhone ? ' — ' + p.emergPhone : ''}`,
+    p.lastVisit      && `Last dental visit: ${p.lastVisit}`,
+    p.prevWork       && `Previous dental work: ${p.prevWork}`,
+    p.chiefComplaint && `Chief complaint: ${p.chiefComplaint}`,
+    p.notes          && p.notes,
+  ].filter(Boolean).join('\n') || null
+  return {
+    firstName:   nameParts[0]              || '',
+    lastName:    nameParts.slice(1).join(' ') || '',
+    phone:       p.phone       || null,
+    email:       p.email       || null,
+    address:     p.address     || null,
+    dateOfBirth: p.dob         || null,
+    gender:      p.gender      || null,
+    notes:       noteParts,
+  }
+}
+
+// ── Execute the import (async — posts to API in batches of 5) ─────────────
+async function executeImport() {
   const mapped = buildMappedPatients()
-  let imported = 0, updated = 0
+  if (!mapped.length) { showToast('No patients to import.'); return }
 
-  mapped.forEach(p => {
-    const existing = findPatientByName(p.fullName)
-    if (existing) {
-      // Update existing — keep photo if already set
-      const photo = existing.photo
-      Object.assign(existing, p)
-      if (photo && !p.photo) existing.photo = photo
-      updated++
-    } else {
-      PATIENTS.push(p)
-      imported++
-    }
-  })
+  const area    = document.getElementById('import-result-area')
+  const nextBtn = document.getElementById('import-next-btn')
+  const backBtn = document.getElementById('import-back-btn')
+  const cancelBtn = document.getElementById('import-cancel-btn')
 
-  savePatients()
+  // Lock buttons while running
+  nextBtn.disabled = true
+  backBtn.style.display = 'none'
 
-  // Show result
-  const area = document.getElementById('import-result-area')
+  let imported = 0, updated = 0, failed = 0
+  const total = mapped.length
+
+  function showProgress(done) {
+    const pct = Math.round((done / total) * 100)
+    area.innerHTML = `
+      <div style="padding:24px;text-align:center">
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">
+          ${lang === 'el' ? 'Εισαγωγή σε εξέλιξη…' : 'Importing…'} ${done}/${total}
+        </div>
+        <div style="background:var(--cream-dark);border-radius:8px;overflow:hidden;height:10px">
+          <div style="background:var(--primary);height:100%;width:${pct}%;transition:width .2s"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">${pct}%</div>
+      </div>`
+  }
+
+  showProgress(0)
+
+  // Send in batches of 5 to avoid overwhelming the server
+  const BATCH = 5
+  for (let i = 0; i < mapped.length; i += BATCH) {
+    const batch = mapped.slice(i, i + BATCH)
+    await Promise.allSettled(batch.map(async p => {
+      try {
+        const existing = findPatientByName(p.fullName)
+        const url    = existing ? `/api/patients/${existing.id}` : '/api/patients'
+        const method = existing ? 'PATCH' : 'POST'
+        const res    = await apiFetch(url, { method, body: patientToApiBody(p) })
+        const data   = await res.json()
+        if (res.ok && data.id) {
+          const mapped2 = patientFromApi(data)
+          if (existing) { Object.assign(existing, mapped2); updated++ }
+          else { PATIENTS.push(mapped2); imported++ }
+        } else { failed++ }
+      } catch { failed++ }
+    }))
+    showProgress(Math.min(i + BATCH, total))
+  }
+
+  // Show final result
   area.innerHTML = `
     <div class="import-result-box">
       <div class="import-result-icon">🎉</div>
@@ -4445,7 +4520,7 @@ function executeImport() {
       <div class="import-result-stats">
         <div class="import-stat">
           <div class="import-stat-num">${imported}</div>
-          <div class="import-stat-lbl">${lang === 'el' ? 'Νέοι' : 'New patients'}</div>
+          <div class="import-stat-lbl">${lang === 'el' ? 'Νέοι' : 'New'}</div>
         </div>
         <div class="import-stat">
           <div class="import-stat-num amber">${updated}</div>
@@ -4453,20 +4528,19 @@ function executeImport() {
         </div>
         <div class="import-stat">
           <div class="import-stat-num">${PATIENTS.length}</div>
-          <div class="import-stat-lbl">${lang === 'el' ? 'Σύνολο' : 'Total in registry'}</div>
+          <div class="import-stat-lbl">${lang === 'el' ? 'Σύνολο' : 'Total'}</div>
         </div>
+        ${failed ? `<div class="import-stat"><div class="import-stat-num" style="color:#D95F5F">${failed}</div><div class="import-stat-lbl">${lang === 'el' ? 'Αποτυχία' : 'Failed'}</div></div>` : ''}
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-top:8px">
-        ${lang === 'el' ? 'Όλοι οι ασθενείς είναι πλέον διαθέσιμοι στη βάση δεδομένων.' : 'All patients are now available in the registry and Patient Charts.'}
+        ${lang === 'el' ? 'Οι ασθενείς είναι πλέον διαθέσιμοι στη βάση δεδομένων.' : 'Patients are now in the registry and Patient Charts.'}
       </div>
-    </div>
-  `
+    </div>`
 
-  // Change footer buttons for done state
-  document.getElementById('import-next-btn').textContent = lang === 'el' ? 'Κλείσιμο' : 'Close'
-  document.getElementById('import-next-btn').onclick = closeImportOverlay
-  document.getElementById('import-back-btn').style.display = 'none'
-  document.getElementById('import-cancel-btn').style.display = 'none'
+  nextBtn.disabled = false
+  nextBtn.textContent = lang === 'el' ? 'Κλείσιμο' : 'Close'
+  nextBtn.onclick = closeImportOverlay
+  cancelBtn.style.display = 'none'
 }
 
 // ── Open / Close ──────────────────────────────────────────────────────────
@@ -4508,7 +4582,7 @@ document.getElementById('import-next-btn').addEventListener('click', function() 
     if (!hasMapped) { showToast(lang === 'el' ? 'Αντιστοιχίστε τουλάχιστον μία στήλη' : 'Please map at least one column'); return }
     goImportStep(3)
   } else if (_importStep === 3) {
-    executeImport()
+    executeImport().catch(err => { console.error('Import error', err); showToast('Import failed — check connection.') })
   }
 })
 
