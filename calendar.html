@@ -3181,6 +3181,312 @@
 
     body[data-role="dentist"] #ops-nav-btn { display:none !important; }
 
+    /* ── Prescription Module ────────────────────────────────────────────── */
+    .rx-overlay {
+      position:fixed; inset:0; z-index:8300; display:flex; align-items:center; justify-content:center;
+      background:rgba(44,42,39,.5); backdrop-filter:blur(4px);
+      opacity:0; pointer-events:none; transition:opacity .2s;
+    }
+    .rx-overlay.open { opacity:1; pointer-events:all; }
+    .rx-modal {
+      width:780px; max-width:97vw; height:88vh; background:var(--white);
+      border-radius:20px; box-shadow:0 20px 60px rgba(44,42,39,.3);
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    .rx-header {
+      display:flex; align-items:center; gap:12px; padding:16px 24px;
+      background:linear-gradient(135deg,#D95F5F 0%,#B04040 100%); flex-shrink:0;
+    }
+    .rx-header-title { font-size:17px; font-weight:700; color:#fff; flex:1; }
+    .rx-close-btn {
+      width:32px; height:32px; border-radius:8px; border:none;
+      background:rgba(255,255,255,.2); color:#fff; font-size:16px;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+    }
+    .rx-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .rx-tab {
+      padding:11px 20px; font-size:13px; font-weight:600; color:var(--text-mid);
+      border:none; background:none; border-bottom:2px solid transparent;
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .rx-tab.active { color:#D95F5F; border-bottom-color:#D95F5F; }
+    .rx-tab:hover:not(.active) { background:var(--cream); }
+    .rx-body { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    .rx-tab-panel { display:none; flex:1; overflow-y:auto; padding:20px; flex-direction:column; gap:16px; }
+    .rx-tab-panel.active { display:flex; }
+    .rx-form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .rx-form-row.three { grid-template-columns:1fr 1fr 1fr; }
+    .rx-field label { display:block; font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; }
+    .rx-field input, .rx-field select, .rx-field textarea {
+      width:100%; border:1.5px solid var(--border); border-radius:8px;
+      padding:8px 10px; font-size:13px; font-family:inherit; background:var(--cream);
+      color:var(--text); outline:none; transition:border-color .15s;
+    }
+    .rx-field input:focus, .rx-field select:focus, .rx-field textarea:focus { border-color:#D95F5F; background:var(--white); }
+    .rx-section-title {
+      font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase;
+      letter-spacing:.07em; padding-bottom:8px; border-bottom:1px solid var(--border);
+    }
+    /* Medication rows */
+    .rx-med-row {
+      display:grid; grid-template-columns:2fr 1fr 1fr 1fr 28px; gap:8px;
+      align-items:end; padding:10px 12px; background:var(--cream);
+      border:1px solid var(--border); border-radius:10px;
+    }
+    .rx-med-row .rx-field label { font-size:10px; }
+    .rx-med-row .rx-field input { font-size:12px; }
+    .rx-med-del {
+      width:28px; height:28px; border-radius:7px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; color:#D95F5F; font-size:14px;
+      display:flex; align-items:center; justify-content:center; align-self:flex-end; margin-bottom:1px;
+    }
+    .rx-med-del:hover { background:#FEE2E2; border-color:#FECACA; }
+    .rx-add-med-btn {
+      padding:8px 14px; border-radius:8px; border:1.5px dashed var(--border);
+      background:none; font-size:12px; font-weight:600; color:var(--primary);
+      cursor:pointer; font-family:inherit; width:100%; text-align:center;
+    }
+    .rx-add-med-btn:hover { background:var(--primary-light); border-color:var(--primary); }
+    .rx-footer {
+      display:flex; gap:10px; padding:14px 20px; border-top:1px solid var(--border);
+      background:var(--cream); flex-shrink:0;
+    }
+    .rx-btn {
+      padding:9px 18px; border-radius:9px; font-size:13px; font-weight:700;
+      cursor:pointer; font-family:inherit; border:none; transition:all .15s;
+    }
+    .rx-btn.primary { background:#D95F5F; color:#fff; }
+    .rx-btn.primary:hover { background:#B04040; }
+    .rx-btn.secondary { border:1.5px solid var(--border); background:var(--white); color:var(--text-mid); }
+    .rx-btn.print { background:#2C2A27; color:#fff; }
+    .rx-btn.print:hover { background:#3D3B37; }
+    /* History list */
+    .rx-hist-card {
+      background:var(--cream); border:1px solid var(--border); border-radius:10px;
+      padding:12px 16px; display:flex; align-items:center; gap:12px;
+    }
+    .rx-hist-num { font-size:12px; font-weight:700; color:#D95F5F; min-width:110px; }
+    .rx-hist-info { flex:1; }
+    .rx-hist-patient { font-size:13px; font-weight:700; color:var(--text); }
+    .rx-hist-detail  { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .rx-hist-status {
+      padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; text-transform:uppercase;
+    }
+    .rx-hist-status.active    { background:#D1FAE5; color:#065F46; }
+    .rx-hist-status.dispensed { background:#DBEAFE; color:#1E40AF; }
+    .rx-hist-status.expired   { background:var(--cream-dark); color:var(--text-muted); }
+    .rx-hist-status.cancelled { background:#FEE2E2; color:#991B1B; }
+
+    /* Print template */
+    #rx-print-area { display:none; }
+    @media print {
+      body > * { display:none !important; }
+      #rx-print-area {
+        display:block !important; position:fixed; inset:0; background:#fff;
+        padding:20mm 20mm 15mm; font-family:'Times New Roman',serif; color:#000;
+        font-size:11pt; line-height:1.5;
+      }
+      .rxp-header { text-align:center; border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:12px; }
+      .rxp-practice { font-size:13pt; font-weight:700; }
+      .rxp-address  { font-size:9pt; }
+      .rxp-title    { font-size:14pt; font-weight:700; text-align:center; letter-spacing:.1em; margin:12px 0 8px; text-transform:uppercase; }
+      .rxp-grid     { display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; margin-bottom:12px; font-size:10pt; }
+      .rxp-label    { font-size:8pt; font-weight:700; text-transform:uppercase; color:#444; }
+      .rxp-value    { border-bottom:1px solid #aaa; padding-bottom:2px; }
+      .rxp-meds     { margin:16px 0; }
+      .rxp-med-header { display:grid; grid-template-columns:3fr 1fr 1fr 2fr; gap:4px; font-size:9pt; font-weight:700; border-bottom:1.5px solid #000; padding-bottom:4px; }
+      .rxp-med-row  { display:grid; grid-template-columns:3fr 1fr 1fr 2fr; gap:4px; font-size:10pt; padding:4px 0; border-bottom:1px solid #eee; }
+      .rxp-sig      { margin-top:40px; display:grid; grid-template-columns:1fr 1fr; gap:30px; }
+      .rxp-sig-box  { border-top:1px solid #000; padding-top:6px; font-size:9pt; text-align:center; }
+      .rxp-footer   { margin-top:12px; font-size:8pt; color:#666; text-align:center; border-top:1px solid #ccc; padding-top:6px; }
+    }
+
+    /* ── EOPYY Picker ────────────────────────────────────────────────────── */
+    .eopyy-btn {
+      padding:4px 8px; border-radius:6px; border:1.5px solid #3D9E8F;
+      background:var(--primary-light); color:var(--primary); font-size:11px; font-weight:700;
+      cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;
+    }
+    .eopyy-btn:hover { background:var(--primary); color:#fff; }
+    .eopyy-picker {
+      position:fixed; z-index:9500; background:var(--white); border:1px solid var(--border);
+      border-radius:12px; box-shadow:0 12px 40px var(--shadow);
+      width:480px; max-width:95vw; max-height:360px; display:flex; flex-direction:column; overflow:hidden;
+    }
+    .eopyy-picker-header { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+    .eopyy-picker-search {
+      flex:1; height:34px; border:1.5px solid var(--border); border-radius:7px;
+      padding:0 10px; font-size:13px; font-family:inherit; background:var(--cream); outline:none;
+    }
+    .eopyy-picker-search:focus { border-color:var(--primary); }
+    .eopyy-picker-close { width:28px; height:28px; border-radius:6px; border:none; background:var(--cream-dark); cursor:pointer; font-size:14px; }
+    .eopyy-picker-list { flex:1; overflow-y:auto; }
+    .eopyy-cat-header { padding:6px 14px; font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; background:var(--cream); position:sticky; top:0; }
+    .eopyy-code-row {
+      display:grid; grid-template-columns:70px 1fr auto auto; gap:8px; align-items:center;
+      padding:8px 14px; cursor:pointer; border-bottom:1px solid var(--border); transition:background .1s;
+    }
+    .eopyy-code-row:hover { background:var(--cream); }
+    .eopyy-code-tag { font-size:11px; font-weight:700; color:var(--primary); font-family:monospace; }
+    .eopyy-code-name { font-size:12px; color:var(--text); }
+    .eopyy-code-coverage { font-size:10px; color:var(--text-muted); }
+    .eopyy-code-amount { font-size:12px; font-weight:700; color:#22C47A; }
+
+    /* ── Clinic Switcher ─────────────────────────────────────────────────── */
+    .clinic-switcher {
+      position:relative; display:none;  /* shown via JS for group_admin */
+    }
+    .clinic-switcher-btn {
+      display:flex; align-items:center; gap:6px; padding:5px 10px;
+      border:1.5px solid var(--border); border-radius:8px; background:var(--cream);
+      cursor:pointer; font-size:12px; font-weight:600; color:var(--text); font-family:inherit;
+      transition:all .15s;
+    }
+    .clinic-switcher-btn:hover { border-color:var(--primary); }
+    .clinic-switcher-btn .cs-name { max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .clinic-dropdown {
+      position:absolute; top:calc(100% + 6px); left:0; z-index:9000;
+      background:var(--white); border:1px solid var(--border); border-radius:10px;
+      box-shadow:0 8px 32px var(--shadow); min-width:220px; overflow:hidden;
+      display:none;
+    }
+    .clinic-dropdown.open { display:block; }
+    .clinic-dropdown-item {
+      padding:10px 14px; cursor:pointer; font-size:13px; color:var(--text);
+      transition:background .1s; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; gap:8px;
+    }
+    .clinic-dropdown-item:last-child { border-bottom:none; }
+    .clinic-dropdown-item:hover { background:var(--cream); }
+    .clinic-dropdown-item.current { color:var(--primary); font-weight:700; }
+    .clinic-dropdown-item .cd-dot { width:8px; height:8px; border-radius:50%; background:var(--primary); flex-shrink:0; }
+
+    /* ── Survey tab (inside Ops Hub) ─────────────────────────────────────── */
+    .srv-scroll { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:20px; }
+    .srv-nps-banner {
+      background:linear-gradient(135deg,var(--primary) 0%,#2D8B7A 100%);
+      border-radius:16px; padding:24px; display:flex; align-items:center; gap:20px;
+    }
+    .srv-nps-score {
+      font-size:56px; font-weight:900; color:#fff; line-height:1; min-width:80px; text-align:center;
+    }
+    .srv-nps-label { font-size:12px; color:rgba(255,255,255,.7); font-weight:600; text-align:center; }
+    .srv-nps-meta { flex:1; }
+    .srv-nps-title { font-size:16px; font-weight:700; color:#fff; margin-bottom:6px; }
+    .srv-nps-sub { font-size:13px; color:rgba(255,255,255,.8); }
+    .srv-breakdown { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .srv-breakdown-card {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:14px; text-align:center;
+    }
+    .srv-breakdown-val { font-size:28px; font-weight:800; }
+    .srv-breakdown-val.green { color:#22C47A; }
+    .srv-breakdown-val.amber { color:var(--amber); }
+    .srv-breakdown-val.red   { color:#D95F5F; }
+    .srv-breakdown-lbl { font-size:11px; color:var(--text-muted); font-weight:600; margin-top:2px; text-transform:uppercase; letter-spacing:.04em; }
+    .srv-settings-panel { background:var(--cream); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+    .srv-settings-row { display:flex; align-items:center; justify-content:space-between; }
+    .srv-settings-label { font-size:13px; font-weight:600; color:var(--text); }
+    .srv-settings-sub { font-size:11px; color:var(--text-muted); }
+    .srv-toggle {
+      width:40px; height:22px; border-radius:11px; background:var(--border); border:none;
+      cursor:pointer; position:relative; transition:background .2s; flex-shrink:0;
+    }
+    .srv-toggle.on { background:var(--primary); }
+    .srv-toggle::after {
+      content:''; position:absolute; top:2px; left:2px;
+      width:18px; height:18px; border-radius:50%; background:#fff;
+      transition:left .2s; box-shadow:0 1px 4px rgba(0,0,0,.2);
+    }
+    .srv-toggle.on::after { left:20px; }
+    .srv-response-row {
+      display:flex; align-items:center; gap:12px; padding:10px 0;
+      border-bottom:1px solid var(--border);
+    }
+    .srv-response-row:last-child { border-bottom:none; }
+    .srv-nps-chip {
+      width:36px; height:36px; border-radius:8px; font-size:14px; font-weight:800;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .srv-nps-chip.promoter  { background:#D1FAE5; color:#065F46; }
+    .srv-nps-chip.passive   { background:#FEF3C7; color:#92400E; }
+    .srv-nps-chip.detractor { background:#FEE2E2; color:#991B1B; }
+    .srv-nps-chip.none      { background:var(--cream-dark); color:var(--text-muted); }
+    .srv-response-info { flex:1; }
+    .srv-response-patient { font-size:13px; font-weight:700; color:var(--text); }
+    .srv-response-detail  { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+    /* ── WhatsApp Inbox (inside Reminders) ───────────────────────────────── */
+    .wa-inbox {
+      display:none; flex:1; overflow:hidden;
+      flex-direction:row;
+    }
+    .wa-inbox.active { display:flex; }
+    .wa-convo-list {
+      width:240px; border-right:1px solid var(--border); overflow-y:auto; flex-shrink:0;
+    }
+    .wa-convo-item {
+      padding:12px 14px; cursor:pointer; border-bottom:1px solid var(--border);
+      display:flex; align-items:flex-start; gap:10px; transition:background .1s;
+    }
+    .wa-convo-item:hover, .wa-convo-item.active { background:var(--cream); }
+    .wa-convo-avatar {
+      width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#25D366,#128C7E);
+      display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;
+      color:#fff; font-weight:700;
+    }
+    .wa-convo-body { flex:1; min-width:0; }
+    .wa-convo-name { font-size:13px; font-weight:700; color:var(--text); }
+    .wa-convo-preview { font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:1px; }
+    .wa-convo-time { font-size:10px; color:var(--text-muted); flex-shrink:0; }
+    .wa-unread-badge {
+      background:#25D366; color:#fff; border-radius:10px; font-size:10px;
+      font-weight:700; padding:1px 6px; flex-shrink:0; align-self:flex-end;
+    }
+    .wa-thread { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .wa-thread-header {
+      padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0;
+      display:flex; align-items:center; gap:10px;
+    }
+    .wa-thread-name { font-size:14px; font-weight:700; color:var(--text); }
+    .wa-thread-phone { font-size:11px; color:var(--text-muted); }
+    .wa-messages { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
+    .wa-bubble {
+      max-width:75%; padding:8px 12px; border-radius:10px; font-size:13px; line-height:1.4;
+    }
+    .wa-bubble.inbound {
+      background:var(--cream); color:var(--text); border-radius:0 10px 10px 10px;
+      align-self:flex-start;
+    }
+    .wa-bubble.outbound {
+      background:#DCF8C6; color:#1a1a1a; border-radius:10px 0 10px 10px;
+      align-self:flex-end;
+    }
+    html[data-theme="dark"] .wa-bubble.outbound { background:#1a4a2a; color:var(--text); }
+    .wa-bubble-meta { font-size:10px; color:var(--text-muted); margin-top:3px; text-align:right; }
+    .wa-bubble.inbound .wa-bubble-meta { text-align:left; }
+    .wa-compose {
+      padding:10px 14px; border-top:1px solid var(--border); display:flex; gap:8px; flex-shrink:0;
+    }
+    .wa-compose-input {
+      flex:1; border:1.5px solid var(--border); border-radius:20px;
+      padding:8px 14px; font-size:13px; font-family:inherit; background:var(--cream);
+      color:var(--text); outline:none; resize:none; max-height:80px; min-height:36px;
+    }
+    .wa-compose-input:focus { border-color:#25D366; }
+    .wa-send-btn {
+      width:36px; height:36px; border-radius:50%; border:none;
+      background:#25D366; color:#fff; font-size:16px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+      align-self:flex-end; transition:background .15s;
+    }
+    .wa-send-btn:hover { background:#128C7E; }
+    .wa-empty { text-align:center; padding:40px 20px; color:var(--text-muted); font-size:13px; }
+    .wa-setup-notice {
+      background:#FEF3C7; border:1px solid #FDE68A; border-radius:10px;
+      padding:12px 16px; font-size:12px; color:#92400E; margin:12px 16px;
+    }
+
     /* ═══════════════════════════════════════════════════════════════════
        DARK MODE
        Overrides every CSS variable; coloured gradients stay vibrant.
@@ -3675,11 +3981,37 @@
         <div class="rem-stat-lbl" data-en="Templates" data-el="Πρότυπα">Templates</div>
         <div class="rem-stat-val" style="font-size:14px;margin-top:4px">✏️</div>
       </div>
+      <div class="rem-stat" data-tab="whatsapp" id="rem-stat-wa-tab">
+        <div class="rem-stat-lbl">WhatsApp</div>
+        <div class="rem-stat-val green" id="rem-stat-wa">💬</div>
+      </div>
     </div>
 
-    <!-- Tab content -->
-    <div class="rem-content" id="rem-content">
-      <!-- built by JS -->
+    <!-- Standard tab content -->
+    <div class="rem-content" id="rem-content" style="display:flex;flex-direction:column"></div>
+
+    <!-- WhatsApp inbox (replaces content when wa tab active) -->
+    <div class="wa-inbox" id="wa-inbox">
+      <div class="wa-convo-list" id="wa-convo-list">
+        <div class="wa-empty" id="wa-convo-empty">No conversations yet.</div>
+      </div>
+      <div class="wa-thread" id="wa-thread" style="display:none">
+        <div class="wa-thread-header">
+          <div>
+            <div class="wa-thread-name" id="wa-thread-name">—</div>
+            <div class="wa-thread-phone" id="wa-thread-phone">—</div>
+          </div>
+        </div>
+        <div id="wa-setup-notice-area"></div>
+        <div class="wa-messages" id="wa-messages"></div>
+        <div class="wa-compose">
+          <textarea class="wa-compose-input" id="wa-compose-input" placeholder="Type a message…" rows="1"></textarea>
+          <button class="wa-send-btn" id="wa-send-btn">➤</button>
+        </div>
+      </div>
+      <div id="wa-thread-placeholder" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px">
+        Select a conversation
+      </div>
     </div>
   </div>
 </div>
@@ -3965,6 +4297,101 @@
   </div>
 </div>
 
+<!-- ── Print area for prescriptions ──────────────────────────────────── -->
+<div id="rx-print-area"></div>
+
+<!-- ── EOPYY code picker (shared floating panel) ─────────────────────── -->
+<div id="eopyy-picker" class="eopyy-picker" style="display:none">
+  <div class="eopyy-picker-header">
+    <input class="eopyy-picker-search" id="eopyy-search" placeholder="Search by name or code…" autocomplete="off" />
+    <button class="eopyy-picker-close" id="eopyy-close-btn">✕</button>
+  </div>
+  <div class="eopyy-picker-list" id="eopyy-list"></div>
+</div>
+
+<!-- ── Prescription overlay ───────────────────────────────────────────── -->
+<div id="rx-overlay" class="rx-overlay">
+  <div class="rx-modal">
+    <div class="rx-header">
+      <div style="font-size:20px">💊</div>
+      <div class="rx-header-title" data-en="Prescription" data-el="Συνταγογράφηση">Prescription</div>
+      <button class="rx-close-btn" id="rx-close-btn">✕</button>
+    </div>
+    <div class="rx-tabs">
+      <button class="rx-tab active" data-rx-tab="new">✏️ <span data-en="New Prescription" data-el="Νέα Συνταγή">New Prescription</span></button>
+      <button class="rx-tab" data-rx-tab="history">📋 <span data-en="History" data-el="Ιστορικό">History</span></button>
+    </div>
+    <div class="rx-body">
+
+      <!-- New prescription tab -->
+      <div class="rx-tab-panel active" id="rx-panel-new">
+        <!-- Patient info -->
+        <div class="rx-section-title" data-en="PATIENT" data-el="ΑΣΘΕΝΗΣ">PATIENT</div>
+        <div class="rx-form-row">
+          <div class="rx-field">
+            <label data-en="Patient Name" data-el="Ονοματεπώνυμο">Patient Name</label>
+            <input type="text" id="rx-patient-name" list="rx-patient-datalist" placeholder="Search patient…" autocomplete="off" />
+            <datalist id="rx-patient-datalist"></datalist>
+          </div>
+          <div class="rx-field">
+            <label data-en="AMKA (Α.Μ.Κ.Α.)" data-el="ΑΜΚΑ">AMKA</label>
+            <input type="text" id="rx-patient-amka" placeholder="Αρ. Μητρώου…" />
+          </div>
+        </div>
+        <div class="rx-form-row three">
+          <div class="rx-field">
+            <label data-en="Date of Birth" data-el="Ημ. Γέννησης">Date of Birth</label>
+            <input type="date" id="rx-patient-dob" />
+          </div>
+          <div class="rx-field">
+            <label data-en="Prescription Date" data-el="Ημ. Συνταγής">Prescription Date</label>
+            <input type="date" id="rx-date" />
+          </div>
+          <div class="rx-field">
+            <label data-en="Valid for (days)" data-el="Ισχύς (ημέρες)">Valid for (days)</label>
+            <select id="rx-valid-days">
+              <option value="7">7 days</option>
+              <option value="15" selected>15 days</option>
+              <option value="30">30 days</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Diagnosis -->
+        <div class="rx-section-title" data-en="DIAGNOSIS / INDICATION" data-el="ΔΙΑΓΝΩΣΗ">DIAGNOSIS / INDICATION</div>
+        <div class="rx-field">
+          <textarea id="rx-diagnosis" rows="2" placeholder="Clinical indication for this prescription…" style="resize:vertical"></textarea>
+        </div>
+
+        <!-- Medications -->
+        <div class="rx-section-title" data-en="MEDICATIONS" data-el="ΦΑΡΜΑΚΑ">MEDICATIONS</div>
+        <div id="rx-med-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button class="rx-add-med-btn" id="rx-add-med-btn">＋ Add medication</button>
+
+        <!-- Doctor notes -->
+        <div class="rx-field">
+          <label data-en="Doctor's notes (non-printed)" data-el="Σημειώσεις ιατρού">Doctor's notes (non-printed)</label>
+          <textarea id="rx-notes" rows="2" placeholder="Internal notes…" style="resize:vertical"></textarea>
+        </div>
+      </div>
+
+      <!-- History tab -->
+      <div class="rx-tab-panel" id="rx-panel-history">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <input style="flex:1;height:34px;border:1.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:inherit;background:var(--cream);outline:none" id="rx-hist-search" placeholder="Search prescriptions…" />
+        </div>
+        <div id="rx-hist-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+    </div>
+    <div class="rx-footer">
+      <button class="rx-btn primary" id="rx-save-btn" data-en="Save Prescription" data-el="Αποθήκευση">Save Prescription</button>
+      <button class="rx-btn print" id="rx-print-btn" data-en="🖨 Print" data-el="🖨 Εκτύπωση">🖨 Print</button>
+      <button class="rx-btn secondary" id="rx-clear-btn" data-en="Clear" data-el="Εκκαθάριση">Clear</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Offline banner ────────────────────────────────────────────────── -->
 <div class="offline-banner" id="offline-banner">
   📵 You're offline — data shown from cache. Changes will sync when connection restores.
@@ -4068,6 +4495,7 @@
       <button class="ops-tab active" data-ops-tab="dashboard">📈 <span data-en="Dashboard" data-el="Επισκόπηση">Dashboard</span></button>
       <button class="ops-tab" data-ops-tab="inventory">📦 <span data-en="Inventory" data-el="Αποθέματα">Inventory</span></button>
       <button class="ops-tab" data-ops-tab="reports">💰 <span data-en="Financial Reports" data-el="Οικονομικές Αναφορές">Financial Reports</span></button>
+      <button class="ops-tab" data-ops-tab="surveys">⭐ <span data-en="Satisfaction" data-el="Ικανοποίηση">Satisfaction</span></button>
       <button class="ops-tab" data-ops-tab="audit">📋 <span data-en="Audit Log" data-el="Αρχείο Ελέγχου">Audit Log</span></button>
     </div>
 
@@ -4237,6 +4665,83 @@
         </div>
         <div class="rpt-scroll" id="rpt-scroll">
           <div class="rpt-loading" id="rpt-loading">Select a period and click Load.</div>
+        </div>
+      </div>
+
+      <!-- ── Satisfaction Surveys tab ──────────────────────────────────── -->
+      <div class="ops-tab-panel" id="ops-panel-surveys">
+        <div class="srv-scroll" id="srv-scroll">
+
+          <!-- NPS banner -->
+          <div class="srv-nps-banner">
+            <div>
+              <div class="srv-nps-score" id="srv-nps-score">—</div>
+              <div class="srv-nps-label" data-en="NPS Index" data-el="Δείκτης NPS">NPS Index</div>
+            </div>
+            <div class="srv-nps-meta">
+              <div class="srv-nps-title" data-en="Patient Satisfaction" data-el="Ικανοποίηση Ασθενών">Patient Satisfaction</div>
+              <div class="srv-nps-sub" id="srv-nps-sub">Loading…</div>
+            </div>
+          </div>
+
+          <!-- Breakdown -->
+          <div class="srv-breakdown">
+            <div class="srv-breakdown-card">
+              <div class="srv-breakdown-val green" id="srv-promoters">—</div>
+              <div class="srv-breakdown-lbl" data-en="Promoters (9-10)" data-el="Υποστηρικτές">Promoters (9–10)</div>
+            </div>
+            <div class="srv-breakdown-card">
+              <div class="srv-breakdown-val amber" id="srv-passives">—</div>
+              <div class="srv-breakdown-lbl" data-en="Passives (7-8)" data-el="Ουδέτεροι">Passives (7–8)</div>
+            </div>
+            <div class="srv-breakdown-card">
+              <div class="srv-breakdown-val red" id="srv-detractors">—</div>
+              <div class="srv-breakdown-lbl" data-en="Detractors (0-6)" data-el="Αρνητικοί">Detractors (0–6)</div>
+            </div>
+          </div>
+
+          <!-- Auto-send settings -->
+          <div class="ops-panel" style="border:1px solid var(--border)">
+            <div class="ops-panel-title" data-en="AUTO-SEND SETTINGS" data-el="ΑΥΤΟΜΑΤΗ ΑΠΟΣΤΟΛΗ">AUTO-SEND SETTINGS</div>
+            <div class="srv-settings-panel">
+              <div class="srv-settings-row">
+                <div>
+                  <div class="srv-settings-label" data-en="Auto-send after appointment" data-el="Αυτόματη αποστολή μετά ραντεβού">Auto-send after appointment</div>
+                  <div class="srv-settings-sub" data-en="Send survey link via WhatsApp/SMS" data-el="Αποστολή μέσω WhatsApp/SMS">Send survey link via WhatsApp/SMS</div>
+                </div>
+                <button class="srv-toggle" id="srv-autosend-toggle" title="Toggle auto-send"></button>
+              </div>
+              <div class="srv-settings-row">
+                <div class="srv-settings-label" data-en="Delay after appointment" data-el="Καθυστέρηση">Delay after appointment</div>
+                <select id="srv-delay-sel" style="height:32px;border:1.5px solid var(--border);border-radius:8px;padding:0 8px;font-size:13px;font-family:inherit;background:var(--cream)">
+                  <option value="1">1 hour</option>
+                  <option value="4">4 hours</option>
+                  <option value="24" selected>24 hours</option>
+                  <option value="48">48 hours</option>
+                </select>
+              </div>
+              <div class="srv-settings-row">
+                <div class="srv-settings-label" data-en="Channel" data-el="Κανάλι">Channel</div>
+                <select id="srv-channel-sel" style="height:32px;border:1.5px solid var(--border);border-radius:8px;padding:0 8px;font-size:13px;font-family:inherit;background:var(--cream)">
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="sms">SMS</option>
+                  <option value="email">Email</option>
+                </select>
+              </div>
+              <div style="display:flex;justify-content:flex-end">
+                <button id="srv-save-settings-btn" style="padding:7px 16px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Save Settings</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent responses -->
+          <div class="ops-panel" style="border:1px solid var(--border)">
+            <div class="ops-panel-title" data-en="RECENT RESPONSES" data-el="ΠΡΟΣΦΑΤΕΣ ΑΠΟΚΡΙΣΕΙΣ">RECENT RESPONSES</div>
+            <div id="srv-responses-list">
+              <div style="color:var(--text-muted);font-size:13px;padding:12px 0">Loading responses…</div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -4625,6 +5130,15 @@
     <div class="logo-icon">🦷</div>
     <div class="logo-text">Dental <span>Assistant</span> Pro</div>
   </div>
+  <!-- Clinic switcher (group admin only, shown via JS) -->
+  <div class="clinic-switcher" id="clinic-switcher">
+    <button class="clinic-switcher-btn" id="clinic-switcher-btn">
+      <span>🏥</span>
+      <span class="cs-name" id="cs-current-name">My Practice</span>
+      <span style="font-size:10px;color:var(--text-muted)">▾</span>
+    </button>
+    <div class="clinic-dropdown" id="clinic-dropdown"></div>
+  </div>
 
   <div class="topbar-center">
     <button class="nav-btn" id="prev-week">&#8249;</button>
@@ -4651,6 +5165,10 @@
     <button class="add-appt-btn" id="reminders-nav-btn" style="background:#8B7CC8;box-shadow:0 2px 8px rgba(139,124,200,.3)">
       <span>🔔</span>
       <span data-en="Reminders" data-el="Υπενθυμίσεις">Reminders</span>
+    </button>
+    <button class="add-appt-btn" id="rx-nav-btn" style="background:#D95F5F;box-shadow:0 2px 8px rgba(217,95,95,.3)">
+      <span>💊</span>
+      <span data-en="Rx" data-el="Rx">Rx</span>
     </button>
     <button class="add-appt-btn" id="ops-nav-btn" style="background:#2C2A27;box-shadow:0 2px 8px rgba(44,42,39,.3)">
       <span>📊</span>
@@ -10885,6 +11403,703 @@ function applyRoleRestrictions(role) {
     blockClinical()
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// EOPYY CODE CATALOG
+// ══════════════════════════════════════════════════════════════════════════
+const EOPYY_CATALOG = [
+  // ── Εξετάσεις ──────────────────────────────────────────────────────────
+  { code:'ΟΔ001', cat:'Εξετάσεις', name_el:'Απλή εξέταση',              name_en:'Simple examination',           coverage:100, amount:8   },
+  { code:'ΟΔ002', cat:'Εξετάσεις', name_el:'Πλήρης εξέταση',            name_en:'Complete examination',         coverage:100, amount:15  },
+  // ── Ακτινογραφίες ──────────────────────────────────────────────────────
+  { code:'ΑΚ001', cat:'Ακτινογραφίες', name_el:'Περιακρορριζική ακτινογραφία', name_en:'Periapical X-ray',     coverage:100, amount:10  },
+  { code:'ΑΚ002', cat:'Ακτινογραφίες', name_el:'Πανοραμική ακτινογραφία',     name_en:'Panoramic X-ray',       coverage:100, amount:25  },
+  { code:'ΑΚ003', cat:'Ακτινογραφίες', name_el:'Ενδοστοματική ακτινογραφία',  name_en:'Intraoral X-ray',       coverage:100, amount:8   },
+  // ── Εξαγωγές ───────────────────────────────────────────────────────────
+  { code:'ΕΞ001', cat:'Εξαγωγές', name_el:'Απλή εξαγωγή',              name_en:'Simple extraction',            coverage:100, amount:28  },
+  { code:'ΕΞ002', cat:'Εξαγωγές', name_el:'Σύνθετη/χειρουργική εξαγωγή', name_en:'Surgical extraction',       coverage:100, amount:55  },
+  { code:'ΕΞ003', cat:'Εξαγωγές', name_el:'Εξαγωγή γνωμοδοντίου',      name_en:'Wisdom tooth extraction',     coverage:100, amount:75  },
+  { code:'ΕΞ004', cat:'Εξαγωγές', name_el:'Εξαγωγή νεογιλού δοντιού',  name_en:'Deciduous tooth extraction',  coverage:100, amount:18  },
+  // ── Εμφράξεις ──────────────────────────────────────────────────────────
+  { code:'ΕΜ001', cat:'Εμφράξεις', name_el:'Αμάλγαμα 1 επιφάνειας',    name_en:'Amalgam filling 1 surface',   coverage:100, amount:22  },
+  { code:'ΕΜ002', cat:'Εμφράξεις', name_el:'Αμάλγαμα 2 επιφανειών',    name_en:'Amalgam filling 2 surfaces',  coverage:100, amount:30  },
+  { code:'ΕΜ003', cat:'Εμφράξεις', name_el:'Αμάλγαμα 3 επιφανειών',    name_en:'Amalgam filling 3 surfaces',  coverage:100, amount:38  },
+  { code:'ΕΜ011', cat:'Εμφράξεις', name_el:'Σύνθετη ρητίνη 1 επιφάνειας', name_en:'Composite resin 1 surface', coverage:80, amount:30  },
+  { code:'ΕΜ012', cat:'Εμφράξεις', name_el:'Σύνθετη ρητίνη 2 επιφανειών', name_en:'Composite resin 2 surfaces',coverage:80, amount:42  },
+  { code:'ΕΜ013', cat:'Εμφράξεις', name_el:'Σύνθετη ρητίνη 3 επιφανειών', name_en:'Composite resin 3 surfaces',coverage:80, amount:54  },
+  { code:'ΕΜ020', cat:'Εμφράξεις', name_el:'Κάλυψη πολφού (pulp capping)', name_en:'Pulp capping',            coverage:100, amount:20  },
+  // ── Ενδοδοντικές ───────────────────────────────────────────────────────
+  { code:'ΕΝ001', cat:'Ενδοδοντικές', name_el:'Νεκρωτομή / Εκτύπωση',  name_en:'Pulpotomy / Extirpation',     coverage:100, amount:35  },
+  { code:'ΕΝ002', cat:'Ενδοδοντικές', name_el:'Μονόριζο (RCT 1 σωλήνα)', name_en:'Root canal treatment – 1 canal', coverage:100, amount:75 },
+  { code:'ΕΝ003', cat:'Ενδοδοντικές', name_el:'Διόριζο (RCT 2 σωλήνων)', name_en:'Root canal treatment – 2 canals',coverage:100, amount:100},
+  { code:'ΕΝ004', cat:'Ενδοδοντικές', name_el:'Τριόριζο (RCT 3 σωλήνων)',name_en:'Root canal treatment – 3 canals',coverage:100, amount:125},
+  { code:'ΕΝ005', cat:'Ενδοδοντικές', name_el:'Τετράριζο (RCT 4 σωλήνων)',name_en:'Root canal treatment – 4 canals',coverage:100,amount:145},
+  // ── Περιοδοντολογικές ──────────────────────────────────────────────────
+  { code:'ΠΕ001', cat:'Περιοδοντολογικές', name_el:'Καθαρισμός / στίλβωση', name_en:'Scaling & polishing',    coverage:100, amount:30  },
+  { code:'ΠΕ002', cat:'Περιοδοντολογικές', name_el:'Subgingival κυρετάζ (ανά τεταρτημόριο)', name_en:'Subgingival curettage (per quadrant)', coverage:80, amount:45 },
+  { code:'ΠΕ003', cat:'Περιοδοντολογικές', name_el:'Gingivectomy (ανά δόντι)', name_en:'Gingivectomy (per tooth)', coverage:80, amount:35 },
+  // ── Προσθετικές ────────────────────────────────────────────────────────
+  { code:'ΠΡ001', cat:'Προσθετικές', name_el:'Μεταλλική κορώνα',        name_en:'Metal crown',                 coverage:60, amount:80  },
+  { code:'ΠΡ002', cat:'Προσθετικές', name_el:'Μεταλλοπορσελάνινη κορώνα', name_en:'Porcelain-fused-to-metal crown', coverage:60, amount:120},
+  { code:'ΠΡ003', cat:'Προσθετικές', name_el:'Ολική κεραμική κορώνα',   name_en:'All-ceramic crown',           coverage:50, amount:150 },
+  { code:'ΠΡ010', cat:'Προσθετικές', name_el:'Ολική οδοντοστοιχία (άνω/κάτω)', name_en:'Complete denture (upper/lower)', coverage:60, amount:200},
+  { code:'ΠΡ011', cat:'Προσθετικές', name_el:'Μερική οδοντοστοιχία',    name_en:'Partial denture',             coverage:60, amount:150 },
+  // ── Ορθοδοντικές ───────────────────────────────────────────────────────
+  { code:'ΟΡ001', cat:'Ορθοδοντικές', name_el:'Ορθοδοντική εξέταση',    name_en:'Orthodontic examination',     coverage:100, amount:20  },
+  { code:'ΟΡ002', cat:'Ορθοδοντικές', name_el:'Κεφαλομετρική ανάλυση',  name_en:'Cephalometric analysis',      coverage:80,  amount:40  },
+  // ── Χειρουργικές ───────────────────────────────────────────────────────
+  { code:'ΧΕ001', cat:'Χειρουργικές', name_el:'Κυστεκτομή',             name_en:'Cystectomy',                  coverage:100, amount:120 },
+  { code:'ΧΕ002', cat:'Χειρουργικές', name_el:'Αποκάλυψη κατακρατημένου', name_en:'Surgical exposure of impacted tooth', coverage:100, amount:90},
+]
+
+// Global EOPYY picker — call openEopyyPicker(anchorEl, onSelect) to use
+;(function() {
+  const picker = document.getElementById('eopyy-picker')
+  const search = document.getElementById('eopyy-search')
+  const list   = document.getElementById('eopyy-list')
+  let _onSelect = null
+
+  function renderList(q) {
+    const lower = (q||'').toLowerCase()
+    const filtered = lower
+      ? EOPYY_CATALOG.filter(c => c.code.toLowerCase().includes(lower) || c.name_el.toLowerCase().includes(lower) || c.name_en.toLowerCase().includes(lower))
+      : EOPYY_CATALOG
+    const byCategory = {}
+    filtered.forEach(c => { (byCategory[c.cat] = byCategory[c.cat]||[]).push(c) })
+    list.innerHTML = Object.entries(byCategory).map(([cat, codes]) => `
+      <div class="eopyy-cat-header">${cat}</div>
+      ${codes.map(c => `
+        <div class="eopyy-code-row" data-code="${c.code}" data-name-el="${c.name_el}" data-name-en="${c.name_en}" data-amount="${c.amount}" data-coverage="${c.coverage}">
+          <span class="eopyy-code-tag">${c.code}</span>
+          <span class="eopyy-code-name">${c.name_el}</span>
+          <span class="eopyy-code-coverage">ΕΟΠΥΥ ${c.coverage}%</span>
+          <span class="eopyy-code-amount">€${c.amount}</span>
+        </div>`).join('')}
+    `).join('') || '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">No results</div>'
+  }
+
+  window.openEopyyPicker = function(anchorEl, onSelect) {
+    _onSelect = onSelect
+    const rect = anchorEl.getBoundingClientRect()
+    picker.style.top  = (rect.bottom + 6) + 'px'
+    picker.style.left = Math.min(rect.left, window.innerWidth - 490) + 'px'
+    picker.style.display = 'flex'
+    picker.style.flexDirection = 'column'
+    search.value = ''
+    renderList('')
+    search.focus()
+  }
+
+  function closePicker() { picker.style.display = 'none'; _onSelect = null }
+
+  document.getElementById('eopyy-close-btn').addEventListener('click', closePicker)
+  search.addEventListener('input', () => renderList(search.value))
+  list.addEventListener('click', e => {
+    const row = e.target.closest('.eopyy-code-row')
+    if (!row) return
+    _onSelect?.({ code: row.dataset.code, name_el: row.dataset.nameEl, name_en: row.dataset.nameEn, amount: parseFloat(row.dataset.amount), coverage: parseInt(row.dataset.coverage) })
+    closePicker()
+  })
+  document.addEventListener('click', e => {
+    if (picker.style.display !== 'none' && !picker.contains(e.target) && !e.target.closest('.eopyy-btn')) closePicker()
+  }, true)
+})()
+
+// Inject EOPYY button into billing table when it renders
+// Hooked in via MutationObserver on bill-items-tbody
+;(function() {
+  const tbody = document.getElementById('bill-items-tbody')
+  if (!tbody) return
+  const obs = new MutationObserver(() => {
+    tbody.querySelectorAll('td:first-child input').forEach(inp => {
+      if (inp.dataset.eopyyWired) return
+      inp.dataset.eopyyWired = '1'
+      const btn = document.createElement('button')
+      btn.className = 'eopyy-btn'; btn.textContent = 'ΕΟΠΥΥ'; btn.type = 'button'
+      btn.title = 'Pick EOPYY code'
+      btn.style.cssText = 'margin-top:3px;display:block'
+      inp.after(btn)
+      btn.addEventListener('click', () => {
+        window.openEopyyPicker(btn, ({ name_el, name_en, code, amount }) => {
+          inp.value = (typeof lang !== 'undefined' && lang === 'el') ? name_el : name_en
+          // Fill code column (next td input)
+          const row = inp.closest('tr')
+          const codeInp = row?.querySelector('td:nth-child(2) input')
+          const priceInp = row?.querySelector('td:nth-child(4) input')
+          if (codeInp) codeInp.value = code
+          if (priceInp) priceInp.value = amount
+          inp.dispatchEvent(new Event('input', { bubbles: true }))
+          priceInp?.dispatchEvent(new Event('input', { bubbles: true }))
+        })
+      })
+    })
+  })
+  obs.observe(tbody, { childList: true, subtree: true })
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// PRESCRIPTION MODULE
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  const overlay = document.getElementById('rx-overlay')
+  let _rxCurrent = null   // saved prescription being reprinted
+  let medCount = 0
+
+  // ── Tabs ────────────────────────────────────────────────────────────────
+  document.querySelectorAll('.rx-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.rx-tab').forEach(b => b.classList.remove('active'))
+      document.querySelectorAll('.rx-tab-panel').forEach(p => p.classList.remove('active'))
+      btn.classList.add('active')
+      document.getElementById('rx-panel-' + btn.dataset.rxTab)?.classList.add('active')
+      if (btn.dataset.rxTab === 'history') loadRxHistory()
+    })
+  })
+
+  // ── Open ─────────────────────────────────────────────────────────────────
+  window.openRx = function(patientName) {
+    clearForm()
+    if (patientName) document.getElementById('rx-patient-name').value = patientName
+    document.getElementById('rx-date').value = new Date().toISOString().slice(0, 10)
+    populateRxPatientList()
+    overlay.classList.add('open')
+    addMedRow()
+    if (typeof auditLog === 'function') auditLog('view', 'Prescription', patientName || 'New prescription')
+  }
+
+  document.getElementById('rx-nav-btn')?.addEventListener('click', () => window.openRx())
+  document.getElementById('rx-close-btn')?.addEventListener('click', () => overlay.classList.remove('open'))
+  overlay?.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open') })
+
+  // ── Patient datalist ─────────────────────────────────────────────────────
+  function populateRxPatientList() {
+    const dl = document.getElementById('rx-patient-datalist')
+    if (!dl || typeof PATIENTS === 'undefined') return
+    dl.innerHTML = PATIENTS.map(p => `<option value="${((p.firstName||'') + ' ' + (p.lastName||'')).trim()}">`).join('')
+  }
+
+  // Auto-fill AMKA when patient selected
+  document.getElementById('rx-patient-name')?.addEventListener('change', e => {
+    if (typeof PATIENTS === 'undefined') return
+    const name = e.target.value.trim().toLowerCase()
+    const p = PATIENTS.find(pt => ((pt.firstName||'') + ' ' + (pt.lastName||'')).trim().toLowerCase() === name)
+    if (p) {
+      document.getElementById('rx-patient-amka').value = p.amka || ''
+      document.getElementById('rx-patient-dob').value  = p.dateOfBirth || p.dob || ''
+    }
+  })
+
+  // ── Medication rows ──────────────────────────────────────────────────────
+  const MED_PRESETS = [
+    'Αμοξυκιλλίνη 500mg caps', 'Αμοξυκιλλίνη/Κλαβουλανικό 875/125mg tabs',
+    'Μετρονιδαζόλη 500mg tabs', 'Ιβουπροφαίνη 400mg tabs',
+    'Παρακεταμόλη 500mg tabs', 'Κλαριθρομυκίνη 500mg tabs',
+    'Χλωρεξιδίνη στοματικό διάλυμα 0.2%', 'Λινκομυκίνη 500mg caps',
+    'Μεθυλπρεδνιζολόνη 4mg tabs', 'Κωδεΐνη/Παρακεταμόλη 30/500mg tabs',
+  ]
+  const FORMS  = ['Tablets (tabs)','Capsules (caps)','Oral solution','Suspension','Cream/Gel','Drops','Injection']
+  const POSOLOGY = ['1×1 (once daily)','1×2 (twice daily)','1×3 (three times daily)','1×4 (four times daily)','As needed (PRN)','Before meals','After meals']
+
+  function addMedRow(data) {
+    medCount++
+    const id = medCount
+    const row = document.createElement('div')
+    row.className = 'rx-med-row'; row.dataset.medId = id
+    row.innerHTML = `
+      <div class="rx-field">
+        ${id===1?'<label data-en="Drug (INN / generic name)" data-el="Φάρμακο (ΙΝΝ)">Drug (INN / generic name)</label>':'<label>&nbsp;</label>'}
+        <input type="text" list="rx-med-preset-${id}" class="rx-med-name" placeholder="e.g. Amoxicillin 500mg" value="${data?.name||''}" />
+        <datalist id="rx-med-preset-${id}">${MED_PRESETS.map(m=>`<option value="${m}">`).join('')}</datalist>
+      </div>
+      <div class="rx-field">
+        ${id===1?'<label data-en="Form" data-el="Μορφή">Form</label>':'<label>&nbsp;</label>'}
+        <select class="rx-med-form">
+          ${FORMS.map(f=>`<option${data?.form===f?' selected':''}>${f}</option>`).join('')}
+        </select>
+      </div>
+      <div class="rx-field">
+        ${id===1?'<label data-en="Qty" data-el="Ποσότητα">Qty</label>':'<label>&nbsp;</label>'}
+        <input type="number" class="rx-med-qty" min="1" step="1" value="${data?.qty||1}" style="text-align:center" />
+      </div>
+      <div class="rx-field">
+        ${id===1?'<label data-en="Posology / Instructions" data-el="Δοσολογία">Posology / Instructions</label>':'<label>&nbsp;</label>'}
+        <input type="text" class="rx-med-posology" list="rx-posology-${id}" placeholder="1×3 daily for 5 days" value="${data?.posology||''}" />
+        <datalist id="rx-posology-${id}">${POSOLOGY.map(p=>`<option value="${p}">`).join('')}</datalist>
+      </div>
+      <button class="rx-med-del" title="Remove" data-del-med="${id}">✕</button>`
+    document.getElementById('rx-med-list').appendChild(row)
+  }
+
+  document.getElementById('rx-add-med-btn')?.addEventListener('click', () => addMedRow())
+  document.getElementById('rx-med-list')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-del-med]')
+    if (btn) btn.closest('.rx-med-row')?.remove()
+  })
+
+  function clearForm() {
+    document.getElementById('rx-patient-name').value = ''
+    document.getElementById('rx-patient-amka').value = ''
+    document.getElementById('rx-patient-dob').value  = ''
+    document.getElementById('rx-diagnosis').value    = ''
+    document.getElementById('rx-notes').value        = ''
+    document.getElementById('rx-med-list').innerHTML = ''
+    medCount = 0
+    _rxCurrent = null
+  }
+
+  document.getElementById('rx-clear-btn')?.addEventListener('click', () => { clearForm(); addMedRow() })
+
+  // ── Collect form data ────────────────────────────────────────────────────
+  function collectMeds() {
+    return Array.from(document.querySelectorAll('#rx-med-list .rx-med-row')).map(row => ({
+      name:     row.querySelector('.rx-med-name')?.value.trim()  || '',
+      form:     row.querySelector('.rx-med-form')?.value         || '',
+      qty:      parseInt(row.querySelector('.rx-med-qty')?.value) || 1,
+      posology: row.querySelector('.rx-med-posology')?.value.trim() || '',
+    })).filter(m => m.name)
+  }
+
+  // ── Save ─────────────────────────────────────────────────────────────────
+  document.getElementById('rx-save-btn')?.addEventListener('click', async () => {
+    const patientName = document.getElementById('rx-patient-name').value.trim()
+    const meds = collectMeds()
+    if (!patientName || !meds.length) {
+      if (typeof showToast === 'function') showToast('Fill in patient name and at least one medication.')
+      return
+    }
+    const patient = (typeof PATIENTS !== 'undefined')
+      ? PATIENTS.find(p => ((p.firstName||'') + ' ' + (p.lastName||'')).trim().toLowerCase() === patientName.toLowerCase())
+      : null
+    try {
+      const body = {
+        patientId:   patient?.id || null,
+        diagnosis:   document.getElementById('rx-diagnosis').value.trim(),
+        medications: meds,
+        doctorNotes: document.getElementById('rx-notes').value.trim(),
+        validDays:   parseInt(document.getElementById('rx-valid-days').value) || 15,
+      }
+      if (patient?.id) {
+        const res  = await apiFetch('/api/prescriptions', { method: 'POST', body })
+        if (res.ok) {
+          _rxCurrent = await res.json()
+          if (typeof showToast === 'function') showToast(`Prescription ${_rxCurrent.rx_number} saved ✓`)
+          if (typeof auditLog === 'function') auditLog('prescription created', patientName, `${meds.length} medication(s)`)
+        }
+      } else {
+        // Offline / demo — store in localStorage
+        const stored = JSON.parse(localStorage.getItem('dental_rx_offline') || '[]')
+        const num    = 'RX-' + new Date().getFullYear() + '-' + String(stored.length + 1).padStart(4, '0')
+        _rxCurrent   = { rx_number: num, patient_name: patientName, prescription_date: document.getElementById('rx-date').value, medications: meds, ...body }
+        stored.unshift(_rxCurrent); localStorage.setItem('dental_rx_offline', JSON.stringify(stored.slice(0, 200)))
+        if (typeof showToast === 'function') showToast(`Prescription ${num} saved (offline)`)
+      }
+    } catch { if (typeof showToast === 'function') showToast('Could not save — check connection.') }
+  })
+
+  // ── Print ─────────────────────────────────────────────────────────────────
+  document.getElementById('rx-print-btn')?.addEventListener('click', () => {
+    const patientName = _rxCurrent?.patient_name || document.getElementById('rx-patient-name').value.trim()
+    const meds = _rxCurrent?.medications || collectMeds()
+    if (!patientName || !meds.length) { if (typeof showToast === 'function') showToast('Add patient and medications first.'); return }
+    const u    = (typeof AUTH !== 'undefined' && AUTH.user) || {}
+    const rxDate = document.getElementById('rx-date').value || new Date().toISOString().slice(0, 10)
+    const validDays = parseInt(document.getElementById('rx-valid-days').value) || 15
+    const validUntil = new Date(new Date(rxDate).getTime() + validDays * 86400000).toISOString().slice(0, 10)
+    const rxNum  = _rxCurrent?.rx_number || '—'
+    const amka   = document.getElementById('rx-patient-amka').value || '—'
+    const dob    = document.getElementById('rx-patient-dob').value || '—'
+    document.getElementById('rx-print-area').innerHTML = `
+      <div class="rxp-header">
+        <div class="rxp-practice">${u.practiceName || 'Dental Practice'}</div>
+        <div class="rxp-address">Οδοντιατρείο · Αρ. Αδείας: ${u.licenseNumber || u.license_number || '—'}</div>
+      </div>
+      <div class="rxp-title">ΙΔΙΩΤΙΚΗ ΣΥΝΤΑΓΗ ΟΔΟΝΤΙΑΤΡΟΥ</div>
+      <div class="rxp-grid">
+        <div><div class="rxp-label">ΑΣΘΕΝΗΣ</div><div class="rxp-value">${patientName}</div></div>
+        <div><div class="rxp-label">ΑΜΚΑ</div><div class="rxp-value">${amka}</div></div>
+        <div><div class="rxp-label">ΗΜ. ΓΕΝΝΗΣΗΣ</div><div class="rxp-value">${dob}</div></div>
+        <div><div class="rxp-label">ΑΡ. ΣΥΝΤΑΓΗΣ</div><div class="rxp-value">${rxNum}</div></div>
+        <div><div class="rxp-label">ΗΜ. ΕΚΔΟΣΗΣ</div><div class="rxp-value">${rxDate}</div></div>
+        <div><div class="rxp-label">ΙΣΧΥΣ ΕΩΣ</div><div class="rxp-value">${validUntil}</div></div>
+      </div>
+      ${document.getElementById('rx-diagnosis').value ? `<div style="margin-bottom:8px"><div class="rxp-label">ΕΝΔΕΙΞΗ / ΔΙΑΓΝΩΣΗ</div><div>${document.getElementById('rx-diagnosis').value}</div></div>` : ''}
+      <div class="rxp-meds">
+        <div class="rxp-med-header"><span>ΦΑΡΜΑΚΟ (ΙΝΝ)</span><span>ΜΟΡΦΗ</span><span>ΠΟΣ.</span><span>ΔΟΣΟΛΟΓΙΑ</span></div>
+        ${meds.map((m, i) => `<div class="rxp-med-row"><span>${i+1}. ${m.name}</span><span>${m.form}</span><span>${m.qty}</span><span>${m.posology}</span></div>`).join('')}
+      </div>
+      <div class="rxp-sig">
+        <div class="rxp-sig-box">Ημερομηνία / Date<br>${rxDate}</div>
+        <div class="rxp-sig-box">Υπογραφή &amp; Σφραγίδα / Signature &amp; Stamp<br><br><br></div>
+      </div>
+      <div class="rxp-footer">Η παρούσα συνταγή εκδίδεται σύμφωνα με τις ισχύουσες διατάξεις περί συνταγογράφησης. Valid under EU Directive 2011/24/EU.</div>`
+    setTimeout(() => { window.print(); if (typeof auditLog === 'function') auditLog('prescription printed', patientName, rxNum) }, 100)
+  })
+
+  // ── History ───────────────────────────────────────────────────────────────
+  async function loadRxHistory() {
+    const el = document.getElementById('rx-hist-list')
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Loading…</div>'
+    let items = []
+    try {
+      const res = await apiFetch('/api/prescriptions?limit=100')
+      if (res.ok) items = await res.json()
+    } catch {}
+    // Merge offline items
+    const offline = JSON.parse(localStorage.getItem('dental_rx_offline') || '[]')
+    items = [...offline, ...items]
+    if (!items.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">No prescriptions yet.</div>'; return }
+    const q = (document.getElementById('rx-hist-search')?.value || '').toLowerCase()
+    const filtered = q ? items.filter(r => (r.patient_name||'').toLowerCase().includes(q) || (r.rx_number||'').toLowerCase().includes(q)) : items
+    el.innerHTML = filtered.map(r => `
+      <div class="rx-hist-card">
+        <div class="rx-hist-num">${r.rx_number || '—'}</div>
+        <div class="rx-hist-info">
+          <div class="rx-hist-patient">${r.patient_name || '—'}</div>
+          <div class="rx-hist-detail">${r.prescription_date || ''}  ·  ${(r.medications||[]).length} medication(s)</div>
+        </div>
+        <span class="rx-hist-status ${r.status||'active'}">${r.status||'active'}</span>
+      </div>`).join('')
+  }
+  document.getElementById('rx-hist-search')?.addEventListener('input', loadRxHistory)
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// MULTI-CLINIC SWITCHER
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  const switcher  = document.getElementById('clinic-switcher')
+  const btn       = document.getElementById('clinic-switcher-btn')
+  const dropdown  = document.getElementById('clinic-dropdown')
+  const nameEl    = document.getElementById('cs-current-name')
+  let _practices  = []
+  let _open       = false
+
+  async function loadClinics() {
+    try {
+      const res = await apiFetch('/api/organizations/my')
+      if (!res.ok) return
+      const { practices, isGroupAdmin } = await res.json()
+      if (!isGroupAdmin || practices.length <= 1) return
+      _practices = practices
+      switcher.style.display = 'flex'
+      const currentName = AUTH.user?.practiceName || 'My Practice'
+      nameEl.textContent = currentName
+    } catch {}
+  }
+
+  btn?.addEventListener('click', () => {
+    _open = !_open
+    if (_open) {
+      const current = AUTH.user?.practiceId
+      dropdown.innerHTML = _practices.map(p => `
+        <div class="clinic-dropdown-item${p.id===current?' current':''}" data-pid="${p.id}">
+          ${p.id===current?'<div class="cd-dot"></div>':'<div style="width:8px"></div>'}
+          ${p.name}
+        </div>`).join('')
+      dropdown.classList.add('open')
+    } else { dropdown.classList.remove('open') }
+  })
+
+  dropdown?.addEventListener('click', async e => {
+    const item = e.target.closest('[data-pid]')
+    if (!item) return
+    const pid = item.dataset.pid
+    if (pid === AUTH.user?.practiceId) { dropdown.classList.remove('open'); _open = false; return }
+    try {
+      const res  = await apiFetch('/api/organizations/switch', { method: 'POST', body: { practiceId: pid } })
+      const data = await res.json()
+      if (data.token) {
+        AUTH.save(data.token, { ...AUTH.user, practiceId: pid, practiceName: data.practice?.name })
+        nameEl.textContent = data.practice?.name || pid
+        dropdown.classList.remove('open'); _open = false
+        if (typeof initAppData === 'function') initAppData()
+        if (typeof showToast === 'function') showToast(`Switched to ${data.practice?.name} ✓`)
+        if (typeof auditLog === 'function') auditLog('clinic switch', data.practice?.name, 'Context changed')
+      }
+    } catch { if (typeof showToast === 'function') showToast('Could not switch clinic.') }
+  })
+
+  document.addEventListener('click', e => {
+    if (_open && !switcher.contains(e.target)) { dropdown.classList.remove('open'); _open = false }
+  }, true)
+
+  // Load on login
+  const _origLogin = window.onLoginSuccess
+  window.onLoginSuccess = function() { _origLogin?.(); if (AUTH.user?.isGroupAdmin) loadClinics() }
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SATISFACTION SURVEYS  (tab inside Ops Hub)
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  let _srvSettings = JSON.parse(localStorage.getItem('dental_survey_settings') || '{"autoSend":false,"delayHours":24,"channel":"whatsapp"}')
+
+  function saveSrvSettings() { localStorage.setItem('dental_survey_settings', JSON.stringify(_srvSettings)) }
+
+  function applySettingsUI() {
+    const toggle = document.getElementById('srv-autosend-toggle')
+    if (toggle) toggle.classList.toggle('on', !!_srvSettings.autoSend)
+    const dSel = document.getElementById('srv-delay-sel')
+    if (dSel) dSel.value = _srvSettings.delayHours || 24
+    const cSel = document.getElementById('srv-channel-sel')
+    if (cSel) cSel.value = _srvSettings.channel || 'whatsapp'
+  }
+
+  async function loadSurveyStats() {
+    try {
+      const res = await apiFetch('/api/surveys/stats')
+      if (!res.ok) return
+      const s = await res.json()
+      document.getElementById('srv-nps-score').textContent  = s.nps_index != null ? s.nps_index : '—'
+      document.getElementById('srv-nps-sub').textContent    = `${s.responded||0} responses · ${s.last_30_days||0} in last 30 days`
+      document.getElementById('srv-promoters').textContent  = s.promoters  || 0
+      document.getElementById('srv-passives').textContent   = s.passives   || 0
+      document.getElementById('srv-detractors').textContent = s.detractors || 0
+    } catch {
+      document.getElementById('srv-nps-score').textContent = '—'
+      document.getElementById('srv-nps-sub').textContent   = 'No data yet'
+      ;['srv-promoters','srv-passives','srv-detractors'].forEach(id => { document.getElementById(id).textContent = 0 })
+    }
+  }
+
+  async function loadSurveyResponses() {
+    const el = document.getElementById('srv-responses-list')
+    try {
+      const res = await apiFetch('/api/surveys/responses?limit=20')
+      if (!res.ok) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No responses yet.</div>'; return }
+      const rows = await res.json()
+      if (!rows.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No responses yet.</div>'; return }
+      el.innerHTML = rows.map(r => {
+        const score = r.nps_score
+        const cls   = score == null ? 'none' : score >= 9 ? 'promoter' : score >= 7 ? 'passive' : 'detractor'
+        return `<div class="srv-response-row">
+          <div class="srv-nps-chip ${cls}">${score != null ? score : '?'}</div>
+          <div class="srv-response-info">
+            <div class="srv-response-patient">${r.patient_name || r.patient_phone || 'Anonymous'}</div>
+            <div class="srv-response-detail">${r.responded_at ? new Date(r.responded_at).toLocaleDateString() : 'No response yet'}</div>
+          </div>
+        </div>`
+      }).join('')
+    } catch { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">Could not load responses.</div>' }
+  }
+
+  window._loadSurveyTab = function() {
+    applySettingsUI()
+    loadSurveyStats()
+    loadSurveyResponses()
+  }
+
+  // Auto-send toggle
+  document.getElementById('srv-autosend-toggle')?.addEventListener('click', function() {
+    _srvSettings.autoSend = !_srvSettings.autoSend
+    this.classList.toggle('on', _srvSettings.autoSend)
+    saveSrvSettings()
+  })
+
+  // Save settings
+  document.getElementById('srv-save-settings-btn')?.addEventListener('click', async () => {
+    _srvSettings.delayHours = parseInt(document.getElementById('srv-delay-sel').value) || 24
+    _srvSettings.channel    = document.getElementById('srv-channel-sel').value || 'whatsapp'
+    saveSrvSettings()
+    try {
+      // Upsert template on backend
+      const res = await apiFetch('/api/surveys/templates', {
+        method: 'POST',
+        body: { name: 'Default', autoSend: _srvSettings.autoSend, delayHours: _srvSettings.delayHours, channel: _srvSettings.channel,
+          questions: [
+            { id: 'nps', type: 'nps', label_en: 'How likely are you to recommend us? (0–10)', label_el: 'Πόσο πιθανό είναι να μας συστήσετε; (0–10)' },
+            { id: 'comment', type: 'text', label_en: 'Any comments?', label_el: 'Σχόλια;' }
+          ]
+        }
+      })
+      if (typeof showToast === 'function') showToast(res.ok ? 'Settings saved ✓' : 'Saved locally')
+    } catch { if (typeof showToast === 'function') showToast('Saved locally') }
+  })
+
+  // Hook into ops hub tab switching
+  const _origSwitch = window._switchOpsTab || null
+  // Patch the switchOpsTab from Ops Hub IIFE
+  const origOpsSwitch = document.querySelector('.ops-tab[data-ops-tab="surveys]')
+  // We use an event-based approach: listen for the surveys tab becoming active
+  const observer = new MutationObserver(() => {
+    const panel = document.getElementById('ops-panel-surveys')
+    if (panel?.classList.contains('active')) window._loadSurveyTab?.()
+  })
+  const surveysPanel = document.getElementById('ops-panel-surveys')
+  if (surveysPanel) observer.observe(surveysPanel, { attributeFilter: ['class'] })
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// WHATSAPP INBOX  (tab inside Reminders)
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  const inbox      = document.getElementById('wa-inbox')
+  const convoList  = document.getElementById('wa-convo-list')
+  const thread     = document.getElementById('wa-thread')
+  const threadPH   = document.getElementById('wa-thread-placeholder')
+  const messages   = document.getElementById('wa-messages')
+  const composeInp = document.getElementById('wa-compose-input')
+  const sendBtn    = document.getElementById('wa-send-btn')
+  let _activePhone = null
+  let _waConfigured = !!window.__WA_CONFIGURED  // set by backend env check
+
+  function fmtTime(iso) {
+    if (!iso) return ''
+    const d = new Date(iso)
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  function initials(name) {
+    return (name || '?').split(' ').map(w => w[0]||'').slice(0,2).join('').toUpperCase()
+  }
+
+  async function loadConversations() {
+    try {
+      const res = await apiFetch('/api/whatsapp/conversations')
+      if (!res.ok) { renderSetupNotice(); return }
+      const convos = await res.json()
+      if (!convos.length) {
+        convoList.innerHTML = '<div class="wa-empty">No conversations yet.</div>'
+        return
+      }
+      convoList.innerHTML = convos.map(c => `
+        <div class="wa-convo-item${c.phone===_activePhone?' active':''}" data-phone="${c.phone}" data-name="${c.patient_name||c.phone}">
+          <div class="wa-convo-avatar">${initials(c.patient_name)}</div>
+          <div class="wa-convo-body">
+            <div class="wa-convo-name">${c.patient_name||c.phone}</div>
+            <div class="wa-convo-preview">${c.last_direction==='outbound'?'You: ':''}${c.last_message||''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+            <div class="wa-convo-time">${fmtTime(c.last_at)}</div>
+            ${parseInt(c.unread)>0?`<span class="wa-unread-badge">${c.unread}</span>`:''}
+          </div>
+        </div>`).join('')
+      // Update topbar badge
+      const totalUnread = convos.reduce((s,c) => s + parseInt(c.unread||0), 0)
+      const badge = document.getElementById('rem-stat-wa')
+      if (badge) badge.textContent = totalUnread > 0 ? totalUnread : '💬'
+    } catch { renderSetupNotice() }
+  }
+
+  function renderSetupNotice() {
+    convoList.innerHTML = `<div class="wa-setup-notice">
+      ⚙️ <b>WhatsApp not configured.</b><br>
+      Add <code>WA_ACCESS_TOKEN</code>, <code>WA_PHONE_NUMBER_ID</code>, and <code>WA_VERIFY_TOKEN</code> to your <code>.env</code> file and restart the backend.
+      <br><br>Register your webhook URL at:<br>
+      <code>https://developers.facebook.com/apps/</code><br>
+      Callback URL: <code>https://your-domain.com/api/whatsapp/webhook</code>
+    </div>`
+  }
+
+  async function openThread(phone, name) {
+    _activePhone = phone
+    document.getElementById('wa-thread-name').textContent  = name
+    document.getElementById('wa-thread-phone').textContent = phone
+    thread.style.display  = 'flex'
+    threadPH.style.display= 'none'
+    messages.innerHTML    = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:12px">Loading…</div>'
+    // Mark active in list
+    document.querySelectorAll('.wa-convo-item').forEach(el => el.classList.toggle('active', el.dataset.phone === phone))
+    try {
+      const res  = await apiFetch(`/api/whatsapp/messages?phone=${encodeURIComponent(phone)}&limit=50`)
+      if (!res.ok) return
+      const msgs = await res.json()
+      messages.innerHTML = msgs.map(m => `
+        <div>
+          <div class="wa-bubble ${m.direction}" title="${fmtTime(m.created_at)}">
+            ${m.body}
+            <div class="wa-bubble-meta">${fmtTime(m.wa_timestamp||m.created_at)}${m.direction==='outbound'?' · '+{'sent':'✓','delivered':'✓✓','read':'✓✓'}[m.status]:''}</div>
+          </div>
+        </div>`).join('')
+      messages.scrollTop = messages.scrollHeight
+      // Refresh unread
+      await loadConversations()
+    } catch {}
+  }
+
+  convoList?.addEventListener('click', e => {
+    const item = e.target.closest('.wa-convo-item')
+    if (item) openThread(item.dataset.phone, item.dataset.name)
+  })
+
+  async function sendMessage() {
+    const body = composeInp?.value.trim()
+    if (!body || !_activePhone) return
+    composeInp.value = ''
+    composeInp.style.height = ''
+    try {
+      const res = await apiFetch('/api/whatsapp/send', { method: 'POST', body: { phone: _activePhone, body } })
+      if (res.ok) {
+        const msg = await res.json()
+        messages.innerHTML += `<div><div class="wa-bubble outbound">${body}<div class="wa-bubble-meta">${fmtTime(new Date().toISOString())} · ✓</div></div></div>`
+        messages.scrollTop = messages.scrollHeight
+        if (typeof auditLog === 'function') auditLog('whatsapp sent', _activePhone, body.slice(0, 60))
+      } else {
+        const err = await res.json()
+        if (typeof showToast === 'function') showToast(err.error || 'Could not send message.')
+      }
+    } catch { if (typeof showToast === 'function') showToast('Network error.') }
+  }
+
+  sendBtn?.addEventListener('click', sendMessage)
+  composeInp?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } })
+  composeInp?.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 80) + 'px' })
+
+  // Hook into Reminders tab switching — intercept the WhatsApp tab click
+  const remStats = document.querySelector('.rem-stats')
+  remStats?.addEventListener('click', e => {
+    const stat = e.target.closest('[data-tab]')
+    if (!stat) return
+    const isWA = stat.dataset.tab === 'whatsapp'
+    const content = document.getElementById('rem-content')
+    if (isWA) {
+      content.style.display = 'none'
+      inbox.classList.add('active')
+      loadConversations()
+      // Mark tab active
+      document.querySelectorAll('.rem-stat').forEach(s => s.classList.toggle('active', s === stat))
+    } else {
+      content.style.display = ''
+      inbox.classList.remove('active')
+    }
+  })
+
+  // Live updates from WebSocket
+  document.addEventListener('dentalWsEvent', e => {
+    if (['whatsapp:inbound','whatsapp:outbound'].includes(e.detail?.type)) {
+      loadConversations()
+      if (e.detail.data?.phone === _activePhone) openThread(_activePhone, document.getElementById('wa-thread-name').textContent)
+    }
+  })
+})()
+
+// Extend DentalSync to fire custom events for WA messages
+;(function() {
+  const origHandle = DentalSync.prototype._handle
+  DentalSync.prototype._handle = function(type, data) {
+    origHandle.call(this, type, data)
+    if (type.startsWith('whatsapp:')) {
+      document.dispatchEvent(new CustomEvent('dentalWsEvent', { detail: { type, data } }))
+    }
+  }
+})()
+
+// Wire surveys tab into the switchOpsTab function
+;(function() {
+  // Wait until Ops Hub IIFE has run, then patch switchOpsTab
+  const origTab = document.querySelectorAll('.ops-tab')
+  origTab.forEach(btn => {
+    if (btn.dataset.opsTab === 'surveys') {
+      btn.addEventListener('click', () => {
+        if (typeof window._loadSurveyTab === 'function') window._loadSurveyTab()
+      })
+    }
+  })
+})()
 
 // ══════════════════════════════════════════════════════════════════════════
 // GLOBAL AUDIT LOGGER  (call from anywhere: window.auditLog('billing','Invoice #4 issued'))

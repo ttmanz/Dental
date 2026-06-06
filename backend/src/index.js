@@ -37,6 +37,10 @@ app.use('/api/consent',         require('./routes/consent'))
 app.use('/api/reminders',       require('./routes/reminders'))
 app.use('/api/portal',          require('./routes/portal'))
 app.use('/api/lab',             require('./routes/lab'))
+app.use('/api/prescriptions',   require('./routes/prescriptions'))
+app.use('/api/surveys',         require('./routes/surveys'))
+app.use('/api/whatsapp',        require('./routes/whatsapp'))
+app.use('/api/organizations',   require('./routes/organizations'))
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
 
