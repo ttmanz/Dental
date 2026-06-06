@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Dental Assistant Pro — The complete practice management system for modern dental clinics. Calendar, AI charting, billing, EOPYY codes, WhatsApp reminders and more."/>
+  <title>Dental Assistant Pro — Practice Management for Greek Dentists</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:   #3D9E8F;
+      --primary-d: #2D8B7A;
+      --primary-l: #E6F4F2;
+      --amber:     #E8A87C;
+      --text:      #1A1917;
+      --mid:       #5C5854;
+      --muted:     #9C9890;
+      --border:    #E5E0D8;
+      --cream:     #F7F4EF;
+      --white:     #FFFFFF;
+      --red:       #D95F5F;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--white); overflow-x: hidden; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── NAV ───────────────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 0;
+      padding: 0 48px; height: 68px;
+      background: rgba(255,255,255,.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+    .nav-logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,var(--primary),var(--primary-d)); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .nav-links { display: flex; align-items: center; gap: 28px; margin-left: 40px; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--mid); transition: color .15s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .lang-toggle { display: flex; gap: 4px; }
+    .lang-btn { padding: 4px 10px; border-radius: 6px; border: 1.5px solid var(--border); background: none; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--muted); font-family: inherit; transition: all .15s; }
+    .lang-btn.active { background: var(--cream); color: var(--text); border-color: var(--text); }
+    .nav-login { padding: 8px 18px; border-radius: 9px; border: 1.5px solid var(--border); background: var(--white); font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer; transition: all .15s; }
+    .nav-login:hover { border-color: var(--primary); color: var(--primary); }
+    .nav-cta { padding: 9px 20px; border-radius: 9px; border: none; background: var(--primary); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s; }
+    .nav-cta:hover { background: var(--primary-d); }
+
+    /* ── HERO ──────────────────────────────────────────────────────────── */
+    .hero {
+      display: grid; grid-template-columns: 1fr 1fr; align-items: center;
+      gap: 60px; padding: 100px 80px 80px; max-width: 1280px; margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--primary-l); color: var(--primary);
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+    .hero h1 {
+      font-size: 52px; font-weight: 900; line-height: 1.08; letter-spacing: -.03em;
+      color: var(--text); margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero-sub { font-size: 18px; color: var(--mid); line-height: 1.6; margin-bottom: 36px; max-width: 460px; }
+    .hero-actions { display: flex; align-items: center; gap: 14px; }
+    .btn-primary {
+      padding: 14px 28px; border-radius: 11px; border: none;
+      background: var(--primary); color: #fff; font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: all .2s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { background: var(--primary-d); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(61,158,143,.3); }
+    .btn-ghost {
+      padding: 14px 24px; border-radius: 11px; border: 1.5px solid var(--border);
+      background: var(--white); color: var(--text); font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+    .hero-note { font-size: 12px; color: var(--muted); margin-top: 14px; }
+
+    /* Hero app preview */
+    .hero-visual {
+      background: linear-gradient(145deg,#E8F4F2 0%,#F7F4EF 100%);
+      border-radius: 20px; padding: 24px; box-shadow: 0 24px 80px rgba(61,158,143,.15);
+      position: relative; overflow: hidden;
+    }
+    .hero-visual::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(61,158,143,.12) 0%, transparent 70%);
+    }
+    .app-preview-bar {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    }
+    .app-preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .app-preview-title { font-size: 12px; font-weight: 700; color: var(--mid); margin-left: 4px; }
+    .preview-calendar {
+      background: var(--white); border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(44,42,39,.08);
+    }
+    .preview-cal-header {
+      display: grid; grid-template-columns: repeat(7,1fr); background: var(--primary);
+    }
+    .preview-cal-day { padding: 8px 4px; text-align: center; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.8); }
+    .preview-cal-body { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; padding: 8px; background: var(--cream); }
+    .preview-cell { height: 44px; border-radius: 6px; background: var(--white); position: relative; overflow: hidden; }
+    .preview-appt { height: 14px; border-radius: 3px; margin: 3px 3px 0; }
+    .preview-stats {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 14px;
+    }
+    .preview-stat { background: var(--white); border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 2px 8px rgba(44,42,39,.06); }
+    .preview-stat-val { font-size: 20px; font-weight: 800; color: var(--primary); }
+    .preview-stat-lbl { font-size: 10px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+    /* ── SOCIAL PROOF BAR ──────────────────────────────────────────────── */
+    .proof-bar {
+      background: var(--cream); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 20px 80px; display: flex; align-items: center; justify-content: center; gap: 48px;
+    }
+    .proof-item { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--mid); }
+    .proof-num { font-size: 22px; font-weight: 900; color: var(--text); }
+
+    /* ── FEATURES ──────────────────────────────────────────────────────── */
+    section { padding: 96px 80px; max-width: 1280px; margin: 0 auto; }
+    .section-label { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; }
+    .section-title { font-size: 38px; font-weight: 900; letter-spacing: -.02em; line-height: 1.15; margin-bottom: 16px; }
+    .section-sub { font-size: 17px; color: var(--mid); line-height: 1.6; max-width: 560px; }
+    .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 56px; }
+    .feature-card {
+      background: var(--cream); border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px; transition: all .2s; cursor: default;
+    }
+    .feature-card:hover { border-color: var(--primary); box-shadow: 0 8px 32px rgba(61,158,143,.1); transform: translateY(-2px); }
+    .feature-icon { font-size: 28px; margin-bottom: 14px; }
+    .feature-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .feature-desc { font-size: 14px; color: var(--mid); line-height: 1.6; }
+    .feature-badge { display: inline-block; background: var(--primary-l); color: var(--primary); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: .04em; margin-top: 12px; }
+
+    /* ── EOPYY HIGHLIGHT ───────────────────────────────────────────────── */
+    .eopyy-section {
+      background: linear-gradient(135deg, #1a3a34 0%, #0f2420 100%);
+      padding: 80px; border-radius: 24px; margin: 0 80px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+    }
+    .eopyy-section .section-label { color: #4DB8A8; }
+    .eopyy-section .section-title  { color: #fff; }
+    .eopyy-section .section-sub    { color: rgba(255,255,255,.65); }
+    .eopyy-codes { display: flex; flex-direction: column; gap: 8px; }
+    .eopyy-code-row {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px; padding: 12px 16px;
+    }
+    .eopyy-code { font-family: monospace; font-size: 13px; font-weight: 700; color: #4DB8A8; min-width: 60px; }
+    .eopyy-name { font-size: 13px; color: rgba(255,255,255,.85); flex: 1; }
+    .eopyy-amt  { font-size: 13px; font-weight: 700; color: #6EE7D0; }
+
+    /* ── PRICING ───────────────────────────────────────────────────────── */
+    .pricing-section { background: var(--cream); padding: 96px 80px; }
+    .pricing-section > div { max-width: 1280px; margin: 0 auto; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 56px; }
+    .pricing-card {
+      background: var(--white); border: 2px solid var(--border);
+      border-radius: 20px; padding: 32px; position: relative; transition: all .2s;
+    }
+    .pricing-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 16px 48px rgba(61,158,143,.12); }
+    .pricing-card.featured { border-color: var(--primary); box-shadow: 0 8px 40px rgba(61,158,143,.15); }
+    .pricing-popular { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 14px; border-radius: 20px; white-space: nowrap; text-transform: uppercase; letter-spacing: .06em; }
+    .pricing-plan { font-size: 14px; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+    .pricing-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
+    .pricing-price-num { font-size: 48px; font-weight: 900; letter-spacing: -.03em; color: var(--text); }
+    .pricing-price-per { font-size: 14px; color: var(--muted); }
+    .pricing-sub  { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .pricing-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .pricing-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--mid); }
+    .pricing-features li::before { content: '✓'; color: var(--primary); font-weight: 800; flex-shrink: 0; }
+    .pricing-features li.no { color: var(--muted); }
+    .pricing-features li.no::before { content: '—'; color: var(--muted); }
+    .pricing-cta {
+      width: 100%; padding: 13px; border-radius: 10px; border: none;
+      font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .pricing-cta.primary { background: var(--primary); color: #fff; }
+    .pricing-cta.primary:hover { background: var(--primary-d); }
+    .pricing-cta.outline { border: 2px solid var(--border); background: none; color: var(--text); }
+    .pricing-cta.outline:hover { border-color: var(--primary); color: var(--primary); }
+    .pricing-note { text-align: center; font-size: 13px; color: var(--muted); margin-top: 20px; }
+
+    /* ── TESTIMONIALS ──────────────────────────────────────────────────── */
+    .testimonials-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 56px; }
+    .testimonial-card { background: var(--cream); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+    .testimonial-stars { color: #F59E0B; font-size: 14px; margin-bottom: 14px; letter-spacing: 2px; }
+    .testimonial-text { font-size: 15px; color: var(--text); line-height: 1.65; margin-bottom: 20px; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .testimonial-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,var(--primary),var(--primary-d)); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; }
+    .testimonial-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .testimonial-role { font-size: 12px; color: var(--muted); }
+
+    /* ── FAQ ───────────────────────────────────────────────────────────── */
+    .faq-list { max-width: 720px; margin: 48px auto 0; }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q {
+      width: 100%; text-align: left; padding: 20px 0; background: none; border: none;
+      font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer;
+      font-family: inherit; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .faq-q:hover { color: var(--primary); }
+    .faq-icon { font-size: 20px; color: var(--muted); flex-shrink: 0; transition: transform .2s; }
+    .faq-a { font-size: 15px; color: var(--mid); line-height: 1.7; max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s; }
+    .faq-item.open .faq-a { max-height: 300px; padding-bottom: 20px; }
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+    /* ── CTA BANNER ────────────────────────────────────────────────────── */
+    .cta-banner {
+      margin: 0 80px 96px; padding: 80px;
+      background: linear-gradient(135deg,var(--primary) 0%,var(--primary-d) 100%);
+      border-radius: 24px; text-align: center;
+    }
+    .cta-banner h2 { font-size: 40px; font-weight: 900; color: #fff; letter-spacing: -.02em; margin-bottom: 14px; }
+    .cta-banner p  { font-size: 17px; color: rgba(255,255,255,.8); margin-bottom: 36px; }
+    .cta-banner .btn-white {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 15px 32px; border-radius: 11px; border: none;
+      background: #fff; color: var(--primary); font-size: 16px; font-weight: 800;
+      cursor: pointer; font-family: inherit; transition: all .2s;
+    }
+    .cta-banner .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+    .cta-banner-note { font-size: 13px; color: rgba(255,255,255,.6); margin-top: 16px; }
+
+    /* ── FOOTER ────────────────────────────────────────────────────────── */
+    footer {
+      background: var(--text); color: rgba(255,255,255,.6);
+      padding: 64px 80px 40px;
+    }
+    .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+    .footer-brand { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 14px; }
+    .footer-brand-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .footer-desc { font-size: 14px; line-height: 1.6; max-width: 260px; }
+    .footer-col h4 { font-size: 12px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 16px; }
+    .footer-col a { display: block; font-size: 14px; margin-bottom: 10px; color: rgba(255,255,255,.55); transition: color .15s; }
+    .footer-col a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 24px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+    .footer-bottom-links { display: flex; gap: 24px; }
+    .footer-bottom-links a { color: rgba(255,255,255,.4); transition: color .15s; }
+    .footer-bottom-links a:hover { color: rgba(255,255,255,.8); }
+
+    /* ── RESPONSIVE ────────────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .hero { grid-template-columns: 1fr; gap: 48px; padding: 64px 40px; }
+      .hero h1 { font-size: 40px; }
+      section { padding: 64px 40px; }
+      .features-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr 1fr; }
+      .eopyy-section, .cta-banner { margin: 0 40px; padding: 48px; }
+      .eopyy-section { grid-template-columns: 1fr; }
+      .proof-bar { padding: 20px 40px; flex-wrap: wrap; gap: 24px; }
+      nav { padding: 0 24px; }
+      .nav-links { display: none; }
+      footer { padding: 48px 40px 32px; }
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+    }
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 30px; }
+      .features-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr; }
+      .eopyy-section, .cta-banner { margin: 0 16px; padding: 32px 24px; }
+      section { padding: 48px 24px; }
+      .hero { padding: 48px 24px; }
+      .nav-right .nav-login { display: none; }
+      .footer-top { grid-template-columns: 1fr; }
+      .proof-bar { padding: 20px 24px; }
+      .pricing-section { padding: 64px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">🦷</div>
+    <span data-en="Dental Assistant Pro" data-el="Dental Assistant Pro">Dental Assistant Pro</span>
+  </div>
+  <div class="nav-links">
+    <a href="#features" data-en="Features" data-el="Χαρακτηριστικά">Features</a>
+    <a href="#eopyy" data-en="EOPYY" data-el="ΕΟΠΥΥ">EOPYY</a>
+    <a href="#pricing" data-en="Pricing" data-el="Τιμές">Pricing</a>
+    <a href="#faq" data-en="FAQ" data-el="FAQ">FAQ</a>
+  </div>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="lang-en">EN</button>
+      <button class="lang-btn" id="lang-el">ΕΛ</button>
+    </div>
+    <a href="/app" class="nav-login" data-en="Sign in" data-el="Είσοδος">Sign in</a>
+    <a href="#pricing" class="nav-cta" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
+  </div>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────────────────────── -->
+<div style="max-width:1280px;margin:0 auto">
+  <div class="hero">
+    <div>
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        <span data-en="Built for Greek dental practices" data-el="Για ελληνικά οδοντιατρεία">Built for Greek dental practices</span>
+      </div>
+      <h1 data-en="The practice management system your patients <span>deserve</span>" data-el="Το σύστημα διαχείρισης που αξίζουν οι <span>ασθενείς σας</span>">
+        The practice management system your patients <span>deserve</span>
+      </h1>
+      <p class="hero-sub" data-en="Calendar, AI charting, billing, EOPYY codes, WhatsApp reminders, and more — in one beautiful app. Start in minutes, not months." data-el="Ημερολόγιο, AI καταγραφή, τιμολόγηση, κωδικοί ΕΟΠΥΥ, υπενθυμίσεις WhatsApp — σε μία εφαρμογή. Ξεκινήστε σε λεπτά.">
+        Calendar, AI charting, billing, EOPYY codes, WhatsApp reminders, and more — in one beautiful app. Start in minutes, not months.
+      </p>
+      <div class="hero-actions">
+        <a href="#pricing" class="btn-primary">
+          <span>🦷</span>
+          <span data-en="Start 14-day free trial" data-el="14 ημέρες δωρεάν">Start 14-day free trial</span>
+        </a>
+        <a href="/app" class="btn-ghost" data-en="View demo →" data-el="Δείτε demo →">View demo →</a>
+      </div>
+      <p class="hero-note" data-en="No credit card required · Cancel anytime · GDPR compliant" data-el="Χωρίς κάρτα · Ακύρωση οποτεδήποτε · GDPR">
+        No credit card required · Cancel anytime · GDPR compliant
+      </p>
+    </div>
+
+    <!-- App preview mockup -->
+    <div class="hero-visual">
+      <div class="app-preview-bar">
+        <div class="app-preview-dot" style="background:#FF6058"></div>
+        <div class="app-preview-dot" style="background:#FFBD2E"></div>
+        <div class="app-preview-dot" style="background:#28C840"></div>
+        <div class="app-preview-title">Dental Assistant Pro — Week View</div>
+      </div>
+      <div class="preview-calendar">
+        <div class="preview-cal-header">
+          <div class="preview-cal-day">MON</div><div class="preview-cal-day">TUE</div>
+          <div class="preview-cal-day">WED</div><div class="preview-cal-day">THU</div>
+          <div class="preview-cal-day">FRI</div><div class="preview-cal-day">SAT</div>
+          <div class="preview-cal-day">SUN</div>
+        </div>
+        <div class="preview-cal-body">
+          <div class="preview-cell"><div class="preview-appt" style="background:#4BAE8A;width:90%"></div><div class="preview-appt" style="background:#8B7CC8;width:70%"></div></div>
+          <div class="preview-cell"><div class="preview-appt" style="background:#E07850;width:85%"></div></div>
+          <div class="preview-cell"><div class="preview-appt" style="background:#3D9E8F;width:95%"></div><div class="preview-appt" style="background:#4BAE8A;width:60%"></div></div>
+          <div class="preview-cell"><div class="preview-appt" style="background:#D95F5F;width:80%"></div><div class="preview-appt" style="background:#E07850;width:75%"></div></div>
+          <div class="preview-cell"><div class="preview-appt" style="background:#3D9E8F;width:90%"></div></div>
+          <div class="preview-cell" style="background:#F7F4EF;opacity:.5"></div>
+          <div class="preview-cell" style="background:#F7F4EF;opacity:.5"></div>
+        </div>
+      </div>
+      <div class="preview-stats">
+        <div class="preview-stat"><div class="preview-stat-val">24</div><div class="preview-stat-lbl">This week</div></div>
+        <div class="preview-stat"><div class="preview-stat-val">€3,840</div><div class="preview-stat-lbl">Revenue</div></div>
+        <div class="preview-stat"><div class="preview-stat-val">98%</div><div class="preview-stat-lbl">Satisfaction</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SOCIAL PROOF ──────────────────────────────────────────────────────── -->
+<div class="proof-bar">
+  <div class="proof-item"><span class="proof-num">500+</span> <span data-en="dental clinics" data-el="οδοντιατρεία">dental clinics</span></div>
+  <div style="width:1px;height:32px;background:var(--border)"></div>
+  <div class="proof-item"><span class="proof-num">120k+</span> <span data-en="appointments managed" data-el="ραντεβού διαχείριση">appointments managed</span></div>
+  <div style="width:1px;height:32px;background:var(--border)"></div>
+  <div class="proof-item"><span class="proof-num">4.9★</span> <span data-en="average rating" data-el="μέσος όρος αξιολόγησης">average rating</span></div>
+  <div style="width:1px;height:32px;background:var(--border)"></div>
+  <div class="proof-item"><span class="proof-num">GDPR</span> <span data-en="compliant & certified" data-el="συμμόρφωση & πιστοποίηση">compliant & certified</span></div>
+</div>
+
+<!-- ── FEATURES ──────────────────────────────────────────────────────────── -->
+<section id="features">
+  <div class="section-label" data-en="Everything you need" data-el="Όλα όσα χρειάζεστε">Everything you need</div>
+  <h2 class="section-title" data-en="One app. Zero compromises." data-el="Μία εφαρμογή. Χωρίς συμβιβασμούς.">One app. Zero compromises.</h2>
+  <p class="section-sub" data-en="Every feature your practice needs, designed by people who understand how dental clinics actually work." data-el="Κάθε λειτουργία που χρειάζεται το ιατρείο σας, σχεδιασμένη από ανθρώπους που καταλαβαίνουν πώς λειτουργούν τα οδοντιατρεία.">
+    Every feature your practice needs, designed by people who understand how dental clinics actually work.
+  </p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <div class="feature-title" data-en="Smart Calendar" data-el="Έξυπνο Ημερολόγιο">Smart Calendar</div>
+      <div class="feature-desc" data-en="Day, week, month and 3-month views. Drag-and-drop appointments. Multi-dentist scheduling with colour coding." data-el="Ημέρα, εβδομάδα, μήνα. Πολυ-οδοντιατρικό πρόγραμμα με χρωματική κωδικοποίηση.">Day, week, month and 3-month views. Drag-and-drop appointments. Multi-dentist scheduling with colour coding.</div>
+      <span class="feature-badge">Core</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <div class="feature-title" data-en="AI Chair-side Assistant" data-el="AI Βοηθός Καρέκλας">AI Chair-side Assistant</div>
+      <div class="feature-desc" data-en="Dictate clinical notes hands-free during treatment. AI structures them into your patient chart automatically." data-el="Υπαγόρευση σημειώσεων χωρίς χέρια. Το AI τις δομεί αυτόματα στον φάκελο ασθενή.">Dictate clinical notes hands-free during treatment. AI structures them into your patient chart automatically.</div>
+      <span class="feature-badge">AI</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧾</div>
+      <div class="feature-title" data-en="Billing & Invoicing" data-el="Τιμολόγηση">Billing & Invoicing</div>
+      <div class="feature-desc" data-en="Create invoices, track payments, record insurance. Monthly P&L reports and outstanding payment dashboard." data-el="Δημιουργία τιμολογίων, παρακολούθηση πληρωμών, ασφαλιστική κάλυψη. Μηνιαίες αναφορές.">Create invoices, track payments, record insurance. Monthly P&L reports and outstanding payment dashboard.</div>
+      <span class="feature-badge">Finance</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💬</div>
+      <div class="feature-title" data-en="WhatsApp Reminders" data-el="Υπενθυμίσεις WhatsApp">WhatsApp Reminders</div>
+      <div class="feature-desc" data-en="Automated appointment reminders via WhatsApp. Two-way inbox — patients reply directly, staff see it in-app." data-el="Αυτόματες υπενθυμίσεις ραντεβού μέσω WhatsApp. Αμφίδρομα μηνύματα με ασθενείς.">Automated appointment reminders via WhatsApp. Two-way inbox — patients reply directly, staff see it in-app.</div>
+      <span class="feature-badge">Communication</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💊</div>
+      <div class="feature-title" data-en="Prescription Module" data-el="Συνταγογράφηση">Prescription Module</div>
+      <div class="feature-desc" data-en="Generate EU-compliant Greek dental prescriptions (ΙΔΙΩΤΙΚΗ ΣΥΝΤΑΓΗ). Print-ready with AMKA, validity date and drug presets." data-el="Έκδοση ιδιωτικών οδοντιατρικών συνταγών. Εκτύπωση με ΑΜΚΑ, ισχύ και προεπιλεγμένα φάρμακα.">Generate EU-compliant Greek dental prescriptions. Print-ready with AMKA, validity date and drug presets.</div>
+      <span class="feature-badge">Clinical</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title" data-en="Analytics Dashboard" data-el="Αναλυτικά Στοιχεία">Analytics Dashboard</div>
+      <div class="feature-desc" data-en="Revenue trends, chair utilisation, NPS satisfaction score, no-show rate — all the KPIs a practice owner needs." data-el="Τάσεις εσόδων, αξιοποίηση καρέκλας, δείκτης NPS, ποσοστό απουσίας — όλα τα KPI ενός ιδιοκτήτη.">Revenue trends, chair utilisation, NPS satisfaction score, no-show rate — all the KPIs a practice owner needs.</div>
+      <span class="feature-badge">Analytics</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <div class="feature-title" data-en="Specialist Referrals" data-el="Δίκτυο Παραπομπών">Specialist Referrals</div>
+      <div class="feature-desc" data-en="Maintain a directory of trusted specialists. Track referrals from pending to completed. One click to create a referral from an appointment." data-el="Κατάλογος ειδικών. Παρακολούθηση παραπομπών από εκκρεμεί έως ολοκληρώθηκε.">Maintain a directory of trusted specialists. Track referrals from pending to completed.</div>
+      <span class="feature-badge">Network</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📦</div>
+      <div class="feature-title" data-en="Inventory Management" data-el="Διαχείριση Αποθεμάτων">Inventory Management</div>
+      <div class="feature-desc" data-en="Track consumables with low-stock alerts. Link items to suppliers for one-click reordering. Real-time quantity adjustment." data-el="Παρακολούθηση αναλωσίμων με ειδοποιήσεις. Αυτόματες παραγγελίες από προμηθευτές.">Track consumables with low-stock alerts. Link items to suppliers for one-click reordering.</div>
+      <span class="feature-badge">Operations</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-title" data-en="GDPR & Security" data-el="GDPR & Ασφάλεια">GDPR & Security</div>
+      <div class="feature-desc" data-en="Article 30 audit log, 2FA login, data export on demand, encrypted at rest. Built for healthcare data from day one." data-el="Αρχείο ελέγχου Άρθ. 30, 2FA σύνδεση, εξαγωγή δεδομένων, κρυπτογράφηση. Σχεδιασμένο για ιατρικά δεδομένα.">Article 30 audit log, 2FA login, data export on demand. Built for healthcare data from day one.</div>
+      <span class="feature-badge">Compliance</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── EOPYY ──────────────────────────────────────────────────────────────── -->
+<div id="eopyy">
+  <div class="eopyy-section">
+    <div>
+      <div class="section-label" data-en="Greek-first" data-el="Για την Ελλάδα">Greek-first</div>
+      <h2 class="section-title" data-en="EOPYY codes built in" data-el="Κωδικοί ΕΟΠΥΥ ενσωματωμένοι">EOPYY codes<br>built in</h2>
+      <p class="section-sub" data-en="Every EOPYY dental procedure code with coverage percentages and reimbursement amounts. Select a code in billing and it auto-fills the description, code, and price." data-el="Όλοι οι κωδικοί οδοντιατρικής του ΕΟΠΥΥ με ποσοστά κάλυψης και επιστροφές. Επιλέξτε κωδικό στη χρέωση και συμπληρώνεται αυτόματα.">
+        Every EOPYY dental procedure code with coverage percentages and reimbursement amounts. Select a code in billing and it auto-fills description, code, and price.
+      </p>
+      <br><br>
+      <a href="#pricing" class="btn-primary" style="display:inline-flex">
+        <span data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</span>
+      </a>
+    </div>
+    <div class="eopyy-codes">
+      <div class="eopyy-code-row"><span class="eopyy-code">ΑΚ002</span><span class="eopyy-name" data-en="Panoramic X-ray" data-el="Πανοραμική ακτινογραφία">Panoramic X-ray</span><span class="eopyy-amt">€25</span></div>
+      <div class="eopyy-code-row"><span class="eopyy-code">ΕΞ001</span><span class="eopyy-name" data-en="Simple extraction" data-el="Απλή εξαγωγή">Simple extraction</span><span class="eopyy-amt">€28</span></div>
+      <div class="eopyy-code-row"><span class="eopyy-code">ΕΜ012</span><span class="eopyy-name" data-en="Composite resin 2 surfaces" data-el="Σύνθετη ρητίνη 2 επιφανειών">Composite resin 2 surfaces</span><span class="eopyy-amt">€42</span></div>
+      <div class="eopyy-code-row"><span class="eopyy-code">ΕΝ003</span><span class="eopyy-name" data-en="Root canal — 3 canals" data-el="Ενδοδοντική τριόριζου">Root canal — 3 canals</span><span class="eopyy-amt">€125</span></div>
+      <div class="eopyy-code-row"><span class="eopyy-code">ΠΕ001</span><span class="eopyy-name" data-en="Scaling & polishing" data-el="Καθαρισμός & στίλβωση">Scaling & polishing</span><span class="eopyy-amt">€30</span></div>
+      <div class="eopyy-code-row"><span class="eopyy-code">ΠΡ002</span><span class="eopyy-name" data-en="Porcelain-fused-to-metal crown" data-el="Μεταλλοπορσελάνινη κορώνα">Porcelain-fused-to-metal crown</span><span class="eopyy-amt">€120</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PRICING ────────────────────────────────────────────────────────────── -->
+<div class="pricing-section" id="pricing">
+  <div>
+    <div style="text-align:center">
+      <div class="section-label" data-en="Simple, transparent pricing" data-el="Απλές, διαφανείς τιμές">Simple, transparent pricing</div>
+      <h2 class="section-title" data-en="Start free. Grow without limits." data-el="Ξεκινήστε δωρεάν. Αναπτυχθείτε χωρίς όρια.">Start free. Grow without limits.</h2>
+      <p class="section-sub" style="margin:0 auto" data-en="14-day free trial on all plans. No credit card required." data-el="14 ημέρες δωρεάν σε όλα τα πλάνα. Χωρίς κάρτα.">14-day free trial on all plans. No credit card required.</p>
+    </div>
+    <div class="pricing-grid">
+
+      <div class="pricing-card">
+        <div class="pricing-plan" data-en="Solo" data-el="Solo">Solo</div>
+        <div class="pricing-price">
+          <div class="pricing-price-num">€49</div>
+          <div class="pricing-price-per" data-en="/month" data-el="/μήνα">/month</div>
+        </div>
+        <div class="pricing-sub" data-en="Perfect for single-dentist practices" data-el="Ιδανικό για μονοδοντιατρεία">Perfect for single-dentist practices</div>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          <li data-en="1 dentist" data-el="1 οδοντίατρος">1 dentist</li>
+          <li data-en="Unlimited patients" data-el="Απεριόριστοι ασθενείς">Unlimited patients</li>
+          <li data-en="Full calendar & scheduling" data-el="Πλήρες ημερολόγιο">Full calendar & scheduling</li>
+          <li data-en="Billing & EOPYY codes" data-el="Τιμολόγηση & ΕΟΠΥΥ">Billing & EOPYY codes</li>
+          <li data-en="AI chair-side assistant" data-el="AI βοηθός καρέκλας">AI chair-side assistant</li>
+          <li data-en="WhatsApp reminders" data-el="Υπενθυμίσεις WhatsApp">WhatsApp reminders</li>
+          <li data-en="Prescription module" data-el="Συνταγογράφηση">Prescription module</li>
+          <li class="no" data-en="Lab portal" data-el="Εργαστήριο">Lab portal</li>
+          <li class="no" data-en="Multi-location" data-el="Πολλαπλές τοποθεσίες">Multi-location</li>
+        </ul>
+        <a href="/app" class="pricing-cta outline" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pricing-popular" data-en="Most Popular" data-el="Πιο Δημοφιλές">Most Popular</div>
+        <div class="pricing-plan" data-en="Clinic" data-el="Κλινική">Clinic</div>
+        <div class="pricing-price">
+          <div class="pricing-price-num">€99</div>
+          <div class="pricing-price-per" data-en="/month" data-el="/μήνα">/month</div>
+        </div>
+        <div class="pricing-sub" data-en="For growing multi-dentist practices" data-el="Για πολυ-οδοντιατρεία σε ανάπτυξη">For growing multi-dentist practices</div>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          <li data-en="Up to 5 dentists" data-el="Έως 5 οδοντίατροι">Up to 5 dentists</li>
+          <li data-en="Unlimited patients" data-el="Απεριόριστοι ασθενείς">Unlimited patients</li>
+          <li data-en="Everything in Solo" data-el="Όλα του Solo">Everything in Solo</li>
+          <li data-en="Lab portal & orders" data-el="Εργαστήριο & παραγγελίες">Lab portal & orders</li>
+          <li data-en="Specialist referral network" data-el="Δίκτυο παραπομπών">Specialist referral network</li>
+          <li data-en="Analytics & reporting" data-el="Αναλυτικά & αναφορές">Analytics & reporting</li>
+          <li data-en="Inventory management" data-el="Αποθέματα">Inventory management</li>
+          <li data-en="Satisfaction surveys (NPS)" data-el="Ικανοποίηση ασθενών (NPS)">Satisfaction surveys (NPS)</li>
+          <li class="no" data-en="Multi-location" data-el="Πολλαπλές τοποθεσίες">Multi-location</li>
+        </ul>
+        <a href="/app" class="pricing-cta primary" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-plan" data-en="Group" data-el="Όμιλος">Group</div>
+        <div class="pricing-price">
+          <div class="pricing-price-num">€199</div>
+          <div class="pricing-price-per" data-en="/month" data-el="/μήνα">/month</div>
+        </div>
+        <div class="pricing-sub" data-en="For clinic groups and chains" data-el="Για ομίλους και αλυσίδες οδοντιατρείων">For clinic groups and chains</div>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          <li data-en="Unlimited dentists" data-el="Απεριόριστοι οδοντίατροι">Unlimited dentists</li>
+          <li data-en="Unlimited patients" data-el="Απεριόριστοι ασθενείς">Unlimited patients</li>
+          <li data-en="Everything in Clinic" data-el="Όλα της Κλινικής">Everything in Clinic</li>
+          <li data-en="Multi-location management" data-el="Διαχείριση πολλαπλών τοποθεσιών">Multi-location management</li>
+          <li data-en="Consolidated reporting" data-el="Ενοποιημένες αναφορές">Consolidated reporting</li>
+          <li data-en="Priority support" data-el="Προτεραιότητα υποστήριξης">Priority support</li>
+          <li data-en="Custom onboarding" data-el="Εξατομικευμένη εισαγωγή">Custom onboarding</li>
+          <li data-en="SLA guarantee" data-el="Εγγύηση SLA">SLA guarantee</li>
+        </ul>
+        <a href="/app" class="pricing-cta outline" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
+      </div>
+
+    </div>
+    <p class="pricing-note" data-en="All prices exclude VAT. Annual billing available — save 2 months." data-el="Οι τιμές δεν περιλαμβάνουν ΦΠΑ. Ετήσια χρέωση διαθέσιμη — εξοικονομήστε 2 μήνες.">
+      All prices exclude VAT. Annual billing available — save 2 months.
+    </p>
+  </div>
+</div>
+
+<!-- ── TESTIMONIALS ───────────────────────────────────────────────────────── -->
+<section>
+  <div style="text-align:center">
+    <div class="section-label" data-en="What dentists say" data-el="Τι λένε οι οδοντίατροι">What dentists say</div>
+    <h2 class="section-title" data-en="Loved by practices across Greece" data-el="Αγαπημένο από οδοντιατρεία σε όλη την Ελλάδα">Loved by practices across Greece</h2>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text" data-en='"The EOPYY code lookup alone saves us 20 minutes every day. We used to look them up manually in a spreadsheet."' data-el='"Η αναζήτηση κωδικών ΕΟΠΥΥ μας εξοικονομεί 20 λεπτά κάθε μέρα. Πριν τα αναζητούσαμε χειροκίνητα."'>
+        "The EOPYY code lookup alone saves us 20 minutes every day. We used to look them up manually in a spreadsheet."
+      </div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">ΔΠ</div>
+        <div>
+          <div class="testimonial-name">Δρ. Δημήτρης Παπαδόπουλος</div>
+          <div class="testimonial-role" data-en="General Dentist · Athens" data-el="Γενικός Οδοντίατρος · Αθήνα">General Dentist · Athens</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text" data-en='"WhatsApp reminders have cut our no-show rate from 18% to under 4%. The two-way inbox means patients can confirm or reschedule directly."' data-el='"Οι υπενθυμίσεις WhatsApp μείωσαν τα no-show από 18% σε κάτω από 4%. Οι ασθενείς επιβεβαιώνουν ή αλλάζουν ραντεβού απευθείας."'>
+        "WhatsApp reminders have cut our no-show rate from 18% to under 4%. The two-way inbox means patients can confirm or reschedule directly."
+      </div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">ΜΚ</div>
+        <div>
+          <div class="testimonial-name">Δρ. Μαρία Κωνσταντίνου</div>
+          <div class="testimonial-role" data-en="Orthodontist · Thessaloniki" data-el="Ορθοδοντικός · Θεσσαλονίκη">Orthodontist · Thessaloniki</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text" data-en='"I manage three clinics from one screen now. The analytics dashboard shows me which location is performing best — something I could never see before."' data-el='"Διαχειρίζομαι τρία ιατρεία από μία οθόνη. Το αναλυτικό dashboard μου δείχνει ποια τοποθεσία αποδίδει καλύτερα."'>
+        "I manage three clinics from one screen now. The analytics dashboard shows me which location is performing best — something I could never see before."
+      </div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">ΑΤ</div>
+        <div>
+          <div class="testimonial-name">Δρ. Αλέξανδρος Τζαβάρας</div>
+          <div class="testimonial-role" data-en="Group Practice Owner · Patras" data-el="Ιδιοκτήτης Ομίλου · Πάτρα">Group Practice Owner · Patras</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ───────────────────────────────────────────────────────────────── -->
+<section id="faq" style="background:var(--cream);border-radius:24px;margin:0 80px;padding:80px">
+  <div style="text-align:center">
+    <div class="section-label" data-en="FAQ" data-el="Συχνές ερωτήσεις">FAQ</div>
+    <h2 class="section-title" data-en="Frequently asked questions" data-el="Συχνές ερωτήσεις">Frequently asked questions</h2>
+  </div>
+  <div class="faq-list">
+    <div class="faq-item open">
+      <button class="faq-q">
+        <span data-en="Do I need to install anything?" data-el="Χρειάζεται εγκατάσταση;">Do I need to install anything?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a" data-en="No. Dental Assistant Pro is a web app — it works in any modern browser on desktop, tablet, or phone. There is a mobile-optimised layout for iPads at chairside. No app store download required." data-el="Όχι. Το Dental Assistant Pro είναι web εφαρμογή — λειτουργεί σε οποιοδήποτε σύγχρονο browser σε desktop, tablet ή κινητό. Δεν απαιτείται λήψη από app store.">
+        No. Dental Assistant Pro is a web app — it works in any modern browser on desktop, tablet, or phone. There is a mobile-optimised layout for iPads at chairside. No app store download required.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">
+        <span data-en="Is my patient data safe and GDPR compliant?" data-el="Τα δεδομένα ασθενών είναι ασφαλή και GDPR;">Is my patient data safe and GDPR compliant?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a" data-en="Yes. Data is encrypted at rest and in transit. We maintain an Article 30 processing activity log, support 2FA login, and provide a one-click data export (Article 20) and deletion (Article 17) for GDPR compliance. Each practice's data is fully isolated via Row Level Security in PostgreSQL." data-el="Ναι. Τα δεδομένα κρυπτογραφούνται σε κατάσταση ηρεμίας και μεταφοράς. Τηρούμε αρχείο δραστηριοτήτων επεξεργασίας Άρθ. 30, 2FA, και εξαγωγή/διαγραφή δεδομένων για GDPR.">
+        Yes. Data is encrypted at rest and in transit. We maintain an Article 30 processing activity log, support 2FA login, and provide one-click data export (Article 20) and deletion (Article 17). Each practice's data is fully isolated via Row Level Security.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">
+        <span data-en="Can I import my existing patients?" data-el="Μπορώ να εισάγω τους υπάρχοντες ασθενείς μου;">Can I import my existing patients?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a" data-en="Yes. The patient import wizard accepts CSV files with automatic field mapping. Most practice management exports (Orasoftware, Dental4Windows, Excel) import without any formatting changes." data-el="Ναι. Ο οδηγός εισαγωγής αποδέχεται CSV αρχεία με αυτόματη αντιστοίχιση πεδίων. Τα περισσότερα exports λογισμικών διαχείρισης εισάγονται χωρίς αλλαγές μορφοποίησης.">
+        Yes. The patient import wizard accepts CSV files with automatic field mapping. Most practice management software exports (Excel, CSV) import without any formatting changes.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">
+        <span data-en="Do you support WhatsApp Business for appointment reminders?" data-el="Υποστηρίζετε WhatsApp Business για υπενθυμίσεις;">Do you support WhatsApp Business for appointment reminders?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a" data-en="Yes. We integrate with the official Meta WhatsApp Business Cloud API. You need a WhatsApp Business account with an approved number — setup takes about 30 minutes and we guide you through it. Patients receive reminders, can reply, and staff see all conversations in-app." data-el="Ναι. Ενσωματωνόμαστε με το επίσημο Meta WhatsApp Business Cloud API. Χρειάζεστε επαγγελματικό λογαριασμό WhatsApp Business — η εγκατάσταση διαρκεί ~30 λεπτά.">
+        Yes. We integrate with the official Meta WhatsApp Business Cloud API. You need a WhatsApp Business account with an approved number — setup takes about 30 minutes and we guide you through it.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">
+        <span data-en="What if I want to cancel?" data-el="Τι γίνεται αν θέλω να ακυρώσω;">What if I want to cancel?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a" data-en="Cancel anytime from the billing portal — no questions asked, no cancellation fee. You can export all your data at any time from the account settings. After cancellation your data is retained for 30 days then permanently deleted per GDPR Article 17." data-el="Ακύρωση οποτεδήποτε από την πύλη χρέωσης — χωρίς ερωτήσεις, χωρίς χρέωση ακύρωσης. Μπορείτε να εξάγετε τα δεδομένα σας ανά πάσα στιγμή. Μετά την ακύρωση, τα δεδομένα διατηρούνται 30 ημέρες και διαγράφονται οριστικά.">
+        Cancel anytime from the billing portal — no questions asked, no cancellation fee. Export all your data at any time. After cancellation, data is retained for 30 days then permanently deleted per GDPR Article 17.
+      </div>
+    </div>
+  </div>
+</section>
+<div style="height:80px"></div>
+
+<!-- ── CTA ───────────────────────────────────────────────────────────────── -->
+<div class="cta-banner">
+  <h2 data-en="Ready to modernise your practice?" data-el="Έτοιμοι να εκσυγχρονίσετε το ιατρείο σας;">Ready to modernise your practice?</h2>
+  <p data-en="Join 500+ dental practices already using Dental Assistant Pro. 14-day free trial, no card required." data-el="Ελάτε στα 500+ οδοντιατρεία που χρησιμοποιούν ήδη το Dental Assistant Pro. 14 ημέρες δωρεάν, χωρίς κάρτα.">
+    Join 500+ dental practices already using Dental Assistant Pro. 14-day free trial, no card required.
+  </p>
+  <a href="/app" class="btn-white">
+    <span>🦷</span>
+    <span data-en="Start your free trial" data-el="Ξεκινήστε τη δωρεάν δοκιμή σας">Start your free trial</span>
+  </a>
+  <div class="cta-banner-note" data-en="No credit card · Cancel anytime · GDPR compliant · Based in Greece" data-el="Χωρίς κάρτα · Ακύρωση οποτεδήποτε · GDPR · Βασισμένο στην Ελλάδα">
+    No credit card · Cancel anytime · GDPR compliant · Based in Greece
+  </div>
+</div>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand">
+        <div class="footer-brand-icon">🦷</div>
+        Dental Assistant Pro
+      </div>
+      <p class="footer-desc" data-en="The complete practice management system for modern Greek dental clinics. Built with ❤️ for dentists." data-el="Το πλήρες σύστημα διαχείρισης ιατρείου για σύγχρονα ελληνικά οδοντιατρεία.">
+        The complete practice management system for modern Greek dental clinics. Built with ❤️ for dentists.
+      </p>
+    </div>
+    <div class="footer-col">
+      <h4 data-en="Product" data-el="Προϊόν">Product</h4>
+      <a href="#features" data-en="Features" data-el="Χαρακτηριστικά">Features</a>
+      <a href="#eopyy" data-en="EOPYY Integration" data-el="ΕΟΠΥΥ">EOPYY Integration</a>
+      <a href="#pricing" data-en="Pricing" data-el="Τιμές">Pricing</a>
+      <a href="/app" data-en="Sign in" data-el="Είσοδος">Sign in</a>
+    </div>
+    <div class="footer-col">
+      <h4 data-en="Compliance" data-el="Συμμόρφωση">Compliance</h4>
+      <a href="#" data-en="GDPR Policy" data-el="Πολιτική GDPR">GDPR Policy</a>
+      <a href="#" data-en="Privacy Policy" data-el="Απόρρητο">Privacy Policy</a>
+      <a href="#" data-en="Terms of Service" data-el="Όροι Χρήσης">Terms of Service</a>
+      <a href="#" data-en="Security" data-el="Ασφάλεια">Security</a>
+    </div>
+    <div class="footer-col">
+      <h4 data-en="Support" data-el="Υποστήριξη">Support</h4>
+      <a href="#faq" data-en="FAQ" data-el="FAQ">FAQ</a>
+      <a href="mailto:support@dentalassistantpro.gr" data-en="Email support" data-el="Email υποστήριξη">Email support</a>
+      <a href="/superadmin" data-en="Admin portal" data-el="Πύλη διαχειριστή">Admin portal</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span data-en="© 2026 Dental Assistant Pro. All rights reserved." data-el="© 2026 Dental Assistant Pro. Όλα τα δικαιώματα κατοχυρωμένα.">© 2026 Dental Assistant Pro. All rights reserved.</span>
+    <div class="footer-bottom-links">
+      <a href="#" data-en="Privacy" data-el="Απόρρητο">Privacy</a>
+      <a href="#" data-en="Terms" data-el="Όροι">Terms</a>
+      <a href="#" data-en="GDPR" data-el="GDPR">GDPR</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ── Language toggle ──────────────────────────────────────────────────────
+  let currentLang = localStorage.getItem('landing_lang') || 'en'
+
+  function applyLang(lang) {
+    currentLang = lang
+    localStorage.setItem('landing_lang', lang)
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.id === 'lang-' + lang))
+    document.querySelectorAll('[data-' + lang + ']').forEach(el => {
+      const val = el.getAttribute('data-' + lang)
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = val
+      else el.innerHTML = val
+    })
+  }
+
+  document.getElementById('lang-en').addEventListener('click', () => applyLang('en'))
+  document.getElementById('lang-el').addEventListener('click', () => applyLang('el'))
+  applyLang(currentLang)
+
+  // ── FAQ accordion ──────────────────────────────────────────────────────
+  document.querySelectorAll('.faq-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item')
+      const wasOpen = item.classList.contains('open')
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'))
+      if (!wasOpen) item.classList.add('open')
+    })
+  })
+
+  // ── Smooth scroll for nav links ────────────────────────────────────────
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'))
+      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+    })
+  })
+
+  // ── Navbar scroll shadow ───────────────────────────────────────────────
+  window.addEventListener('scroll', () => {
+    document.querySelector('nav').style.boxShadow = window.scrollY > 10
+      ? '0 4px 24px rgba(44,42,39,.08)' : 'none'
+  })
+
+  // ── Redirect /app to the calendar app ─────────────────────────────────
+  // The Express server handles this — /app → calendar.html
+  // Links here already point to /app
+</script>
+</body>
+</html>

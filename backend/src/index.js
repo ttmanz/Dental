@@ -54,7 +54,8 @@ app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISO
 const ROOT = path.resolve(__dirname, '../../')
 app.get('/portal',     (_, res) => res.sendFile(path.join(ROOT, 'patient-portal.html')))
 app.get('/superadmin', (_, res) => res.sendFile(path.join(ROOT, 'superadmin.html')))
-app.get('/',           (_, res) => res.sendFile(path.join(ROOT, 'calendar.html')))
+app.get('/app',        (_, res) => res.sendFile(path.join(ROOT, 'calendar.html')))
+app.get('/',           (_, res) => res.sendFile(path.join(ROOT, 'landing.html')))
 app.use(express.static(ROOT))
 
 app.use((err, req, res, _next) => {

@@ -6158,7 +6158,7 @@
 
 <script>
 // ── API config ───────────────────────────────────────────────────────────
-const API_BASE = 'http://localhost:3001'  // swap to https://your-domain.com for production
+const API_BASE = window.location.origin === 'http://localhost:5175' ? 'http://localhost:3001' : window.location.origin
 
 // ── Auth state ───────────────────────────────────────────────────────────
 const AUTH = {
