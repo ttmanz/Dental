@@ -1504,6 +1504,163 @@
     }
     .modal-btn.treat:hover { background: #2D8B7A; }
 
+    /* ── Lab Portal overlay ─────────────────────────────────────────────── */
+    .lab-overlay {
+      display:none; position:fixed; inset:0; z-index:3500;
+      background:rgba(44,42,39,.5); align-items:center; justify-content:center;
+    }
+    .lab-overlay.open { display:flex; }
+    .lab-modal {
+      background:var(--cream); width:min(1020px,97vw); height:90vh;
+      border-radius:20px; display:flex; flex-direction:column;
+      box-shadow:0 20px 70px rgba(44,42,39,.22); overflow:hidden; position:relative;
+    }
+    .lab-header {
+      display:flex; align-items:center; gap:12px; padding:16px 24px;
+      background:var(--white); border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .lab-header-title { font-size:16px; font-weight:800; color:var(--text); flex:1; }
+    .lab-header-actions { display:flex; gap:8px; }
+    .lab-new-btn {
+      display:flex; align-items:center; gap:6px; padding:8px 16px;
+      border-radius:9px; border:none; background:var(--primary); color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; font-family:inherit;
+    }
+    .lab-new-btn:hover { background:#2D8B7A; }
+    .lab-close-btn {
+      width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    /* Stats bar */
+    .lab-stats { display:flex; gap:1px; background:var(--border); flex-shrink:0; }
+    .lab-stat  { flex:1; background:var(--white); padding:12px 18px; }
+    .lab-stat-lbl { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+    .lab-stat-val { font-size:20px; font-weight:800; color:var(--text); margin-top:2px; }
+    .lab-stat-val.amber { color:#92400E; }
+    .lab-stat-val.red   { color:#991B1B; }
+    .lab-stat-val.green { color:#065F46; }
+
+    /* Body: sidebar + list */
+    .lab-body { flex:1; display:flex; overflow:hidden; }
+    .lab-sidebar {
+      width:170px; flex-shrink:0; background:var(--white);
+      border-right:1px solid var(--border); padding:12px 10px;
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .lab-filter-lbl { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; padding:0 8px; margin:6px 0 4px; }
+    .lab-filter-btn {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:7px 10px; border-radius:8px; border:none; background:transparent;
+      font-size:13px; font-weight:500; color:var(--text-mid); cursor:pointer;
+      font-family:inherit; width:100%; text-align:left; transition:all .15s;
+    }
+    .lab-filter-btn:hover { background:var(--cream); }
+    .lab-filter-btn.active { background:var(--primary-light); color:var(--primary); font-weight:700; }
+    .lab-filter-count { font-size:11px; font-weight:700; background:var(--cream-dark); color:var(--text-muted); border-radius:10px; padding:1px 7px; }
+    .lab-filter-btn.active .lab-filter-count { background:var(--primary-mid); color:var(--primary); }
+
+    /* Order list */
+    .lab-list-wrap { flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
+    .lab-order-row {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:13px 16px; display:flex; align-items:center; gap:12px;
+      cursor:pointer; transition:all .15s;
+    }
+    .lab-order-row:hover { border-color:var(--primary-mid); box-shadow:0 4px 16px var(--shadow); }
+    .lab-order-row.overdue { border-left:3px solid #D95F5F; }
+    .lab-type-icon { font-size:22px; flex-shrink:0; }
+    .lab-order-info { flex:1; min-width:0; }
+    .lab-order-num  { font-size:12px; font-weight:700; color:var(--primary); }
+    .lab-order-patient { font-size:14px; font-weight:700; color:var(--text); }
+    .lab-order-meta { font-size:12px; color:var(--text-muted); margin-top:2px; }
+    .lab-order-due  { font-size:12px; font-weight:600; flex-shrink:0; }
+    .lab-order-due.ok       { color:#065F46; }
+    .lab-order-due.soon     { color:#92400E; }
+    .lab-order-due.overdue  { color:#991B1B; }
+    .lab-status-badge {
+      padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700;
+      text-transform:uppercase; letter-spacing:.04em; flex-shrink:0; white-space:nowrap;
+    }
+    .lab-status-badge.draft       { background:var(--cream-dark);   color:var(--text-muted); }
+    .lab-status-badge.sent        { background:#DBEAFE;             color:#1E40AF; }
+    .lab-status-badge.in_progress { background:#FEF3C7;             color:#92400E; }
+    .lab-status-badge.shipped     { background:var(--primary-light);color:var(--primary); }
+    .lab-status-badge.received    { background:#D1FAE5;             color:#065F46; }
+    .lab-status-badge.fitted      { background:#D1FAE5;             color:#065F46; }
+    .lab-status-badge.cancelled   { background:#FEE2E2;             color:#991B1B; }
+    .lab-empty { text-align:center; padding:56px 24px; color:var(--text-muted); font-size:13px; }
+
+    /* Order editor panel (slides in from right) */
+    .lab-editor {
+      position:absolute; top:0; right:0; bottom:0; width:min(580px,100%);
+      background:var(--cream); border-left:1px solid var(--border);
+      display:flex; flex-direction:column;
+      transform:translateX(100%); transition:transform .25s ease; z-index:10;
+    }
+    .lab-editor.open { transform:translateX(0); }
+    .lab-editor-header {
+      display:flex; align-items:center; gap:10px; padding:14px 20px;
+      background:var(--white); border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .lab-editor-back {
+      padding:6px 12px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); font-size:12px; font-weight:600;
+      cursor:pointer; color:var(--text-mid); font-family:inherit;
+    }
+    .lab-editor-back:hover { background:var(--cream-dark); }
+    .lab-editor-num  { font-size:14px; font-weight:800; color:var(--primary); flex:1; }
+    .lab-editor-body { flex:1; overflow-y:auto; padding:18px 20px; display:flex; flex-direction:column; gap:14px; }
+
+    /* Status timeline */
+    .lab-timeline { display:flex; align-items:center; gap:0; padding:4px 0; }
+    .lab-tl-step  { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+    .lab-tl-dot   {
+      width:26px; height:26px; border-radius:50%; border:2.5px solid var(--border);
+      background:var(--white); display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:700; color:var(--text-muted); transition:all .2s; flex-shrink:0;
+    }
+    .lab-tl-dot.done    { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .lab-tl-dot.current { background:var(--amber); border-color:var(--amber); color:#fff; animation:tl-pulse 1.5s ease-in-out infinite; }
+    @keyframes tl-pulse { 0%,100%{box-shadow:0 0 0 3px rgba(232,168,124,.2)} 50%{box-shadow:0 0 0 7px rgba(232,168,124,.1)} }
+    .lab-tl-label { font-size:9px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; text-align:center; }
+    .lab-tl-line  { flex:1; height:2px; background:var(--border); margin-top:-18px; }
+    .lab-tl-line.done { background:var(--primary); }
+
+    /* Form sections */
+    .lab-section { background:var(--white); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .lab-section-title { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+    .lab-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .lab-field label { display:block; font-size:11px; font-weight:600; color:var(--text-mid); margin-bottom:5px; }
+    .lab-field input, .lab-field select, .lab-field textarea {
+      width:100%; border:1.5px solid var(--border); border-radius:8px; padding:8px 10px;
+      font-size:13px; font-family:inherit; color:var(--text); background:var(--cream); outline:none; transition:all .15s;
+    }
+    .lab-field input:focus, .lab-field select:focus, .lab-field textarea:focus { border-color:var(--primary); background:var(--white); }
+    .lab-field textarea { min-height:64px; resize:vertical; }
+    .lab-field.full { grid-column:1/-1; }
+
+    /* Next status button */
+    .lab-advance-btn {
+      width:100%; padding:11px; border-radius:10px; border:none;
+      background:var(--primary); color:#fff; font-size:14px; font-weight:700;
+      cursor:pointer; font-family:inherit; transition:background .15s;
+    }
+    .lab-advance-btn:hover { background:#2D8B7A; }
+    .lab-advance-btn:disabled { opacity:.5; cursor:default; }
+
+    /* Editor footer */
+    .lab-editor-footer {
+      padding:14px 20px; background:var(--white); border-top:1px solid var(--border);
+      display:flex; gap:8px; flex-shrink:0;
+    }
+    .lab-act { padding:9px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .lab-act.primary   { border:none; background:var(--primary); color:#fff; }
+    .lab-act.primary:hover { background:#2D8B7A; }
+    .lab-act.secondary { border:1px solid var(--border); background:var(--white); color:var(--text-mid); }
+    .lab-act.danger    { border:1px solid #FECACA; background:#FEE2E2; color:#991B1B; }
+
     /* ── Reminders panel ────────────────────────────────────────────────── */
     .rem-overlay {
       display:none; position:fixed; inset:0; z-index:3400;
@@ -2582,6 +2739,80 @@
   </div>
 </div>
 
+<!-- ── Lab Portal overlay ────────────────────────────────────────────── -->
+<div id="lab-overlay" class="lab-overlay">
+  <div class="lab-modal">
+
+    <div class="lab-header">
+      <span style="font-size:22px">🔬</span>
+      <div class="lab-header-title" data-en="Lab Portal" data-el="Πύλη Εργαστηρίου">Lab Portal</div>
+      <div class="lab-header-actions">
+        <button class="lab-new-btn" id="lab-new-btn">＋ <span data-en="New Order" data-el="Νέα Παραγγελία">New Order</span></button>
+        <button class="lab-new-btn" id="lab-manage-btn" style="background:var(--cream-dark);color:var(--text-mid);border:1px solid var(--border)">⚙ <span data-en="Labs" data-el="Εργαστήρια">Labs</span></button>
+        <button class="lab-close-btn" id="lab-close-btn">✕</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="lab-stats">
+      <div class="lab-stat">
+        <div class="lab-stat-lbl" data-en="Active Orders" data-el="Ενεργές">Active Orders</div>
+        <div class="lab-stat-val amber" id="lstat-pending">—</div>
+      </div>
+      <div class="lab-stat">
+        <div class="lab-stat-lbl" data-en="Overdue" data-el="Καθυστερημένα">Overdue</div>
+        <div class="lab-stat-val red" id="lstat-overdue">—</div>
+      </div>
+      <div class="lab-stat">
+        <div class="lab-stat-lbl" data-en="Shipped" data-el="Αποστάλθηκαν">Shipped</div>
+        <div class="lab-stat-val" id="lstat-shipped">—</div>
+      </div>
+      <div class="lab-stat">
+        <div class="lab-stat-lbl" data-en="Received This Week" data-el="Ελήφθησαν">Received This Week</div>
+        <div class="lab-stat-val green" id="lstat-received">—</div>
+      </div>
+      <div class="lab-stat">
+        <div class="lab-stat-lbl" data-en="Fitted This Month" data-el="Τοποθετήθηκαν">Fitted This Month</div>
+        <div class="lab-stat-val green" id="lstat-fitted">—</div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="lab-body">
+      <!-- Sidebar -->
+      <div class="lab-sidebar">
+        <div class="lab-filter-lbl">Status</div>
+        <button class="lab-filter-btn active" data-lfilter="all">All <span class="lab-filter-count" id="lcount-all">0</span></button>
+        <button class="lab-filter-btn" data-lfilter="draft">Draft <span class="lab-filter-count" id="lcount-draft">0</span></button>
+        <button class="lab-filter-btn" data-lfilter="sent">Sent <span class="lab-filter-count" id="lcount-sent">0</span></button>
+        <button class="lab-filter-btn" data-lfilter="in_progress">In Lab <span class="lab-filter-count" id="lcount-in_progress">0</span></button>
+        <button class="lab-filter-btn" data-lfilter="shipped">Shipped <span class="lab-filter-count" id="lcount-shipped">0</span></button>
+        <button class="lab-filter-btn" data-lfilter="received">Received <span class="lab-filter-count" id="lcount-received">0</span></button>
+        <button class="lab-filter-btn" data-lfilter="fitted">Fitted <span class="lab-filter-count" id="lcount-fitted">0</span></button>
+      </div>
+
+      <!-- Order list -->
+      <div class="lab-list-wrap" id="lab-list"></div>
+
+      <!-- Editor panel -->
+      <div class="lab-editor" id="lab-editor">
+        <div class="lab-editor-header">
+          <button class="lab-editor-back" id="lab-editor-back">← <span data-en="Orders" data-el="Παραγγελίες">Orders</span></button>
+          <div class="lab-editor-num" id="lab-editor-num">—</div>
+          <span class="lab-status-badge draft" id="lab-editor-status">draft</span>
+        </div>
+        <div class="lab-editor-body" id="lab-editor-body"></div>
+        <div class="lab-editor-footer">
+          <button class="lab-act secondary" id="lab-save-btn" data-en="Save" data-el="Αποθήκευση">Save</button>
+          <button class="lab-advance-btn" id="lab-advance-btn">—</button>
+          <button class="lab-act danger" id="lab-delete-btn" data-en="Delete" data-el="Διαγραφή">Delete</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- ── Reminders overlay ─────────────────────────────────────────────── -->
 <div id="rem-overlay" class="rem-overlay">
   <div class="rem-modal">
@@ -2990,6 +3221,10 @@
       <button class="lang-btn active" id="lang-en">EN</button>
       <button class="lang-btn" id="lang-el">ΕΛ</button>
     </div>
+    <button class="add-appt-btn" id="lab-nav-btn" style="background:#5B9ED6;box-shadow:0 2px 8px rgba(91,158,214,.3)">
+      <span>🔬</span>
+      <span data-en="Lab" data-el="Εργαστήριο">Lab</span>
+    </button>
     <button class="add-appt-btn" id="reminders-nav-btn" style="background:#8B7CC8;box-shadow:0 2px 8px rgba(139,124,200,.3)">
       <span>🔔</span>
       <span data-en="Reminders" data-el="Υπενθυμίσεις">Reminders</span>
@@ -7671,6 +7906,329 @@ General rules (non-session):
     if (!p?.id) { showToast('Patient not found.'); return }
     document.getElementById('pc-overlay')?.classList.remove('open')
     openPerioChart(p.id, name)
+  })
+
+})()
+
+// ── Lab Portal ────────────────────────────────────────────────────────────
+;(function initLabPortal() {
+
+  const TYPE_ICONS = {
+    crown:'👑', bridge:'🌉', veneer:'✨', inlay_onlay:'🔷',
+    implant_crown:'🦷', partial_denture:'🫦', full_denture:'😁',
+    temporary:'⏳', night_guard:'🌙', retainer:'📎',
+    clear_aligner:'🦷', orthodontic_appliance:'⚙', post_core:'🔩', other:'📦'
+  }
+  const STATUS_FLOW = ['draft','sent','in_progress','shipped','received','fitted']
+  const STATUS_LABELS_EN = { draft:'Draft', sent:'Sent to Lab', in_progress:'In Progress',
+    shipped:'Shipped', received:'Received', fitted:'Fitted', cancelled:'Cancelled' }
+
+  let _labFilter  = 'all'
+  let _labOrders  = []
+  let _labLabs    = []
+  let _labCurrent = null
+
+  const overlay  = document.getElementById('lab-overlay')
+  const listEl   = document.getElementById('lab-list')
+  const editor   = document.getElementById('lab-editor')
+
+  // ── Open ──────────────────────────────────────────────────────────────────
+  window.openLabPortal = async function() {
+    overlay.classList.add('open')
+    closeEditor()
+    await Promise.all([loadStats(), loadOrders(), loadLabs()])
+  }
+
+  document.getElementById('lab-nav-btn').addEventListener('click', () => window.openLabPortal())
+  document.getElementById('lab-close-btn').addEventListener('click', () => overlay.classList.remove('open'))
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open') })
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const res = await apiFetch('/api/lab/stats')
+      if (!res.ok) return
+      const s = await res.json()
+      document.getElementById('lstat-pending').textContent  = s.pending    || 0
+      document.getElementById('lstat-overdue').textContent  = s.overdue    || 0
+      document.getElementById('lstat-shipped').textContent  = s.shipped    || 0
+      document.getElementById('lstat-received').textContent = s.received_this_week || 0
+      document.getElementById('lstat-fitted').textContent   = s.fitted_this_month  || 0
+    } catch {}
+  }
+
+  // ── Labs list ─────────────────────────────────────────────────────────────
+  async function loadLabs() {
+    try {
+      const res = await apiFetch('/api/lab/labs')
+      if (res.ok) _labLabs = await res.json()
+    } catch {}
+  }
+
+  // ── Orders list ───────────────────────────────────────────────────────────
+  async function loadOrders() {
+    listEl.innerHTML = '<div class="lab-empty" style="padding:20px">Loading…</div>'
+    try {
+      const res = await apiFetch('/api/lab/orders?limit=200')
+      if (!res.ok) { listEl.innerHTML = '<div class="lab-empty">Could not load.</div>'; return }
+      _labOrders = await res.json()
+      renderOrderList()
+      updateFilterCounts()
+    } catch { listEl.innerHTML = '<div class="lab-empty">Error loading orders.</div>' }
+  }
+
+  function renderOrderList() {
+    const orders = _labFilter === 'all' ? _labOrders : _labOrders.filter(o => o.status === _labFilter)
+    if (!orders.length) {
+      listEl.innerHTML = `<div class="lab-empty">
+        <div style="font-size:36px;margin-bottom:12px">🔬</div>
+        <div style="font-size:14px;font-weight:600">${lang==='el'?'Δεν υπάρχουν παραγγελίες':'No lab orders found'}</div>
+      </div>`
+      return
+    }
+    listEl.innerHTML = ''
+    orders.forEach(o => {
+      const dueDate  = o.due_date ? new Date(o.due_date+'T00:00:00') : null
+      const today    = new Date(); today.setHours(0,0,0,0)
+      const diffDays = dueDate ? Math.round((dueDate - today) / 86400000) : null
+      const dueClass = !dueDate ? '' : diffDays < 0 ? 'overdue' : diffDays <= 2 ? 'soon' : 'ok'
+      const dueText  = !dueDate ? '—'
+        : diffDays < 0  ? `${Math.abs(diffDays)}d overdue`
+        : diffDays === 0 ? 'Due today'
+        : diffDays === 1 ? 'Due tomorrow'
+        : `${diffDays}d left`
+      const teeth = o.tooth_numbers?.length ? ` · Teeth: ${o.tooth_numbers.join(', ')}` : ''
+      const shade = o.shade ? ` · Shade: ${o.shade}` : ''
+
+      const row = document.createElement('div')
+      row.className = 'lab-order-row' + (o.is_overdue ? ' overdue' : '')
+      row.innerHTML = `
+        <div class="lab-type-icon">${TYPE_ICONS[o.order_type]||'📦'}</div>
+        <div class="lab-order-info">
+          <div class="lab-order-num">${o.order_number}</div>
+          <div class="lab-order-patient">${o.patient_name}</div>
+          <div class="lab-order-meta">${o.order_type.replace(/_/g,' ')}${teeth}${shade} · ${o.lab_name||'No lab assigned'}</div>
+        </div>
+        <div class="lab-order-due ${dueClass}">${dueText}</div>
+        <span class="lab-status-badge ${o.status}">${STATUS_LABELS_EN[o.status]||o.status}</span>`
+      row.addEventListener('click', () => openEditor(o))
+      listEl.appendChild(row)
+    })
+  }
+
+  function updateFilterCounts() {
+    const counts = { all: _labOrders.length }
+    _labOrders.forEach(o => { counts[o.status] = (counts[o.status]||0) + 1 })
+    ;['all','draft','sent','in_progress','shipped','received','fitted'].forEach(f => {
+      const el = document.getElementById(`lcount-${f}`)
+      if (el) el.textContent = counts[f] || 0
+    })
+  }
+
+  document.querySelector('.lab-sidebar').addEventListener('click', e => {
+    const btn = e.target.closest('.lab-filter-btn')
+    if (!btn) return
+    _labFilter = btn.dataset.lfilter
+    document.querySelectorAll('.lab-filter-btn').forEach(b => b.classList.toggle('active', b === btn))
+    renderOrderList()
+  })
+
+  // ── New Order ─────────────────────────────────────────────────────────────
+  document.getElementById('lab-new-btn').addEventListener('click', async () => {
+    const patientName = prompt(lang==='el'?'Όνομα ασθενή:':'Patient name:')
+    if (!patientName) return
+    const patient = findPatientByName(patientName)
+    if (!patient) { showToast(lang==='el'?'Ασθενής δεν βρέθηκε':'Patient not found'); return }
+    try {
+      const res = await apiFetch('/api/lab/orders', { method:'POST', body:{ patientId: patient.id }})
+      const order = await res.json()
+      if (order.id) {
+        _labOrders.unshift({ ...order, patient_name: patient.fullName, lab_name: null, is_overdue: false })
+        renderOrderList(); updateFilterCounts(); loadStats()
+        openEditor(order)
+      }
+    } catch { showToast('Could not create order.') }
+  })
+
+  // ── Editor ────────────────────────────────────────────────────────────────
+  function openEditor(order) {
+    _labCurrent = { ..._labOrders.find(o => o.id === order.id) || order }
+    renderEditorContent()
+    editor.classList.add('open')
+  }
+
+  function closeEditor() {
+    editor.classList.remove('open')
+    _labCurrent = null
+  }
+
+  document.getElementById('lab-editor-back').addEventListener('click', () => {
+    closeEditor(); renderOrderList()
+  })
+
+  function renderEditorContent() {
+    const o = _labCurrent
+    document.getElementById('lab-editor-num').textContent = o.order_number
+    const sb = document.getElementById('lab-editor-status')
+    sb.textContent = STATUS_LABELS_EN[o.status]||o.status
+    sb.className   = `lab-status-badge ${o.status}`
+
+    const body = document.getElementById('lab-editor-body')
+    body.innerHTML = ''
+
+    // Status timeline
+    const tlWrap = document.createElement('div')
+    tlWrap.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Status Timeline</div>'
+    const tl = document.createElement('div')
+    tl.className = 'lab-timeline'
+    const currentIdx = STATUS_FLOW.indexOf(o.status)
+    STATUS_FLOW.filter(s => s !== 'cancelled').forEach((s, i) => {
+      const dot = document.createElement('div')
+      dot.className = 'lab-tl-dot' + (i < currentIdx ? ' done' : i === currentIdx ? ' current' : '')
+      dot.textContent = i < currentIdx ? '✓' : (i+1)
+      const lbl = document.createElement('div')
+      lbl.className = 'lab-tl-label'
+      lbl.textContent = STATUS_LABELS_EN[s].replace(' ','\n')
+      const step = document.createElement('div')
+      step.className = 'lab-tl-step'
+      step.appendChild(dot); step.appendChild(lbl)
+      if (i > 0) { const line = document.createElement('div'); line.className='lab-tl-line'+(i<=currentIdx?' done':''); tl.appendChild(line) }
+      tl.appendChild(step)
+    })
+    tlWrap.appendChild(tl)
+    const tlSection = document.createElement('div'); tlSection.className='lab-section'; tlSection.appendChild(tlWrap)
+    body.appendChild(tlSection)
+
+    // Details form
+    const detailSection = document.createElement('div')
+    detailSection.className = 'lab-section'
+    detailSection.innerHTML = `
+      <div class="lab-section-title">Order Details</div>
+      <div class="lab-form-grid">
+        <div class="lab-field">
+          <label>${lang==='el'?'Τύπος':'Order Type'}</label>
+          <select id="le-type">
+            ${Object.keys(TYPE_ICONS).map(t=>`<option value="${t}"${o.order_type===t?' selected':''}>${t.replace(/_/g,' ')}</option>`).join('')}
+          </select>
+        </div>
+        <div class="lab-field">
+          <label>${lang==='el'?'Εργαστήριο':'Lab'}</label>
+          <select id="le-lab">
+            <option value="">— No lab selected —</option>
+            ${_labLabs.map(l=>`<option value="${l.id}"${o.lab_id===l.id?' selected':''}>${l.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="lab-field">
+          <label>${lang==='el'?'Δόντια (FDI)':'Tooth Numbers (FDI)'}</label>
+          <input type="text" id="le-teeth" value="${(o.tooth_numbers||[]).join(', ')}" placeholder="14, 15" />
+        </div>
+        <div class="lab-field">
+          <label>${lang==='el'?'Απόχρωση':'Shade'}</label>
+          <input type="text" id="le-shade" value="${o.shade||''}" placeholder="A2, B1…" />
+        </div>
+        <div class="lab-field">
+          <label>${lang==='el'?'Υλικό':'Material'}</label>
+          <input type="text" id="le-material" value="${o.material||''}" placeholder="Zirconia, PFM, E.max…" />
+        </div>
+        <div class="lab-field">
+          <label>${lang==='el'?'Παράδοση':'Due Date'}</label>
+          <input type="date" id="le-due" value="${(o.due_date||'').slice(0,10)}" />
+        </div>
+        <div class="lab-field full">
+          <label>${lang==='el'?'Οδηγίες':'Instructions'}</label>
+          <textarea id="le-instructions">${o.instructions||''}</textarea>
+        </div>
+      </div>`
+    body.appendChild(detailSection)
+
+    // Timestamps
+    if (o.sent_at || o.received_at || o.fitted_at) {
+      const tsSection = document.createElement('div')
+      tsSection.className = 'lab-section'
+      tsSection.innerHTML = `<div class="lab-section-title">Timeline Dates</div>` +
+        (o.sent_at     ? `<div style="font-size:12px;color:var(--text-mid);padding:4px 0">📤 Sent: ${new Date(o.sent_at).toLocaleDateString(lang==='el'?'el-GR':'en-GB')}</div>` : '') +
+        (o.received_at ? `<div style="font-size:12px;color:var(--text-mid);padding:4px 0">📥 Received: ${new Date(o.received_at).toLocaleDateString(lang==='el'?'el-GR':'en-GB')}</div>` : '') +
+        (o.fitted_at   ? `<div style="font-size:12px;color:#065F46;padding:4px 0">✓ Fitted: ${new Date(o.fitted_at).toLocaleDateString(lang==='el'?'el-GR':'en-GB')}</div>` : '')
+      body.appendChild(tsSection)
+    }
+
+    // Advance button label
+    const nextStatus = STATUS_FLOW[STATUS_FLOW.indexOf(o.status) + 1]
+    const advBtn = document.getElementById('lab-advance-btn')
+    if (nextStatus && o.status !== 'cancelled') {
+      advBtn.disabled = false
+      advBtn.textContent = `→ Mark as ${STATUS_LABELS_EN[nextStatus]}`
+    } else {
+      advBtn.disabled = true
+      advBtn.textContent = o.status === 'fitted' ? '✓ Complete' : 'No next step'
+    }
+
+    document.getElementById('lab-delete-btn').style.display = o.status === 'draft' ? '' : 'none'
+  }
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+  document.getElementById('lab-save-btn').addEventListener('click', async () => {
+    if (!_labCurrent) return
+    const teeth = (document.getElementById('le-teeth').value||'')
+      .split(/[\s,]+/).map(Number).filter(n => n > 0)
+    try {
+      const res = await apiFetch(`/api/lab/orders/${_labCurrent.id}`, { method:'PATCH', body:{
+        orderType:    document.getElementById('le-type').value,
+        labId:        document.getElementById('le-lab').value || null,
+        toothNumbers: teeth.length ? teeth : null,
+        shade:        document.getElementById('le-shade').value.trim() || null,
+        material:     document.getElementById('le-material').value.trim() || null,
+        dueDate:      document.getElementById('le-due').value || null,
+        instructions: document.getElementById('le-instructions').value.trim() || null,
+      }})
+      const updated = await res.json()
+      Object.assign(_labCurrent, updated)
+      const idx = _labOrders.findIndex(o => o.id === _labCurrent.id)
+      if (idx !== -1) Object.assign(_labOrders[idx], updated)
+      renderEditorContent(); renderOrderList(); updateFilterCounts()
+      showToast(lang==='el'?'Αποθηκεύτηκε ✓':'Saved ✓')
+    } catch { showToast('Could not save.') }
+  })
+
+  // ── Advance status ────────────────────────────────────────────────────────
+  document.getElementById('lab-advance-btn').addEventListener('click', async () => {
+    if (!_labCurrent) return
+    const nextStatus = STATUS_FLOW[STATUS_FLOW.indexOf(_labCurrent.status) + 1]
+    if (!nextStatus) return
+    try {
+      const res = await apiFetch(`/api/lab/orders/${_labCurrent.id}`, { method:'PATCH', body:{ status: nextStatus }})
+      const updated = await res.json()
+      Object.assign(_labCurrent, updated)
+      const idx = _labOrders.findIndex(o => o.id === _labCurrent.id)
+      if (idx !== -1) Object.assign(_labOrders[idx], updated)
+      renderEditorContent(); renderOrderList(); updateFilterCounts(); loadStats()
+      showToast(`${STATUS_LABELS_EN[nextStatus]} ✓`)
+    } catch { showToast('Could not update status.') }
+  })
+
+  // ── Delete (draft only) ───────────────────────────────────────────────────
+  document.getElementById('lab-delete-btn').addEventListener('click', async () => {
+    if (!confirm(lang==='el'?'Διαγραφή παραγγελίας;':'Delete this order?')) return
+    try {
+      await apiFetch(`/api/lab/orders/${_labCurrent.id}`, { method:'DELETE' })
+      _labOrders = _labOrders.filter(o => o.id !== _labCurrent.id)
+      closeEditor(); renderOrderList(); updateFilterCounts(); loadStats()
+      showToast(lang==='el'?'Διαγράφηκε':'Deleted')
+    } catch { showToast('Could not delete.') }
+  })
+
+  // ── Manage labs ────────────────────────────────────────────────────────────
+  document.getElementById('lab-manage-btn').addEventListener('click', async () => {
+    const name = prompt(lang==='el'?'Όνομα νέου εργαστηρίου:':'New lab name:')
+    if (!name?.trim()) return
+    const phone = prompt(lang==='el'?'Τηλέφωνο:':'Phone:') || ''
+    const email = prompt(lang==='el'?'Email:':'Email:') || ''
+    const days  = parseInt(prompt(lang==='el'?'Μέσος χρόνος παράδοσης (ημέρες):':'Avg turnaround days:', '7')) || 7
+    try {
+      const res = await apiFetch('/api/lab/labs', { method:'POST', body:{ name:name.trim(), phone, email, avgTurnaroundDays:days }})
+      const lab = await res.json()
+      if (lab.id) { _labLabs.push(lab); showToast(`${lab.name} added ✓`) }
+    } catch { showToast('Could not add lab.') }
   })
 
 })()
