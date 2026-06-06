@@ -29,26 +29,37 @@ router.post('/login', async (req, res) => {
       [user.id]
     )
 
+    const userPayload = {
+      id:           user.id,
+      email:        user.email,
+      firstName:    user.first_name,
+      lastName:     user.last_name,
+      role:         user.role,
+      practiceId:   user.practice_id,
+      practiceName: user.practice_name,
+      locale:       user.locale,
+      timezone:     user.timezone,
+    }
+
+    // 2FA challenge — if user has TOTP enabled, issue a short-lived MFA token
+    if (user.totp_enabled) {
+      const mfaToken = require('crypto').randomBytes(24).toString('hex')
+      if (typeof router._totpEnqueue === 'function') {
+        router._totpEnqueue(mfaToken, {
+          userId: user.id, practiceId: user.practice_id,
+          role: user.role, email: user.email, user: userPayload
+        })
+      }
+      return res.json({ requiresMFA: true, mfaToken })
+    }
+
     const token = jwt.sign(
       { userId: user.id, practiceId: user.practice_id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
     )
 
-    res.json({
-      token,
-      user: {
-        id:           user.id,
-        email:        user.email,
-        firstName:    user.first_name,
-        lastName:     user.last_name,
-        role:         user.role,
-        practiceId:   user.practice_id,
-        practiceName: user.practice_name,
-        locale:       user.locale,
-        timezone:     user.timezone,
-      }
-    })
+    res.json({ token, user: userPayload })
   } catch (err) {
     console.error('login error', err)
     res.status(500).json({ error: 'Server error' })

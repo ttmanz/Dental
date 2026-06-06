@@ -1,0 +1,20 @@
+{
+  "name": "Dental Assistant Pro",
+  "short_name": "DentalPro",
+  "description": "Practice management — calendar, patients, AI charting",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F4EF",
+  "theme_color": "#3D9E8F",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%233D9E8F'/><text y='140' x='96' text-anchor='middle' font-size='120' font-family='system-ui'>🦷</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "productivity"],
+  "lang": "en"
+}

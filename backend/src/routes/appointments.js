@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const { query } = require('../db')
 const { requireAuth } = require('../middleware/auth')
+const { broadcast } = require('../websocket')
 
 router.use(requireAuth)
 
@@ -78,6 +79,7 @@ router.post('/', async (req, res) => {
        durationMinutes || 30, type || 'consultation', notes || null,
        colorOverride || null, req.user.userId]
     )
+    broadcast('appointment:created', { id: rows[0].id, date: rows[0].appointment_date }, pid(req))
     res.status(201).json(rows[0])
   } catch (err) {
     console.error(err); res.status(500).json({ error: 'Server error' })
@@ -102,6 +104,7 @@ router.patch('/:id', async (req, res) => {
     const { rows } = await query(pid(req),
       `UPDATE appointments SET ${sets.join(', ')} WHERE id = $${vals.length} RETURNING *`, vals)
     if (!rows[0]) return res.status(404).json({ error: 'Not found' })
+    broadcast('appointment:updated', { id: rows[0].id, date: rows[0].appointment_date, status: rows[0].status }, pid(req))
     res.json(rows[0])
   } catch (err) {
     console.error(err); res.status(500).json({ error: 'Server error' })
@@ -114,6 +117,7 @@ router.delete('/:id', async (req, res) => {
     const { rowCount } = await query(pid(req),
       'DELETE FROM appointments WHERE id = $1', [req.params.id])
     if (!rowCount) return res.status(404).json({ error: 'Not found' })
+    broadcast('appointment:deleted', { id: req.params.id }, pid(req))
     res.status(204).end()
   } catch (err) {
     console.error(err); res.status(500).json({ error: 'Server error' })

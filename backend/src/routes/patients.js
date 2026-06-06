@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const { query } = require('../db')
 const { requireAuth } = require('../middleware/auth')
+const { broadcast } = require('../websocket')
 
 router.use(requireAuth)
 
@@ -60,6 +61,7 @@ router.post('/', async (req, res) => {
        phone || null, email || null, address || null, notes || null,
        amka || null, photoUrl || null, req.user.userId]
     )
+    broadcast('patient:created', { id: rows[0].id }, pid(req))
     res.status(201).json(rows[0])
   } catch (err) {
     console.error(err); res.status(500).json({ error: 'Server error' })

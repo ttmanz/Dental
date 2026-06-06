@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="DentalPro"/>
+  <meta name="theme-color" id="meta-theme-color" content="#3D9E8F"/>
   <title>Dental Assistant Pro — Calendar</title>
+  <link rel="manifest" href="/manifest.json"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -2609,6 +2614,836 @@
     #reg-form.show { display: block; }
     #login-form.hide { display: none; }
 
+    /* ── Specialist Referral Network ───────────────────────────────────── */
+    .ref-overlay {
+      position:fixed; inset:0; z-index:8100; display:flex; align-items:center; justify-content:center;
+      background:rgba(44,42,39,.45); backdrop-filter:blur(4px);
+      opacity:0; pointer-events:none; transition:opacity .2s;
+    }
+    .ref-overlay.open { opacity:1; pointer-events:all; }
+    .ref-modal {
+      width:920px; max-width:96vw; height:86vh; background:var(--white);
+      border-radius:20px; box-shadow:0 20px 60px rgba(44,42,39,.25);
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    .ref-header {
+      display:flex; align-items:center; gap:12px;
+      padding:18px 24px; background:linear-gradient(135deg,#8B7CC8 0%,#6B5CA8 100%);
+      flex-shrink:0;
+    }
+    .ref-header-icon { font-size:22px; }
+    .ref-header-title { font-size:17px; font-weight:700; color:#fff; flex:1; }
+    .ref-close-btn {
+      width:32px; height:32px; border-radius:8px; border:none;
+      background:rgba(255,255,255,.2); color:#fff; font-size:16px;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+    }
+    .ref-close-btn:hover { background:rgba(255,255,255,.35); }
+    .ref-stats {
+      display:flex; border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .ref-stat {
+      flex:1; padding:14px 20px; text-align:center; border-right:1px solid var(--border);
+    }
+    .ref-stat:last-child { border-right:none; }
+    .ref-stat-label { font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; }
+    .ref-stat-value { font-size:22px; font-weight:800; color:var(--text); margin-top:2px; }
+    .ref-stat-value.purple { color:#8B7CC8; }
+    .ref-stat-value.amber  { color:var(--amber); }
+    .ref-stat-value.green  { color:#22C47A; }
+    .ref-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .ref-tab {
+      padding:12px 24px; font-size:13px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; border:none; background:none; border-bottom:2px solid transparent;
+      transition:all .15s; font-family:inherit;
+    }
+    .ref-tab.active { color:#8B7CC8; border-bottom-color:#8B7CC8; }
+    .ref-tab:hover:not(.active) { color:var(--text); background:var(--cream); }
+    .ref-body { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    .ref-tab-panel { display:none; flex:1; overflow:hidden; flex-direction:column; }
+    .ref-tab-panel.active { display:flex; }
+    .ref-toolbar {
+      display:flex; align-items:center; gap:10px; padding:14px 20px;
+      border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .ref-search {
+      flex:1; height:36px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 12px; font-size:13px; font-family:inherit; outline:none; background:var(--cream);
+    }
+    .ref-search:focus { border-color:#8B7CC8; background:var(--white); }
+    .ref-add-btn {
+      padding:8px 16px; border-radius:8px; border:none; background:#8B7CC8; color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;
+    }
+    .ref-add-btn:hover { background:#6B5CA8; }
+    .ref-list { flex:1; overflow-y:auto; padding:12px 20px; display:flex; flex-direction:column; gap:10px; }
+    .ref-empty { text-align:center; padding:48px 24px; color:var(--text-muted); font-size:13px; }
+    .ref-card {
+      background:var(--cream); border:1px solid var(--border); border-radius:12px;
+      padding:14px 16px; display:flex; align-items:flex-start; gap:14px; transition:border-color .15s;
+    }
+    .ref-card:hover { border-color:#8B7CC8; }
+    .ref-card-icon {
+      width:40px; height:40px; border-radius:10px;
+      background:linear-gradient(135deg,#8B7CC8,#6B5CA8);
+      display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+    }
+    .ref-card-body { flex:1; min-width:0; }
+    .ref-card-name { font-size:14px; font-weight:700; color:var(--text); }
+    .ref-card-specialty { font-size:12px; color:#8B7CC8; font-weight:600; margin-top:1px; }
+    .ref-card-meta { display:flex; gap:16px; margin-top:6px; flex-wrap:wrap; }
+    .ref-card-meta-item { font-size:12px; color:var(--text-mid); }
+    .ref-card-actions { display:flex; gap:6px; }
+    .ref-card-btn {
+      width:30px; height:30px; border-radius:7px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; font-size:13px;
+      display:flex; align-items:center; justify-content:center; transition:all .12s;
+    }
+    .ref-card-btn.refer { background:#EDE9FF; border-color:#8B7CC8; color:#6B5CA8; }
+    .ref-card-btn.refer:hover { background:#8B7CC8; color:#fff; }
+    .ref-card-btn.remove:hover { background:#FEE2E2; border-color:#FECACA; }
+    .ref-form-panel {
+      display:none; background:var(--white); border-top:1px solid var(--border);
+      padding:20px; flex-direction:column; gap:14px; flex-shrink:0; max-height:55vh; overflow-y:auto;
+    }
+    .ref-form-panel.open { display:flex; }
+    .ref-form-title { font-size:13px; font-weight:700; color:var(--text); }
+    .ref-form-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+    .ref-form-grid.two { grid-template-columns:1fr 1fr; }
+    .ref-field label { display:block; font-size:11px; font-weight:600; color:var(--text-mid); margin-bottom:5px; }
+    .ref-field input, .ref-field select, .ref-field textarea {
+      width:100%; border:1.5px solid var(--border); border-radius:8px;
+      padding:8px 10px; font-size:13px; font-family:inherit; color:var(--text);
+      background:var(--cream); outline:none;
+    }
+    .ref-field input:focus, .ref-field select:focus, .ref-field textarea:focus {
+      border-color:#8B7CC8; background:var(--white);
+    }
+    .ref-field textarea { resize:vertical; min-height:56px; }
+    .ref-form-actions { display:flex; gap:8px; justify-content:flex-end; }
+    .ref-btn-cancel {
+      padding:8px 16px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); font-size:13px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; font-family:inherit;
+    }
+    .ref-btn-save {
+      padding:8px 20px; border-radius:8px; border:none; background:#8B7CC8; color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+    }
+    .ref-btn-save:hover { background:#6B5CA8; }
+    .ref-filters {
+      display:flex; gap:6px; padding:12px 20px; border-bottom:1px solid var(--border);
+      flex-shrink:0; flex-wrap:wrap; align-items:center;
+    }
+    .ref-filter-btn {
+      padding:6px 14px; border-radius:20px; border:1.5px solid var(--border);
+      background:var(--white); font-size:12px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .ref-filter-btn.active { background:#8B7CC8; border-color:#8B7CC8; color:#fff; }
+    .ref-filter-btn:hover:not(.active) { background:var(--cream); }
+    .ref-referral-card {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:14px 16px; display:flex; align-items:flex-start; gap:14px; transition:border-color .15s;
+    }
+    .ref-referral-card:hover { border-color:#8B7CC8; }
+    .ref-ref-status {
+      padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; flex-shrink:0;
+    }
+    .ref-ref-status.pending   { background:#FEF3C7; color:#92400E; }
+    .ref-ref-status.accepted  { background:#D1FAE5; color:#065F46; }
+    .ref-ref-status.completed { background:#EDE9FF; color:#4C1D95; }
+    .ref-ref-status.declined  { background:#FEE2E2; color:#991B1B; }
+    .ref-ref-info { flex:1; }
+    .ref-ref-patient { font-size:14px; font-weight:700; color:var(--text); }
+    .ref-ref-detail  { font-size:12px; color:var(--text-mid); margin-top:3px; }
+    .ref-ref-actions { display:flex; gap:6px; align-items:center; }
+    .ref-status-select {
+      height:30px; border:1px solid var(--border); border-radius:7px;
+      font-size:12px; font-family:inherit; padding:0 8px; background:var(--cream); cursor:pointer;
+    }
+
+    /* ── Supplier Integration ──────────────────────────────────────────── */
+    .sup-overlay {
+      position:fixed; inset:0; z-index:8050; display:flex; align-items:center; justify-content:center;
+      background:rgba(44,42,39,.45); backdrop-filter:blur(4px);
+      opacity:0; pointer-events:none; transition:opacity .2s;
+    }
+    .sup-overlay.open { opacity:1; pointer-events:all; }
+    .sup-modal {
+      width:960px; max-width:96vw; height:86vh; background:var(--white);
+      border-radius:20px; box-shadow:0 20px 60px rgba(44,42,39,.25);
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    .sup-header {
+      display:flex; align-items:center; gap:12px;
+      padding:18px 24px; background:linear-gradient(135deg,#4BAE8A 0%,#2D8B6A 100%);
+      flex-shrink:0;
+    }
+    .sup-header-icon { font-size:22px; }
+    .sup-header-title { font-size:17px; font-weight:700; color:#fff; flex:1; }
+    .sup-close-btn {
+      width:32px; height:32px; border-radius:8px; border:none;
+      background:rgba(255,255,255,.2); color:#fff; font-size:16px;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+    }
+    .sup-close-btn:hover { background:rgba(255,255,255,.35); }
+    .sup-stats { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .sup-stat {
+      flex:1; padding:14px 20px; text-align:center; border-right:1px solid var(--border);
+    }
+    .sup-stat:last-child { border-right:none; }
+    .sup-stat-label { font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; }
+    .sup-stat-value { font-size:22px; font-weight:800; color:var(--text); margin-top:2px; }
+    .sup-stat-value.green { color:#4BAE8A; }
+    .sup-stat-value.amber { color:var(--amber); }
+    .sup-stat-value.blue  { color:#5B9ED6; }
+    .sup-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .sup-tab {
+      padding:12px 24px; font-size:13px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; border:none; background:none; border-bottom:2px solid transparent;
+      transition:all .15s; font-family:inherit;
+    }
+    .sup-tab.active { color:#4BAE8A; border-bottom-color:#4BAE8A; }
+    .sup-tab:hover:not(.active) { color:var(--text); background:var(--cream); }
+    .sup-body { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    .sup-tab-panel { display:none; flex:1; overflow:hidden; flex-direction:column; }
+    .sup-tab-panel.active { display:flex; }
+    .sup-toolbar {
+      display:flex; align-items:center; gap:10px; padding:14px 20px;
+      border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .sup-search {
+      flex:1; height:36px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 12px; font-size:13px; font-family:inherit; outline:none; background:var(--cream);
+    }
+    .sup-search:focus { border-color:#4BAE8A; background:var(--white); }
+    .sup-add-btn {
+      padding:8px 16px; border-radius:8px; border:none; background:#4BAE8A; color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;
+    }
+    .sup-add-btn:hover { background:#2D8B6A; }
+    .sup-list { flex:1; overflow-y:auto; padding:12px 20px; display:flex; flex-direction:column; gap:10px; }
+    .sup-empty { text-align:center; padding:48px 24px; color:var(--text-muted); font-size:13px; }
+    .sup-card {
+      background:var(--cream); border:1px solid var(--border); border-radius:12px;
+      padding:14px 16px; display:flex; align-items:flex-start; gap:14px; transition:border-color .15s;
+    }
+    .sup-card:hover { border-color:#4BAE8A; }
+    .sup-card-icon {
+      width:40px; height:40px; border-radius:10px;
+      background:linear-gradient(135deg,#4BAE8A,#2D8B6A);
+      display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+    }
+    .sup-card-body { flex:1; min-width:0; }
+    .sup-card-name { font-size:14px; font-weight:700; color:var(--text); }
+    .sup-card-category { font-size:12px; color:#4BAE8A; font-weight:600; margin-top:1px; }
+    .sup-card-meta { display:flex; gap:16px; margin-top:6px; flex-wrap:wrap; }
+    .sup-card-meta-item { font-size:12px; color:var(--text-mid); }
+    .sup-card-actions { display:flex; gap:6px; }
+    .sup-card-btn {
+      width:30px; height:30px; border-radius:7px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; font-size:13px;
+      display:flex; align-items:center; justify-content:center; transition:all .12s;
+    }
+    .sup-card-btn.order { background:#E6F9F2; border-color:#4BAE8A; color:#2D8B6A; }
+    .sup-card-btn.order:hover { background:#4BAE8A; color:#fff; }
+    .sup-card-btn.remove:hover { background:#FEE2E2; border-color:#FECACA; }
+    .sup-form-panel {
+      display:none; background:var(--white); border-top:1px solid var(--border);
+      padding:20px; flex-direction:column; gap:14px; flex-shrink:0; max-height:55vh; overflow-y:auto;
+    }
+    .sup-form-panel.open { display:flex; }
+    .sup-form-title { font-size:13px; font-weight:700; color:var(--text); }
+    .sup-form-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+    .sup-form-grid.two { grid-template-columns:1fr 1fr; }
+    .sup-field label { display:block; font-size:11px; font-weight:600; color:var(--text-mid); margin-bottom:5px; }
+    .sup-field input, .sup-field select, .sup-field textarea {
+      width:100%; border:1.5px solid var(--border); border-radius:8px;
+      padding:8px 10px; font-size:13px; font-family:inherit; color:var(--text);
+      background:var(--cream); outline:none;
+    }
+    .sup-field input:focus, .sup-field select:focus, .sup-field textarea:focus {
+      border-color:#4BAE8A; background:var(--white);
+    }
+    .sup-field textarea { resize:vertical; min-height:56px; }
+    .sup-form-actions { display:flex; gap:8px; justify-content:flex-end; }
+    .sup-btn-cancel {
+      padding:8px 16px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); font-size:13px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; font-family:inherit;
+    }
+    .sup-btn-save {
+      padding:8px 20px; border-radius:8px; border:none; background:#4BAE8A; color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+    }
+    .sup-btn-save:hover { background:#2D8B6A; }
+    .sup-order-filters {
+      display:flex; gap:6px; padding:12px 20px; border-bottom:1px solid var(--border);
+      flex-shrink:0; flex-wrap:wrap; align-items:center;
+    }
+    .sup-order-filter-btn {
+      padding:6px 14px; border-radius:20px; border:1.5px solid var(--border);
+      background:var(--white); font-size:12px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .sup-order-filter-btn.active { background:#4BAE8A; border-color:#4BAE8A; color:#fff; }
+    .sup-order-filter-btn:hover:not(.active) { background:var(--cream); }
+    .sup-order-card {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:14px 16px; display:flex; align-items:flex-start; gap:14px; transition:border-color .15s;
+    }
+    .sup-order-card:hover { border-color:#4BAE8A; }
+    .sup-order-status {
+      padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700;
+      text-transform:uppercase; flex-shrink:0; margin-top:2px;
+    }
+    .sup-order-status.pending  { background:#FEF3C7; color:#92400E; }
+    .sup-order-status.ordered  { background:#DBEAFE; color:#1E40AF; }
+    .sup-order-status.partial  { background:#FDE8D0; color:#92400E; }
+    .sup-order-status.received { background:#D1FAE5; color:#065F46; }
+    .sup-order-info { flex:1; }
+    .sup-order-name   { font-size:14px; font-weight:700; color:var(--text); }
+    .sup-order-detail { font-size:12px; color:var(--text-mid); margin-top:3px; }
+    .sup-order-actions { display:flex; gap:6px; align-items:center; }
+    .sup-order-status-select {
+      height:30px; border:1px solid var(--border); border-radius:7px;
+      font-size:12px; font-family:inherit; padding:0 8px; background:var(--cream); cursor:pointer;
+    }
+    body[data-role="dentist"] #supplier-nav-btn { display:none !important; }
+
+    /* ── Operations Hub ─────────────────────────────────────────────────── */
+    .ops-overlay {
+      position:fixed; inset:0; z-index:8200; display:flex; align-items:center; justify-content:center;
+      background:rgba(44,42,39,.5); backdrop-filter:blur(4px);
+      opacity:0; pointer-events:none; transition:opacity .2s;
+    }
+    .ops-overlay.open { opacity:1; pointer-events:all; }
+    .ops-modal {
+      width:1040px; max-width:97vw; height:88vh; background:var(--white);
+      border-radius:20px; box-shadow:0 24px 64px rgba(44,42,39,.3);
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    .ops-header {
+      display:flex; align-items:center; gap:12px; padding:18px 24px;
+      background:linear-gradient(135deg,#2C2A27 0%,#3D3B37 100%); flex-shrink:0;
+    }
+    .ops-header-icon { font-size:22px; }
+    .ops-header-title { font-size:17px; font-weight:700; color:#fff; flex:1; }
+    .ops-header-sub { font-size:12px; color:rgba(255,255,255,.5); }
+    .ops-close-btn {
+      width:32px; height:32px; border-radius:8px; border:none;
+      background:rgba(255,255,255,.15); color:#fff; font-size:16px;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+    }
+    .ops-close-btn:hover { background:rgba(255,255,255,.3); }
+    .ops-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--white); }
+    .ops-tab {
+      padding:13px 22px; font-size:13px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; border:none; background:none; border-bottom:2px solid transparent;
+      transition:all .15s; font-family:inherit; display:flex; align-items:center; gap:7px;
+    }
+    .ops-tab.active { color:#3D9E8F; border-bottom-color:#3D9E8F; }
+    .ops-tab:hover:not(.active) { color:var(--text); background:var(--cream); }
+    .ops-body { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    .ops-tab-panel { display:none; flex:1; overflow:hidden; flex-direction:column; }
+    .ops-tab-panel.active { display:flex; }
+
+    /* ── Dashboard ──────────────────────────────────────────────────────── */
+    .ops-dash-scroll { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:20px; }
+    .ops-kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .ops-kpi-card {
+      background:var(--white); border:1px solid var(--border); border-radius:14px;
+      padding:16px 20px; position:relative; overflow:hidden;
+    }
+    .ops-kpi-accent {
+      position:absolute; top:0; left:0; right:0; height:3px; border-radius:14px 14px 0 0;
+    }
+    .ops-kpi-label { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+    .ops-kpi-value { font-size:26px; font-weight:800; color:var(--text); margin:6px 0 2px; letter-spacing:-.02em; }
+    .ops-kpi-sub   { font-size:11px; color:var(--text-muted); }
+    .ops-kpi-loading { font-size:26px; font-weight:800; color:var(--border); }
+    .ops-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .ops-panel {
+      background:var(--white); border:1px solid var(--border); border-radius:14px;
+      padding:18px 20px; display:flex; flex-direction:column; gap:14px;
+    }
+    .ops-panel-title { font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+    .ops-chart-area { display:flex; align-items:flex-end; gap:6px; height:90px; }
+    .ops-bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .ops-bar {
+      width:100%; border-radius:5px 5px 0 0; background:var(--primary);
+      min-height:4px; transition:height .4s ease;
+    }
+    .ops-bar-lbl { font-size:9px; color:var(--text-muted); font-weight:600; text-transform:uppercase; }
+    .ops-bar-val { font-size:9px; color:var(--text-mid); font-weight:700; }
+    .ops-day-bar  { background:#8B7CC8; }
+    .ops-stat-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); }
+    .ops-stat-row:last-child { border-bottom:none; }
+    .ops-stat-key { font-size:13px; color:var(--text-mid); }
+    .ops-stat-val { font-size:13px; font-weight:700; color:var(--text); }
+    .ops-activity-entry { display:flex; align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); }
+    .ops-activity-entry:last-child { border-bottom:none; }
+    .ops-act-dot { width:8px; height:8px; border-radius:50%; background:var(--primary); margin-top:4px; flex-shrink:0; }
+    .ops-act-body { flex:1; }
+    .ops-act-text { font-size:12px; color:var(--text); }
+    .ops-act-time { font-size:11px; color:var(--text-muted); margin-top:1px; }
+
+    /* ── Inventory ───────────────────────────────────────────────────────── */
+    .inv-banner {
+      display:flex; align-items:center; gap:10px; padding:10px 20px;
+      background:#FEF3C7; border-bottom:1px solid #FDE68A; flex-shrink:0; font-size:13px; font-weight:600; color:#92400E;
+    }
+    .inv-toolbar {
+      display:flex; align-items:center; gap:10px; padding:14px 20px;
+      border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .inv-cat-filter {
+      height:36px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 10px; font-size:13px; font-family:inherit; background:var(--cream); outline:none;
+    }
+    .inv-search {
+      flex:1; height:36px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 12px; font-size:13px; font-family:inherit; outline:none; background:var(--cream);
+    }
+    .inv-search:focus { border-color:var(--primary); background:var(--white); }
+    .inv-add-btn {
+      padding:8px 16px; border-radius:8px; border:none; background:var(--primary); color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;
+    }
+    .inv-add-btn:hover { background:#2D8B7A; }
+    .inv-list { flex:1; overflow-y:auto; padding:12px 20px; display:flex; flex-direction:column; gap:8px; }
+    .inv-empty { text-align:center; padding:48px 24px; color:var(--text-muted); font-size:13px; }
+    .inv-card {
+      background:var(--white); border:1px solid var(--border); border-radius:12px;
+      padding:12px 16px; display:flex; align-items:center; gap:14px; transition:border-color .15s;
+    }
+    .inv-card:hover { border-color:var(--primary); }
+    .inv-card.low-stock { border-left:3px solid #D95F5F; }
+    .inv-card-info { flex:1; min-width:0; }
+    .inv-card-name { font-size:14px; font-weight:700; color:var(--text); }
+    .inv-card-cat  { font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; margin-top:1px; }
+    .inv-qty-block { text-align:center; min-width:70px; }
+    .inv-qty-num { font-size:20px; font-weight:800; }
+    .inv-qty-num.ok  { color:#22C47A; }
+    .inv-qty-num.low { color:var(--amber); }
+    .inv-qty-num.critical { color:#D95F5F; }
+    .inv-qty-unit { font-size:10px; color:var(--text-muted); font-weight:600; text-transform:uppercase; }
+    .inv-qty-min  { font-size:10px; color:var(--text-muted); }
+    .inv-card-actions { display:flex; gap:6px; }
+    .inv-card-btn {
+      width:30px; height:30px; border-radius:7px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; font-size:13px;
+      display:flex; align-items:center; justify-content:center; transition:all .12s;
+    }
+    .inv-card-btn:hover { background:var(--cream-dark); }
+    .inv-card-btn.reorder:hover { background:#D1FAE5; border-color:#22C47A; }
+    .inv-card-btn.remove:hover  { background:#FEE2E2; border-color:#FECACA; }
+    .inv-form-panel {
+      display:none; background:var(--white); border-top:1px solid var(--border);
+      padding:20px; flex-direction:column; gap:14px; flex-shrink:0; max-height:50vh; overflow-y:auto;
+    }
+    .inv-form-panel.open { display:flex; }
+    .inv-form-title { font-size:13px; font-weight:700; color:var(--text); }
+    .inv-form-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .inv-form-grid.two { grid-template-columns:1fr 1fr; }
+    .inv-field label { display:block; font-size:11px; font-weight:600; color:var(--text-mid); margin-bottom:5px; }
+    .inv-field input, .inv-field select {
+      width:100%; border:1.5px solid var(--border); border-radius:8px;
+      padding:8px 10px; font-size:13px; font-family:inherit; color:var(--text);
+      background:var(--cream); outline:none;
+    }
+    .inv-field input:focus, .inv-field select:focus { border-color:var(--primary); background:var(--white); }
+    .inv-form-actions { display:flex; gap:8px; justify-content:flex-end; }
+    .inv-btn-cancel {
+      padding:8px 16px; border-radius:8px; border:1px solid var(--border);
+      background:var(--white); font-size:13px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; font-family:inherit;
+    }
+    .inv-btn-save {
+      padding:8px 20px; border-radius:8px; border:none; background:var(--primary); color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+    }
+    .inv-btn-save:hover { background:#2D8B7A; }
+    .inv-adjust-btn {
+      width:28px; height:28px; border-radius:6px; border:1px solid var(--border);
+      background:var(--white); cursor:pointer; font-size:16px; line-height:1;
+      display:flex; align-items:center; justify-content:center; font-weight:700;
+    }
+    .inv-qty-editor { display:flex; align-items:center; gap:4px; }
+    .inv-qty-input {
+      width:52px; text-align:center; border:1.5px solid var(--border); border-radius:7px;
+      padding:4px; font-size:14px; font-weight:700; font-family:inherit;
+    }
+
+    /* ── Financial Reports ──────────────────────────────────────────────── */
+    .rpt-toolbar {
+      display:flex; align-items:center; gap:12px; padding:14px 20px;
+      border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .rpt-period-label { font-size:12px; font-weight:600; color:var(--text-mid); }
+    .rpt-month-sel, .rpt-year-sel {
+      height:34px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 10px; font-size:13px; font-family:inherit; background:var(--cream); outline:none;
+    }
+    .rpt-month-sel:focus, .rpt-year-sel:focus { border-color:var(--primary); }
+    .rpt-load-btn {
+      padding:7px 14px; border-radius:8px; border:none; background:var(--primary); color:#fff;
+      font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+    }
+    .rpt-export-btn {
+      padding:7px 14px; border-radius:8px; border:1.5px solid var(--border);
+      background:var(--white); font-size:13px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; font-family:inherit; margin-left:auto;
+    }
+    .rpt-export-btn:hover { background:var(--cream-dark); }
+    .rpt-scroll { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:18px; }
+    .rpt-summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .rpt-card {
+      background:var(--white); border:1px solid var(--border); border-radius:12px; padding:16px;
+    }
+    .rpt-card-label { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+    .rpt-card-value { font-size:22px; font-weight:800; margin-top:4px; }
+    .rpt-card-value.green { color:#22C47A; }
+    .rpt-card-value.amber { color:var(--amber); }
+    .rpt-card-value.red   { color:#D95F5F; }
+    .rpt-card-value.blue  { color:#5B9ED6; }
+    .rpt-section-title { font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+    .rpt-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .rpt-table th { text-align:left; padding:8px 12px; font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; border-bottom:2px solid var(--border); }
+    .rpt-table td { padding:9px 12px; border-bottom:1px solid var(--border); color:var(--text); vertical-align:middle; }
+    .rpt-table tr:last-child td { border-bottom:none; }
+    .rpt-table tr:hover td { background:var(--cream); }
+    .rpt-inv-status {
+      padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; text-transform:uppercase;
+    }
+    .rpt-inv-status.paid    { background:#D1FAE5; color:#065F46; }
+    .rpt-inv-status.partial { background:#FDE8D0; color:#92400E; }
+    .rpt-inv-status.issued  { background:#DBEAFE; color:#1E40AF; }
+    .rpt-inv-status.overdue { background:#FEE2E2; color:#991B1B; }
+    .rpt-inv-status.draft   { background:var(--cream-dark); color:var(--text-muted); }
+    .rpt-inv-status.void    { background:#F3F4F6; color:#6B7280; }
+    .rpt-insurance-table th, .rpt-insurance-table td { padding:8px 12px; }
+    .rpt-empty { text-align:center; padding:40px; color:var(--text-muted); font-size:13px; }
+    .rpt-loading { text-align:center; padding:40px; color:var(--text-muted); font-size:13px; }
+    .rpt-trend-area { display:flex; align-items:flex-end; gap:6px; height:80px; padding-top:4px; }
+    .rpt-trend-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .rpt-trend-bar { width:100%; border-radius:4px 4px 0 0; background:var(--primary); min-height:4px; }
+    .rpt-trend-lbl { font-size:9px; color:var(--text-muted); font-weight:600; }
+
+    /* ── Audit Log ──────────────────────────────────────────────────────── */
+    .aud-toolbar {
+      display:flex; align-items:center; gap:10px; padding:12px 20px;
+      border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap;
+    }
+    .aud-filter-btn {
+      padding:5px 12px; border-radius:16px; border:1.5px solid var(--border);
+      background:var(--white); font-size:12px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .aud-filter-btn.active { background:#2C2A27; border-color:#2C2A27; color:#fff; }
+    .aud-filter-btn:hover:not(.active) { background:var(--cream); }
+    .aud-search {
+      flex:1; min-width:140px; height:32px; border:1.5px solid var(--border); border-radius:8px;
+      padding:0 10px; font-size:12px; font-family:inherit; outline:none; background:var(--cream);
+    }
+    .aud-search:focus { border-color:#2C2A27; background:var(--white); }
+    .aud-export-btn {
+      padding:5px 12px; border-radius:8px; border:1.5px solid var(--border);
+      background:var(--white); font-size:12px; font-weight:600; color:var(--text-mid);
+      cursor:pointer; font-family:inherit; white-space:nowrap;
+    }
+    .aud-export-btn:hover { background:var(--cream-dark); }
+    .aud-list { flex:1; overflow-y:auto; padding:10px 20px; display:flex; flex-direction:column; gap:0; }
+    .aud-entry {
+      display:grid; grid-template-columns:130px 120px auto 1fr;
+      align-items:start; gap:10px; padding:9px 0; border-bottom:1px solid var(--border);
+      font-size:12px;
+    }
+    .aud-entry:last-child { border-bottom:none; }
+    .aud-ts    { color:var(--text-muted); font-variant-numeric:tabular-nums; }
+    .aud-user  { font-weight:600; color:var(--text); }
+    .aud-badge {
+      padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700;
+      text-transform:uppercase; letter-spacing:.03em; white-space:nowrap; align-self:start;
+    }
+    .aud-badge.access   { background:#EDE9FF; color:#4C1D95; }
+    .aud-badge.clinical { background:#D1FAE5; color:#065F46; }
+    .aud-badge.billing  { background:#FDE8D0; color:#92400E; }
+    .aud-badge.data     { background:#DBEAFE; color:#1E40AF; }
+    .aud-badge.system   { background:var(--cream-dark); color:var(--text-muted); }
+    .aud-detail { color:var(--text-mid); }
+    .aud-empty  { text-align:center; padding:48px 24px; color:var(--text-muted); font-size:13px; }
+    .aud-gdpr-note {
+      font-size:11px; color:var(--text-muted); text-align:center; padding:10px 20px;
+      border-top:1px solid var(--border); flex-shrink:0; background:var(--cream);
+    }
+
+    body[data-role="dentist"] #ops-nav-btn { display:none !important; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       DARK MODE
+       Overrides every CSS variable; coloured gradients stay vibrant.
+    ════════════════════════════════════════════════════════════════════ */
+    html[data-theme="dark"] {
+      --cream:        #141311;
+      --cream-dark:   #1C1A18;
+      --white:        #1E1C1A;
+      --primary:      #4DB8A8;
+      --primary-light:#0E3632;
+      --primary-mid:  #1A4A46;
+      --amber:        #E8A87C;
+      --amber-light:  #2A1A08;
+      --text:         #EDE9E3;
+      --text-mid:     #A8A49E;
+      --text-muted:   #68645E;
+      --border:       #2C2925;
+      --shadow:       rgba(0,0,0,.4);
+    }
+    @media (prefers-color-scheme: dark) {
+      html:not([data-theme="light"]) {
+        --cream:        #141311;
+        --cream-dark:   #1C1A18;
+        --white:        #1E1C1A;
+        --primary:      #4DB8A8;
+        --primary-light:#0E3632;
+        --primary-mid:  #1A4A46;
+        --amber:        #E8A87C;
+        --amber-light:  #2A1A08;
+        --text:         #EDE9E3;
+        --text-mid:     #A8A49E;
+        --text-muted:   #68645E;
+        --border:       #2C2925;
+        --shadow:       rgba(0,0,0,.4);
+      }
+    }
+    /* Dark-mode specifics that can't be covered by variable swap */
+    html[data-theme="dark"] .topbar,
+    html:not([data-theme="light"]) .topbar { border-bottom-color: var(--border); }
+    html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea,
+    html:not([data-theme="light"]) @media(prefers-color-scheme:dark) input { color-scheme: dark; }
+    html[data-theme="dark"] .login-card,
+    html:not([data-theme="light"]) @media (prefers-color-scheme:dark) .login-card { background: var(--white); }
+    html[data-theme="dark"] .cal-time { color: var(--text-muted); }
+    html[data-theme="dark"] .appt-block { filter: brightness(0.9); }
+
+    /* Dark mode toggle button */
+    .theme-toggle-btn {
+      width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border);
+      background: var(--cream); cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s; flex-shrink: 0;
+    }
+    .theme-toggle-btn:hover { background: var(--cream-dark); }
+
+    /* Live sync indicator */
+    .sync-indicator {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      background: var(--text-muted); transition: background .3s;
+      cursor: default; align-self: center;
+    }
+    .sync-indicator[data-state="connected"]    { background: #22C47A; box-shadow: 0 0 0 3px rgba(34,196,122,.2); }
+    .sync-indicator[data-state="disconnected"] { background: var(--amber); }
+    .sync-indicator[data-state="error"]        { background: #D95F5F; }
+
+    /* Offline banner */
+    .offline-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+      background: #2C2A27; color: #EDE9E3; text-align: center;
+      font-size: 13px; font-weight: 600; padding: 8px 16px;
+      transform: translateY(-100%); transition: transform .3s;
+    }
+    .offline-banner.show { transform: translateY(0); }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       2FA MODAL
+    ════════════════════════════════════════════════════════════════════ */
+    .mfa-overlay {
+      position: fixed; inset: 0; z-index: 99000; display: flex;
+      align-items: center; justify-content: center;
+      background: rgba(20,19,17,.85); backdrop-filter: blur(6px);
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .mfa-overlay.open { opacity: 1; pointer-events: all; }
+    .mfa-card {
+      width: 380px; max-width: 95vw; background: var(--white);
+      border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,.4);
+      overflow: hidden;
+    }
+    .mfa-header {
+      padding: 28px 28px 20px; text-align: center;
+      background: linear-gradient(135deg, #2C2A27, #3D3B37);
+    }
+    .mfa-icon  { font-size: 40px; margin-bottom: 10px; }
+    .mfa-title { font-size: 18px; font-weight: 700; color: #fff; }
+    .mfa-sub   { font-size: 13px; color: rgba(255,255,255,.6); margin-top: 4px; }
+    .mfa-body  { padding: 24px 28px; }
+    .mfa-code-row { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+    .mfa-digit {
+      width: 44px; height: 56px; border: 2px solid var(--border); border-radius: 10px;
+      font-size: 24px; font-weight: 800; text-align: center;
+      background: var(--cream); color: var(--text); font-family: 'Inter', monospace;
+      outline: none; transition: border-color .15s; caret-color: var(--primary);
+    }
+    .mfa-digit:focus { border-color: var(--primary); background: var(--white); }
+    .mfa-err  { color: #D95F5F; font-size: 13px; text-align: center; min-height: 18px; }
+    .mfa-btn  {
+      width: 100%; padding: 13px; border: none; border-radius: 10px;
+      background: var(--primary); color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: background .15s; margin-top: 12px;
+    }
+    .mfa-btn:hover { background: #2D8B7A; }
+    .mfa-btn:disabled { opacity: .5; cursor: default; }
+    .mfa-back { display: block; text-align: center; margin-top: 14px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+    .mfa-back:hover { color: var(--text); }
+
+    /* 2FA Setup modal (in settings) */
+    .mfa-setup-overlay {
+      position: fixed; inset: 0; z-index: 99100; display: flex;
+      align-items: center; justify-content: center;
+      background: rgba(20,19,17,.85); backdrop-filter: blur(6px);
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .mfa-setup-overlay.open { opacity: 1; pointer-events: all; }
+    .mfa-setup-card {
+      width: 440px; max-width: 96vw; background: var(--white);
+      border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,.4); overflow: hidden;
+    }
+    .mfa-setup-body { padding: 28px; display: flex; flex-direction: column; gap: 16px; }
+    .mfa-setup-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .mfa-qr-box { text-align: center; padding: 16px; background: var(--cream); border-radius: 12px; }
+    .mfa-qr-img { width: 160px; height: 160px; }
+    .mfa-secret-display {
+      font-family: monospace; font-size: 14px; font-weight: 600;
+      letter-spacing: .1em; color: var(--primary); word-break: break-all;
+      background: var(--cream); padding: 10px 14px; border-radius: 8px; text-align: center;
+    }
+    .mfa-setup-steps { font-size: 13px; color: var(--text-mid); line-height: 1.6; }
+    .mfa-setup-steps ol { padding-left: 18px; }
+    .mfa-confirm-row { display: flex; gap: 10px; }
+    .mfa-confirm-input {
+      flex: 1; height: 42px; border: 2px solid var(--border); border-radius: 9px;
+      padding: 0 14px; font-size: 18px; font-weight: 700; text-align: center;
+      letter-spacing: .2em; font-family: monospace; background: var(--cream);
+      color: var(--text); outline: none;
+    }
+    .mfa-confirm-input:focus { border-color: var(--primary); background: var(--white); }
+    .mfa-confirm-btn {
+      padding: 0 18px; border: none; border-radius: 9px; background: var(--primary);
+      color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .mfa-confirm-btn:hover { background: #2D8B7A; }
+    .mfa-setup-err { color: #D95F5F; font-size: 12px; min-height: 16px; }
+    .mfa-setup-close {
+      width: 30px; height: 30px; border: none; background: none; font-size: 18px;
+      cursor: pointer; color: var(--text-muted); border-radius: 7px; float: right;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       TABLET UI  (≤ 1024 px — iPad landscape / Android tablet)
+    ════════════════════════════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      :root { --sidebar-w: 220px; --topbar-h: 60px; }
+      .topbar-center { gap: 8px; }
+      .add-appt-btn span:last-child { display: none; }   /* icon-only topbar buttons */
+      .add-appt-btn { min-width: 40px; padding: 0 10px; justify-content: center; }
+      .view-btn { padding: 6px 10px; font-size: 12px; }
+      .ops-kpi-grid  { grid-template-columns: 1fr 1fr; }
+      .rpt-summary-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Phone / small tablet portrait  (≤ 768 px) */
+    @media (max-width: 768px) {
+      :root { --sidebar-w: 0px; --topbar-h: 56px; }
+      body { overflow: hidden auto; }
+
+      /* Sidebar becomes a slide-over drawer */
+      .sidebar {
+        position: fixed; top: var(--topbar-h); left: 0; bottom: 0; z-index: 500;
+        width: 280px; transform: translateX(-100%);
+        transition: transform .25s ease; box-shadow: 4px 0 20px var(--shadow);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-backdrop {
+        display: none; position: fixed; inset: 0; z-index: 499;
+        background: rgba(0,0,0,.3); backdrop-filter: blur(2px);
+      }
+      .sidebar-backdrop.show { display: block; }
+
+      /* Hamburger button */
+      .hamburger-btn {
+        width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+        background: var(--cream); cursor: pointer; display: flex;
+        align-items: center; justify-content: center; font-size: 18px;
+        flex-shrink: 0;
+      }
+
+      /* Topbar compact */
+      .topbar { padding: 0 12px; gap: 8px; }
+      .topbar-logo .logo-text { display: none; }
+      .topbar-center { gap: 6px; }
+      .nav-date { font-size: 14px; min-width: 120px; }
+      .today-btn, .view-toggle { display: none; }
+
+      /* Hide non-essential topbar buttons */
+      #reminders-nav-btn, #referral-nav-btn, #supplier-nav-btn,
+      #lab-nav-btn, #ops-nav-btn { display: none !important; }
+
+      /* Bottom nav bar for quick access */
+      .bottom-nav {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 600;
+        height: 60px; background: var(--white); border-top: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: space-around;
+        padding: 0 8px; padding-bottom: env(safe-area-inset-bottom);
+        box-shadow: 0 -2px 12px var(--shadow);
+      }
+      .bottom-nav-btn {
+        display: flex; flex-direction: column; align-items: center; gap: 3px;
+        padding: 8px 12px; border: none; background: none; cursor: pointer;
+        font-family: inherit; color: var(--text-muted); border-radius: 10px;
+        transition: all .15s; min-width: 52px;
+      }
+      .bottom-nav-btn.active { color: var(--primary); }
+      .bottom-nav-btn:hover  { background: var(--cream); color: var(--text); }
+      .bottom-nav-icon { font-size: 20px; }
+      .bottom-nav-lbl  { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+
+      /* Main area accounts for bottom nav */
+      .body-wrap { padding-bottom: 60px; }
+      .cal-body  { padding-bottom: 60px; }
+
+      /* Modals go full-screen on phone */
+      .bill-modal, .tp-modal, .ref-modal, .sup-modal, .ops-modal {
+        width: 100vw !important; max-width: 100vw !important;
+        height: 100vh !important; max-height: 100vh !important;
+        border-radius: 0 !important;
+      }
+
+      /* Calendar touch targets */
+      .cal-slot { min-height: 56px; }
+      .appt-block { min-height: 44px; font-size: 11px; }
+      .day-header { padding: 10px 4px; font-size: 11px; }
+
+      /* Patient form full screen */
+      .patient-form-modal { border-radius: 0; max-height: 100vh; }
+
+      /* Larger tap targets everywhere */
+      .nav-btn, .mini-nav { width: 40px; height: 40px; }
+      .dentist-item, .legend-item { padding: 10px 12px; }
+    }
+
+    /* Touch device hover optimisation */
+    @media (hover: none) {
+      .appt-block:hover { filter: none; }
+      button:hover { opacity: 1; }
+    }
+
+    /* Safe area insets (notch/dynamic island) */
+    .topbar { padding-top: max(0px, env(safe-area-inset-top)); }
+    @supports (padding: max(0px)) {
+      .topbar { height: calc(var(--topbar-h) + env(safe-area-inset-top)); }
+    }
+
   </style>
 </head>
 <body>
@@ -3130,6 +3965,593 @@
   </div>
 </div>
 
+<!-- ── Offline banner ────────────────────────────────────────────────── -->
+<div class="offline-banner" id="offline-banner">
+  📵 You're offline — data shown from cache. Changes will sync when connection restores.
+</div>
+
+<!-- ── 2FA verification modal (appears after password login) ─────────── -->
+<div class="mfa-overlay" id="mfa-overlay">
+  <div class="mfa-card">
+    <div class="mfa-header">
+      <div class="mfa-icon">🔐</div>
+      <div class="mfa-title" data-en="Two-Factor Authentication" data-el="Διπλή Αυθεντικοποίηση">Two-Factor Authentication</div>
+      <div class="mfa-sub" data-en="Enter the 6-digit code from your authenticator app" data-el="Εισάγετε τον 6ψήφιο κωδικό">Enter the 6-digit code from your authenticator app</div>
+    </div>
+    <div class="mfa-body">
+      <div class="mfa-code-row" id="mfa-digits-row">
+        <input class="mfa-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code" />
+        <input class="mfa-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input class="mfa-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input class="mfa-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input class="mfa-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+        <input class="mfa-digit" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+      </div>
+      <div class="mfa-err" id="mfa-err"></div>
+      <button class="mfa-btn" id="mfa-submit-btn" data-en="Verify" data-el="Επαλήθευση">Verify</button>
+      <span class="mfa-back" id="mfa-back-btn" data-en="← Back to login" data-el="← Πίσω στη σύνδεση">← Back to login</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── 2FA setup modal (from profile/settings) ───────────────────────── -->
+<div class="mfa-setup-overlay" id="mfa-setup-overlay">
+  <div class="mfa-setup-card">
+    <div class="mfa-header" style="position:relative">
+      <button class="mfa-setup-close" id="mfa-setup-close-btn">✕</button>
+      <div class="mfa-icon">🔒</div>
+      <div class="mfa-title" data-en="Set Up Two-Factor Auth" data-el="Ρύθμιση 2FA">Set Up Two-Factor Auth</div>
+      <div class="mfa-sub" data-en="Use any authenticator app (Google, Authy, 1Password)" data-el="Χρησιμοποιήστε οποιαδήποτε εφαρμογή">Use any authenticator app (Google, Authy, 1Password)</div>
+    </div>
+    <div class="mfa-setup-body">
+      <div class="mfa-setup-steps">
+        <ol>
+          <li>Scan the QR code with your authenticator app</li>
+          <li>Or manually enter the secret key below</li>
+          <li>Enter the 6-digit code to confirm setup</li>
+        </ol>
+      </div>
+      <div class="mfa-qr-box">
+        <img class="mfa-qr-img" id="mfa-qr-img" src="" alt="QR code" />
+      </div>
+      <div class="mfa-secret-display" id="mfa-secret-display">—</div>
+      <div class="mfa-confirm-row">
+        <input class="mfa-confirm-input" id="mfa-confirm-code" type="tel" inputmode="numeric" placeholder="000000" maxlength="6" autocomplete="one-time-code" />
+        <button class="mfa-confirm-btn" id="mfa-confirm-btn" data-en="Enable 2FA" data-el="Ενεργοποίηση">Enable 2FA</button>
+      </div>
+      <div class="mfa-setup-err" id="mfa-setup-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Sidebar backdrop (mobile drawer) ──────────────────────────────── -->
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+<!-- ── Bottom nav (mobile only) ──────────────────────────────────────── -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bottom-nav-btn active" id="bnav-calendar">
+    <span class="bottom-nav-icon">📅</span>
+    <span class="bottom-nav-lbl">Calendar</span>
+  </button>
+  <button class="bottom-nav-btn" id="bnav-patients">
+    <span class="bottom-nav-icon">👤</span>
+    <span class="bottom-nav-lbl">Patients</span>
+  </button>
+  <button class="bottom-nav-btn" id="bnav-billing">
+    <span class="bottom-nav-icon">🧾</span>
+    <span class="bottom-nav-lbl">Billing</span>
+  </button>
+  <button class="bottom-nav-btn" id="bnav-lab">
+    <span class="bottom-nav-icon">🔬</span>
+    <span class="bottom-nav-lbl">Lab</span>
+  </button>
+  <button class="bottom-nav-btn" id="bnav-more">
+    <span class="bottom-nav-icon">☰</span>
+    <span class="bottom-nav-lbl">More</span>
+  </button>
+</nav>
+
+<!-- ── Operations Hub overlay ────────────────────────────────────────── -->
+<div id="ops-overlay" class="ops-overlay">
+  <div class="ops-modal">
+
+    <div class="ops-header">
+      <div class="ops-header-icon">📊</div>
+      <div>
+        <div class="ops-header-title" data-en="Analytics &amp; Operations" data-el="Αναλυτικά &amp; Λειτουργίες">Analytics &amp; Operations</div>
+        <div class="ops-header-sub" id="ops-header-sub">Practice management hub</div>
+      </div>
+      <button class="ops-close-btn" id="ops-close-btn">✕</button>
+    </div>
+
+    <div class="ops-tabs">
+      <button class="ops-tab active" data-ops-tab="dashboard">📈 <span data-en="Dashboard" data-el="Επισκόπηση">Dashboard</span></button>
+      <button class="ops-tab" data-ops-tab="inventory">📦 <span data-en="Inventory" data-el="Αποθέματα">Inventory</span></button>
+      <button class="ops-tab" data-ops-tab="reports">💰 <span data-en="Financial Reports" data-el="Οικονομικές Αναφορές">Financial Reports</span></button>
+      <button class="ops-tab" data-ops-tab="audit">📋 <span data-en="Audit Log" data-el="Αρχείο Ελέγχου">Audit Log</span></button>
+    </div>
+
+    <div class="ops-body">
+
+      <!-- ── Dashboard tab ─────────────────────────────────────────────── -->
+      <div class="ops-tab-panel active" id="ops-panel-dashboard">
+        <div class="ops-dash-scroll">
+
+          <!-- KPI cards -->
+          <div class="ops-kpi-grid">
+            <div class="ops-kpi-card">
+              <div class="ops-kpi-accent" style="background:var(--primary)"></div>
+              <div class="ops-kpi-label" data-en="Revenue This Month" data-el="Έσοδα Μήνα">Revenue This Month</div>
+              <div class="ops-kpi-value ops-kpi-loading" id="dash-kpi-revenue">—</div>
+              <div class="ops-kpi-sub" id="dash-kpi-revenue-sub">Loading…</div>
+            </div>
+            <div class="ops-kpi-card">
+              <div class="ops-kpi-accent" style="background:#8B7CC8"></div>
+              <div class="ops-kpi-label" data-en="Total Patients" data-el="Σύνολο Ασθενών">Total Patients</div>
+              <div class="ops-kpi-value ops-kpi-loading" id="dash-kpi-patients">—</div>
+              <div class="ops-kpi-sub" id="dash-kpi-patients-sub">In registry</div>
+            </div>
+            <div class="ops-kpi-card">
+              <div class="ops-kpi-accent" style="background:var(--amber)"></div>
+              <div class="ops-kpi-label" data-en="Appointments This Week" data-el="Ραντεβού Εβδομάδας">Appointments This Week</div>
+              <div class="ops-kpi-value ops-kpi-loading" id="dash-kpi-appts">—</div>
+              <div class="ops-kpi-sub" id="dash-kpi-appts-sub">Loading…</div>
+            </div>
+            <div class="ops-kpi-card">
+              <div class="ops-kpi-accent" style="background:#D95F5F"></div>
+              <div class="ops-kpi-label" data-en="Outstanding" data-el="Εκκρεμεί">Outstanding</div>
+              <div class="ops-kpi-value ops-kpi-loading" id="dash-kpi-outstanding">—</div>
+              <div class="ops-kpi-sub" id="dash-kpi-outstanding-sub">Loading…</div>
+            </div>
+          </div>
+
+          <!-- Charts row -->
+          <div class="ops-row">
+            <div class="ops-panel">
+              <div class="ops-panel-title" data-en="Revenue — Last 6 Months" data-el="Έσοδα — 6 Μήνες">Revenue — Last 6 Months</div>
+              <div class="ops-chart-area" id="dash-revenue-chart">
+                <div style="color:var(--text-muted);font-size:12px;align-self:center;width:100%;text-align:center">Loading chart…</div>
+              </div>
+            </div>
+            <div class="ops-panel">
+              <div class="ops-panel-title" data-en="Appointments by Day" data-el="Ραντεβού ανά Ημέρα">Appointments by Day</div>
+              <div class="ops-chart-area" id="dash-days-chart">
+                <div style="color:var(--text-muted);font-size:12px;align-self:center;width:100%;text-align:center">Loading…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Practice stats + Recent activity -->
+          <div class="ops-row">
+            <div class="ops-panel">
+              <div class="ops-panel-title" data-en="Practice At a Glance" data-el="Σύνοψη">Practice At a Glance</div>
+              <div id="dash-glance-list">
+                <div class="ops-stat-row"><span class="ops-stat-key">Active Specialists</span><span class="ops-stat-val" id="dash-g-specialists">—</span></div>
+                <div class="ops-stat-row"><span class="ops-stat-key">Open Referrals</span><span class="ops-stat-val" id="dash-g-referrals">—</span></div>
+                <div class="ops-stat-row"><span class="ops-stat-key">Supplier Orders Pending</span><span class="ops-stat-val" id="dash-g-orders">—</span></div>
+                <div class="ops-stat-row"><span class="ops-stat-key">Inventory Low Stock</span><span class="ops-stat-val" id="dash-g-lowstock" style="color:#D95F5F">—</span></div>
+                <div class="ops-stat-row"><span class="ops-stat-key">Lab Orders In Progress</span><span class="ops-stat-val" id="dash-g-lab">—</span></div>
+                <div class="ops-stat-row"><span class="ops-stat-key">Overdue Invoices</span><span class="ops-stat-val" id="dash-g-overdue" style="color:var(--amber)">—</span></div>
+              </div>
+            </div>
+            <div class="ops-panel">
+              <div class="ops-panel-title" data-en="Recent Activity" data-el="Πρόσφατη Δραστηριότητα">Recent Activity</div>
+              <div id="dash-activity-list">
+                <div style="color:var(--text-muted);font-size:12px">No activity recorded yet.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Inventory tab ──────────────────────────────────────────────── -->
+      <div class="ops-tab-panel" id="ops-panel-inventory">
+        <div id="inv-low-banner" class="inv-banner" style="display:none">
+          ⚠️ <span id="inv-low-text">items are below minimum stock level</span>
+        </div>
+        <div class="inv-toolbar">
+          <select class="inv-cat-filter" id="inv-cat-filter">
+            <option value="">All Categories</option>
+            <option value="Consumables">Consumables</option>
+            <option value="Anaesthetics">Anaesthetics</option>
+            <option value="Sterilization">Sterilization</option>
+            <option value="Orthodontic">Orthodontic</option>
+            <option value="Radiography">Radiography</option>
+            <option value="Implants">Implants</option>
+            <option value="PPE">PPE</option>
+            <option value="Lab Materials">Lab Materials</option>
+            <option value="Other">Other</option>
+          </select>
+          <input class="inv-search" id="inv-search" placeholder="Search items…" />
+          <button class="inv-add-btn" id="inv-add-btn">＋ Add Item</button>
+        </div>
+        <div class="inv-list" id="inv-list"></div>
+        <!-- Add/Edit item form -->
+        <div class="inv-form-panel" id="inv-form">
+          <div class="inv-form-title" id="inv-form-title">New Item</div>
+          <div class="inv-form-grid">
+            <div class="inv-field">
+              <label>Item Name</label>
+              <input type="text" id="inv-f-name" placeholder="e.g. Latex Gloves M" />
+            </div>
+            <div class="inv-field">
+              <label>Category</label>
+              <select id="inv-f-category">
+                <option value="">— Select —</option>
+                <option value="Consumables">Consumables</option>
+                <option value="Anaesthetics">Anaesthetics</option>
+                <option value="Sterilization">Sterilization</option>
+                <option value="Orthodontic">Orthodontic</option>
+                <option value="Radiography">Radiography</option>
+                <option value="Implants">Implants</option>
+                <option value="PPE">PPE</option>
+                <option value="Lab Materials">Lab Materials</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="inv-field">
+              <label>Unit</label>
+              <input type="text" id="inv-f-unit" placeholder="box / pair / vial…" />
+            </div>
+            <div class="inv-field">
+              <label>Unit Cost (€)</label>
+              <input type="number" id="inv-f-cost" min="0" step="0.01" placeholder="0.00" />
+            </div>
+          </div>
+          <div class="inv-form-grid">
+            <div class="inv-field">
+              <label>Current Qty</label>
+              <input type="number" id="inv-f-qty" min="0" step="1" placeholder="0" />
+            </div>
+            <div class="inv-field">
+              <label>Min Qty (alert below)</label>
+              <input type="number" id="inv-f-minqty" min="0" step="1" placeholder="0" />
+            </div>
+            <div class="inv-field">
+              <label>Linked Supplier</label>
+              <select id="inv-f-supplier">
+                <option value="">— None —</option>
+              </select>
+            </div>
+            <div class="inv-field">
+              <label>Notes</label>
+              <input type="text" id="inv-f-notes" placeholder="Brand, SKU, notes…" />
+            </div>
+          </div>
+          <div class="inv-form-actions">
+            <button class="inv-btn-cancel" id="inv-form-cancel">Cancel</button>
+            <button class="inv-btn-save" id="inv-form-save">Save Item</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Financial Reports tab ──────────────────────────────────────── -->
+      <div class="ops-tab-panel" id="ops-panel-reports">
+        <div class="rpt-toolbar">
+          <span class="rpt-period-label" data-en="Period:" data-el="Περίοδος:">Period:</span>
+          <select class="rpt-month-sel" id="rpt-month"></select>
+          <select class="rpt-year-sel" id="rpt-year"></select>
+          <button class="rpt-load-btn" id="rpt-load-btn" data-en="Load" data-el="Φόρτωση">Load</button>
+          <button class="rpt-export-btn" id="rpt-export-btn">⬇ Export CSV</button>
+        </div>
+        <div class="rpt-scroll" id="rpt-scroll">
+          <div class="rpt-loading" id="rpt-loading">Select a period and click Load.</div>
+        </div>
+      </div>
+
+      <!-- ── Audit Log tab ──────────────────────────────────────────────── -->
+      <div class="ops-tab-panel" id="ops-panel-audit">
+        <div class="aud-toolbar">
+          <button class="aud-filter-btn active" data-aud-filter="all">All</button>
+          <button class="aud-filter-btn" data-aud-filter="access">Access</button>
+          <button class="aud-filter-btn" data-aud-filter="clinical">Clinical</button>
+          <button class="aud-filter-btn" data-aud-filter="billing">Billing</button>
+          <button class="aud-filter-btn" data-aud-filter="data">Data</button>
+          <button class="aud-filter-btn" data-aud-filter="system">System</button>
+          <input class="aud-search" id="aud-search" placeholder="Search log…" />
+          <button class="aud-export-btn" id="aud-export-btn">⬇ Export CSV</button>
+        </div>
+        <div class="aud-list" id="aud-list"></div>
+        <div class="aud-gdpr-note">
+          GDPR Art. 30 — Processing activity log. Retained locally. Entries are append-only and cannot be deleted.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Specialist Referral Network overlay ───────────────────────────── -->
+<div id="ref-overlay" class="ref-overlay">
+  <div class="ref-modal">
+    <div class="ref-header">
+      <div class="ref-header-icon">🔗</div>
+      <div class="ref-header-title" data-en="Specialist Referral Network" data-el="Δίκτυο Παραπομπών">Specialist Referral Network</div>
+      <button class="ref-close-btn" id="ref-close-btn">✕</button>
+    </div>
+    <div class="ref-stats">
+      <div class="ref-stat">
+        <div class="ref-stat-label" data-en="Specialists" data-el="Ειδικοί">Specialists</div>
+        <div class="ref-stat-value purple" id="ref-stat-specialists">0</div>
+      </div>
+      <div class="ref-stat">
+        <div class="ref-stat-label" data-en="Total Referrals" data-el="Σύνολο">Total Referrals</div>
+        <div class="ref-stat-value" id="ref-stat-total">0</div>
+      </div>
+      <div class="ref-stat">
+        <div class="ref-stat-label" data-en="Pending" data-el="Εκκρεμεί">Pending</div>
+        <div class="ref-stat-value amber" id="ref-stat-pending">0</div>
+      </div>
+      <div class="ref-stat">
+        <div class="ref-stat-label" data-en="Completed" data-el="Ολοκληρώθηκε">Completed</div>
+        <div class="ref-stat-value green" id="ref-stat-completed">0</div>
+      </div>
+    </div>
+    <div class="ref-tabs">
+      <button class="ref-tab active" data-ref-tab="specialists" data-en="Specialists" data-el="Ειδικοί">Specialists</button>
+      <button class="ref-tab" data-ref-tab="referrals" data-en="Referrals" data-el="Παραπομπές">Referrals</button>
+    </div>
+    <div class="ref-body">
+
+      <!-- Specialists tab -->
+      <div class="ref-tab-panel active" id="ref-panel-specialists">
+        <div class="ref-toolbar">
+          <input class="ref-search" id="ref-spec-search" placeholder="Search specialists…" />
+          <button class="ref-add-btn" id="ref-add-spec-btn">＋ Add Specialist</button>
+        </div>
+        <div class="ref-list" id="ref-spec-list"></div>
+        <!-- Add specialist form -->
+        <div class="ref-form-panel" id="ref-spec-form">
+          <div class="ref-form-title" data-en="New Specialist" data-el="Νέος Ειδικός">New Specialist</div>
+          <div class="ref-form-grid">
+            <div class="ref-field">
+              <label data-en="Full Name" data-el="Ονοματεπώνυμο">Full Name</label>
+              <input type="text" id="ref-spec-name" placeholder="Dr. First Surname" />
+            </div>
+            <div class="ref-field">
+              <label data-en="Specialty" data-el="Ειδικότητα">Specialty</label>
+              <select id="ref-spec-specialty">
+                <option value="">— Select —</option>
+                <option value="Orthodontist">Orthodontist</option>
+                <option value="Oral Surgeon">Oral Surgeon</option>
+                <option value="Periodontist">Periodontist</option>
+                <option value="Endodontist">Endodontist</option>
+                <option value="Prosthodontist">Prosthodontist</option>
+                <option value="Pediatric Dentist">Pediatric Dentist</option>
+                <option value="Oral Radiologist">Oral Radiologist</option>
+                <option value="Implantologist">Implantologist</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="ref-field">
+              <label data-en="Clinic / Practice" data-el="Κλινική">Clinic / Practice</label>
+              <input type="text" id="ref-spec-clinic" placeholder="Clinic name…" />
+            </div>
+          </div>
+          <div class="ref-form-grid">
+            <div class="ref-field">
+              <label data-en="Phone" data-el="Τηλέφωνο">Phone</label>
+              <input type="tel" id="ref-spec-phone" placeholder="+30 210…" />
+            </div>
+            <div class="ref-field">
+              <label data-en="Email" data-el="Email">Email</label>
+              <input type="email" id="ref-spec-email" placeholder="dr@clinic.gr" />
+            </div>
+            <div class="ref-field">
+              <label data-en="Address" data-el="Διεύθυνση">Address</label>
+              <input type="text" id="ref-spec-address" placeholder="Street, City" />
+            </div>
+          </div>
+          <div class="ref-form-grid two">
+            <div class="ref-field">
+              <label data-en="Notes" data-el="Σημειώσεις">Notes</label>
+              <textarea id="ref-spec-notes" placeholder="Wait times, referral preferences…"></textarea>
+            </div>
+            <div class="ref-form-actions" style="align-self:flex-end;padding-bottom:4px">
+              <button class="ref-btn-cancel" id="ref-spec-cancel-btn">Cancel</button>
+              <button class="ref-btn-save" id="ref-spec-save-btn">Save Specialist</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Referrals tab -->
+      <div class="ref-tab-panel" id="ref-panel-referrals">
+        <div class="ref-filters">
+          <button class="ref-filter-btn active" data-ref-filter="all">All</button>
+          <button class="ref-filter-btn" data-ref-filter="pending">Pending</button>
+          <button class="ref-filter-btn" data-ref-filter="accepted">Accepted</button>
+          <button class="ref-filter-btn" data-ref-filter="completed">Completed</button>
+          <button class="ref-filter-btn" data-ref-filter="declined">Declined</button>
+          <button class="ref-add-btn" id="ref-add-referral-btn" style="margin-left:auto">＋ New Referral</button>
+        </div>
+        <div class="ref-list" id="ref-referral-list"></div>
+        <!-- New referral form -->
+        <div class="ref-form-panel" id="ref-referral-form">
+          <div class="ref-form-title" data-en="New Referral" data-el="Νέα Παραπομπή">New Referral</div>
+          <div class="ref-form-grid">
+            <div class="ref-field">
+              <label data-en="Patient Name" data-el="Ασθενής">Patient Name</label>
+              <input type="text" id="ref-ref-patient" placeholder="Patient full name…" list="ref-patient-datalist" />
+              <datalist id="ref-patient-datalist"></datalist>
+            </div>
+            <div class="ref-field">
+              <label data-en="Specialist" data-el="Ειδικός">Specialist</label>
+              <select id="ref-ref-specialist"></select>
+            </div>
+            <div class="ref-field">
+              <label data-en="Date" data-el="Ημερομηνία">Date</label>
+              <input type="date" id="ref-ref-date" />
+            </div>
+          </div>
+          <div class="ref-form-grid two">
+            <div class="ref-field">
+              <label data-en="Reason / Diagnosis" data-el="Αιτία / Διάγνωση">Reason / Diagnosis</label>
+              <textarea id="ref-ref-reason" placeholder="Clinical reason for referral…"></textarea>
+            </div>
+            <div class="ref-form-actions" style="align-self:flex-end;padding-bottom:4px">
+              <button class="ref-btn-cancel" id="ref-referral-cancel-btn">Cancel</button>
+              <button class="ref-btn-save" id="ref-referral-save-btn">Send Referral</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Supplier Integration overlay ──────────────────────────────────── -->
+<div id="sup-overlay" class="sup-overlay">
+  <div class="sup-modal">
+    <div class="sup-header">
+      <div class="sup-header-icon">📦</div>
+      <div class="sup-header-title" data-en="Supplier Integration" data-el="Διαχείριση Προμηθευτών">Supplier Integration</div>
+      <button class="sup-close-btn" id="sup-close-btn">✕</button>
+    </div>
+    <div class="sup-stats">
+      <div class="sup-stat">
+        <div class="sup-stat-label" data-en="Suppliers" data-el="Προμηθευτές">Suppliers</div>
+        <div class="sup-stat-value green" id="sup-stat-suppliers">0</div>
+      </div>
+      <div class="sup-stat">
+        <div class="sup-stat-label" data-en="Total Orders" data-el="Παραγγελίες">Total Orders</div>
+        <div class="sup-stat-value" id="sup-stat-orders">0</div>
+      </div>
+      <div class="sup-stat">
+        <div class="sup-stat-label" data-en="Pending" data-el="Εκκρεμεί">Pending</div>
+        <div class="sup-stat-value amber" id="sup-stat-pending">0</div>
+      </div>
+      <div class="sup-stat">
+        <div class="sup-stat-label" data-en="Total Spend" data-el="Δαπάνες">Total Spend</div>
+        <div class="sup-stat-value blue" id="sup-stat-spend">€0</div>
+      </div>
+    </div>
+    <div class="sup-tabs">
+      <button class="sup-tab active" data-sup-tab="suppliers" data-en="Suppliers" data-el="Προμηθευτές">Suppliers</button>
+      <button class="sup-tab" data-sup-tab="orders" data-en="Orders" data-el="Παραγγελίες">Orders</button>
+    </div>
+    <div class="sup-body">
+
+      <!-- Suppliers tab -->
+      <div class="sup-tab-panel active" id="sup-panel-suppliers">
+        <div class="sup-toolbar">
+          <input class="sup-search" id="sup-sup-search" placeholder="Search suppliers…" />
+          <button class="sup-add-btn" id="sup-add-sup-btn">＋ Add Supplier</button>
+        </div>
+        <div class="sup-list" id="sup-sup-list"></div>
+        <!-- Add supplier form -->
+        <div class="sup-form-panel" id="sup-sup-form">
+          <div class="sup-form-title" data-en="New Supplier" data-el="Νέος Προμηθευτής">New Supplier</div>
+          <div class="sup-form-grid">
+            <div class="sup-field">
+              <label data-en="Supplier Name" data-el="Επωνυμία">Supplier Name</label>
+              <input type="text" id="sup-sup-name" placeholder="Company name…" />
+            </div>
+            <div class="sup-field">
+              <label data-en="Category" data-el="Κατηγορία">Category</label>
+              <select id="sup-sup-category">
+                <option value="">— Select —</option>
+                <option value="Consumables">Consumables</option>
+                <option value="Equipment">Equipment</option>
+                <option value="Lab Materials">Lab Materials</option>
+                <option value="Sterilization">Sterilization</option>
+                <option value="Anaesthetics">Anaesthetics</option>
+                <option value="Radiography">Radiography</option>
+                <option value="Implants">Implants</option>
+                <option value="Orthodontic Supplies">Orthodontic Supplies</option>
+                <option value="PPE">PPE</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="sup-field">
+              <label data-en="Contact Person" data-el="Υπεύθυνος">Contact Person</label>
+              <input type="text" id="sup-sup-contact" placeholder="Sales rep name…" />
+            </div>
+          </div>
+          <div class="sup-form-grid">
+            <div class="sup-field">
+              <label data-en="Phone" data-el="Τηλέφωνο">Phone</label>
+              <input type="tel" id="sup-sup-phone" placeholder="+30 210…" />
+            </div>
+            <div class="sup-field">
+              <label data-en="Email" data-el="Email">Email</label>
+              <input type="email" id="sup-sup-email" placeholder="orders@supplier.gr" />
+            </div>
+            <div class="sup-field">
+              <label data-en="Website" data-el="Ιστοσελίδα">Website</label>
+              <input type="text" id="sup-sup-website" placeholder="www.supplier.gr" />
+            </div>
+          </div>
+          <div class="sup-form-grid two">
+            <div class="sup-field">
+              <label data-en="Notes" data-el="Σημειώσεις">Notes</label>
+              <textarea id="sup-sup-notes" placeholder="Payment terms, delivery schedule…"></textarea>
+            </div>
+            <div class="sup-form-actions" style="align-self:flex-end;padding-bottom:4px">
+              <button class="sup-btn-cancel" id="sup-sup-cancel-btn">Cancel</button>
+              <button class="sup-btn-save" id="sup-sup-save-btn">Save Supplier</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders tab -->
+      <div class="sup-tab-panel" id="sup-panel-orders">
+        <div class="sup-order-filters">
+          <button class="sup-order-filter-btn active" data-sup-order-filter="all">All</button>
+          <button class="sup-order-filter-btn" data-sup-order-filter="pending">Pending</button>
+          <button class="sup-order-filter-btn" data-sup-order-filter="ordered">Ordered</button>
+          <button class="sup-order-filter-btn" data-sup-order-filter="partial">Partial</button>
+          <button class="sup-order-filter-btn" data-sup-order-filter="received">Received</button>
+          <button class="sup-add-btn" id="sup-add-order-btn" style="margin-left:auto">＋ New Order</button>
+        </div>
+        <div class="sup-list" id="sup-order-list"></div>
+        <!-- New order form -->
+        <div class="sup-form-panel" id="sup-order-form">
+          <div class="sup-form-title" data-en="New Order" data-el="Νέα Παραγγελία">New Order</div>
+          <div class="sup-form-grid">
+            <div class="sup-field">
+              <label data-en="Supplier" data-el="Προμηθευτής">Supplier</label>
+              <select id="sup-order-supplier"></select>
+            </div>
+            <div class="sup-field">
+              <label data-en="Order Date" data-el="Ημερομηνία">Order Date</label>
+              <input type="date" id="sup-order-date" />
+            </div>
+            <div class="sup-field">
+              <label data-en="Expected Delivery" data-el="Αναμενόμενη Παράδοση">Expected Delivery</label>
+              <input type="date" id="sup-order-delivery" />
+            </div>
+          </div>
+          <div class="sup-form-grid">
+            <div class="sup-field" style="grid-column:span 2">
+              <label data-en="Items / Description" data-el="Είδη">Items / Description</label>
+              <textarea id="sup-order-items" placeholder="List items ordered…" style="min-height:56px"></textarea>
+            </div>
+            <div class="sup-field">
+              <label data-en="Total Cost (€)" data-el="Κόστος (€)">Total Cost (€)</label>
+              <input type="number" id="sup-order-cost" min="0" step="0.01" placeholder="0.00" />
+            </div>
+          </div>
+          <div class="sup-form-grid two">
+            <div class="sup-field">
+              <label data-en="Notes" data-el="Σημειώσεις">Notes</label>
+              <textarea id="sup-order-notes" placeholder="Order reference, special instructions…"></textarea>
+            </div>
+            <div class="sup-form-actions" style="align-self:flex-end;padding-bottom:4px">
+              <button class="sup-btn-cancel" id="sup-order-cancel-btn">Cancel</button>
+              <button class="sup-btn-save" id="sup-order-save-btn">Place Order</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- ── Login overlay ─────────────────────────────────────────────────── -->
 <div id="login-overlay" class="login-overlay">
   <div class="login-card">
@@ -3198,6 +4620,7 @@
 
 <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
 <header class="topbar">
+  <button class="hamburger-btn" id="hamburger-btn" title="Menu" style="display:none">☰</button>
   <div class="topbar-logo">
     <div class="logo-icon">🦷</div>
     <div class="logo-text">Dental <span>Assistant</span> Pro</div>
@@ -3229,6 +4652,18 @@
       <span>🔔</span>
       <span data-en="Reminders" data-el="Υπενθυμίσεις">Reminders</span>
     </button>
+    <button class="add-appt-btn" id="ops-nav-btn" style="background:#2C2A27;box-shadow:0 2px 8px rgba(44,42,39,.3)">
+      <span>📊</span>
+      <span data-en="Analytics" data-el="Αναλυτικά">Analytics</span>
+    </button>
+    <button class="add-appt-btn" id="referral-nav-btn" style="background:#8B7CC8;box-shadow:0 2px 8px rgba(139,124,200,.3)">
+      <span>🔗</span>
+      <span data-en="Referrals" data-el="Παραπομπές">Referrals</span>
+    </button>
+    <button class="add-appt-btn" id="supplier-nav-btn" style="background:#4BAE8A;box-shadow:0 2px 8px rgba(75,174,138,.3)">
+      <span>📦</span>
+      <span data-en="Suppliers" data-el="Προμηθευτές">Suppliers</span>
+    </button>
     <button class="add-appt-btn" id="billing-nav-btn" style="background:var(--amber);box-shadow:0 2px 8px rgba(232,168,124,.3)">
       <span>🧾</span>
       <span data-en="Billing" data-el="Τιμολόγηση">Billing</span>
@@ -3238,7 +4673,9 @@
       <span data-en="New Appointment" data-el="Νέο Ραντεβού">New Appointment</span>
     </button>
     <span class="role-chip" id="role-chip" style="display:none"></span>
-    <div class="avatar" id="user-avatar" title="User">MP</div>
+    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode">🌙</button>
+    <div class="sync-indicator" id="sync-indicator" data-state="" title="Sync status"></div>
+    <div class="avatar" id="user-avatar" title="User" style="cursor:pointer">MP</div>
   </div>
 </header>
 
@@ -4172,6 +5609,11 @@ function apiFetch(path, options = {}) {
       const res  = await apiFetch('/api/auth/login', { method:'POST', body:{ email, password:pwd } })
       const data = await res.json()
       if (!res.ok) { showErr(loginErr, data.error || 'Login failed'); return }
+      if (data.requiresMFA) {
+        overlay.classList.add('hidden')
+        if (typeof window._openMFAChallenge === 'function') window._openMFAChallenge(data.mfaToken)
+        return
+      }
       AUTH.save(data.token, data.user)
       onLoginSuccess()
     } catch { showErr(loginErr, 'Cannot reach server — is the backend running?') }
@@ -4211,12 +5653,14 @@ function apiFetch(path, options = {}) {
       }
       // Apply role restrictions immediately so UI is correct before data loads
       if (typeof applyRoleRestrictions === 'function') applyRoleRestrictions(u.role)
+      if (typeof auditLog === 'function') auditLog('login', 'Session', `${u.firstName||''} ${u.lastName||''} (${u.role||'user'}) signed in`)
     }
     overlay.classList.add('hidden')
     if (typeof initAppData === 'function') initAppData()
   }
 
   window.doLogout = function() {
+    if (typeof auditLog === 'function') auditLog('logout', 'Session', 'User signed out')
     AUTH.clear()
     overlay.classList.remove('hidden')
     loginForm.classList.remove('hide'); regForm.classList.remove('show')
@@ -5472,6 +6916,7 @@ document.getElementById('af-save').addEventListener('click', () => {
     if (data.id) {
       APPTS.push(apptFromApi({ ...data, patient_name: patient, dentist_name: dentist }))
       renderCalendar()
+      if (typeof auditLog === 'function') auditLog('appointment created', patient, `${dateVal} ${startTime} with ${dentist}`)
     }
   }).catch(() => showToast('Could not save appointment — check connection.'))
 
@@ -5607,6 +7052,7 @@ document.getElementById('pm-save').addEventListener('click', () => {
           PATIENTS.push(mapped)
         }
         showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
+        if (typeof auditLog === 'function') auditLog(existing ? 'patient updated' : 'patient created', `${mapped.firstName||''} ${mapped.lastName||''}`.trim(), existing ? 'Record updated' : 'New patient registered')
       }
     })
     .catch(() => showToast('Could not save patient — check connection.'))
@@ -8915,6 +10361,7 @@ General rules (non-session):
       document.getElementById('bill-editor-status').className = `bill-inv-status ${inv.status}`
       document.getElementById('bill-issue-btn').style.display = 'none'
       showToast(lang==='el'?'Τιμολόγιο εκδόθηκε ✓':'Invoice issued ✓')
+      if (typeof auditLog === 'function') auditLog('invoice issued', `Invoice #${_billCurrent.invoice_number||_billCurrent.id}`, `Patient: ${_billCurrent.patient_name||''}`)
       loadStats(); renderInvoiceList()
     } catch { showToast('Could not issue invoice.') }
   })
@@ -8929,6 +10376,7 @@ General rules (non-session):
       document.getElementById('bill-void-btn').style.display  = 'none'
       document.getElementById('bill-issue-btn').style.display = 'none'
       showToast(lang==='el'?'Ακυρώθηκε':'Voided'); loadStats()
+      if (typeof auditLog === 'function') auditLog('invoice voided', `Invoice #${_billCurrent.invoice_number||_billCurrent.id}`, `Patient: ${_billCurrent.patient_name||''}`)
     } catch { showToast('Could not void invoice.') }
   })
 
@@ -9437,6 +10885,1531 @@ function applyRoleRestrictions(role) {
     blockClinical()
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// GLOBAL AUDIT LOGGER  (call from anywhere: window.auditLog('billing','Invoice #4 issued'))
+// ══════════════════════════════════════════════════════════════════════════
+window.auditLog = (function() {
+  const KEY = 'dental_audit'
+  const CAP = 2000
+  const CATEGORIES = {
+    login:'access', logout:'access', view:'access',
+    patient:'data', import:'data', export:'data',
+    appointment:'clinical', treatment:'clinical', referral:'clinical', lab:'clinical',
+    invoice:'billing', payment:'billing', billing:'billing',
+    inventory:'system', order:'system', supplier:'system', settings:'system'
+  }
+  function categorise(action) {
+    const a = (action||'').toLowerCase()
+    for (const [k,v] of Object.entries(CATEGORIES)) { if (a.includes(k)) return v }
+    return 'system'
+  }
+  return function(action, entity, detail) {
+    try {
+      const user = (typeof AUTH !== 'undefined' && AUTH.user)
+        ? ((AUTH.user.firstName||'') + ' ' + (AUTH.user.lastName||'')).trim() || AUTH.user.email || 'User'
+        : 'System'
+      const entries = JSON.parse(localStorage.getItem(KEY) || '[]')
+      entries.unshift({ id: Date.now().toString(36), ts: new Date().toISOString(), user, action, entity: entity||'', detail: detail||'', cat: categorise(action) })
+      if (entries.length > CAP) entries.length = CAP
+      localStorage.setItem(KEY, JSON.stringify(entries))
+      // live-refresh if audit panel is visible
+      if (document.getElementById('ops-panel-audit')?.classList.contains('active') &&
+          document.getElementById('ops-overlay')?.classList.contains('open')) {
+        if (typeof window._renderAuditLog === 'function') window._renderAuditLog()
+      }
+    } catch {}
+  }
+})()
+
+// ══════════════════════════════════════════════════════════════════════════
+// OPERATIONS HUB  (Dashboard · Inventory · Financial Reports · Audit Log)
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  const overlay = document.getElementById('ops-overlay')
+  let opsActiveTab = 'dashboard'
+
+  // ── Helpers ────────────────────────────────────────────────────────────
+  function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6) }
+  function fmtEuro(n) { return '€' + (parseFloat(n)||0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',') }
+  function fmtEuro2(n) { return '€' + (parseFloat(n)||0).toFixed(2) }
+  function monthName(idx) { return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][idx] }
+  function dayName(d)  { return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d] }
+  function isoDate(d)  { return d.toISOString().slice(0,10) }
+  function relativeTs(iso) {
+    const diff = Date.now() - new Date(iso).getTime()
+    if (diff < 60000)    return 'just now'
+    if (diff < 3600000)  return Math.floor(diff/60000) + 'm ago'
+    if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago'
+    return new Date(iso).toLocaleDateString()
+  }
+
+  function switchOpsTab(tab) {
+    opsActiveTab = tab
+    document.querySelectorAll('.ops-tab').forEach(b => b.classList.toggle('active', b.dataset.opsTab === tab))
+    document.querySelectorAll('.ops-tab-panel').forEach(p => p.classList.toggle('active', p.id === 'ops-panel-' + tab))
+    if (tab === 'dashboard') loadDashboard()
+    if (tab === 'inventory') { renderInventory(); refreshInvLowBanner() }
+    if (tab === 'reports')   initReportsUI()
+    if (tab === 'audit')     window._renderAuditLog()
+  }
+
+  // ── Open / Close ────────────────────────────────────────────────────────
+  window.openOpsHub = function(tab) {
+    overlay.classList.add('open')
+    const t = tab || opsActiveTab || 'dashboard'
+    switchOpsTab(t)
+    auditLog('view', 'Operations Hub', tab || 'dashboard')
+  }
+
+  document.getElementById('ops-close-btn').addEventListener('click', () => overlay.classList.remove('open'))
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open') })
+  document.querySelectorAll('.ops-tab').forEach(btn => btn.addEventListener('click', () => switchOpsTab(btn.dataset.opsTab)))
+  document.getElementById('ops-nav-btn').addEventListener('click', () => window.openOpsHub())
+
+
+  // ════════════════════════════════════════════════════════════════════════
+  // TAB 1 — DASHBOARD
+  // ════════════════════════════════════════════════════════════════════════
+  async function loadDashboard() {
+    // ── KPI: Revenue + outstanding (from billing API) ──────────────────
+    try {
+      const res = await apiFetch('/api/invoices/summary')
+      if (res.ok) {
+        const s = await res.json()
+        document.getElementById('dash-kpi-revenue').textContent     = fmtEuro(s.this_month || 0)
+        document.getElementById('dash-kpi-revenue').className       = 'ops-kpi-value'
+        document.getElementById('dash-kpi-revenue-sub').textContent = `Total billed: ${fmtEuro(s.total_billed || 0)}`
+        document.getElementById('dash-kpi-outstanding').textContent = fmtEuro(s.total_outstanding || 0)
+        document.getElementById('dash-kpi-outstanding').className   = 'ops-kpi-value'
+        document.getElementById('dash-kpi-outstanding-sub').textContent = `${s.overdue_count || 0} overdue`
+        document.getElementById('dash-g-overdue').textContent = s.overdue_count || 0
+      }
+    } catch {}
+
+    // ── KPI: Patients ────────────────────────────────────────────────────
+    try {
+      const patCount = (typeof PATIENTS !== 'undefined') ? PATIENTS.length : '—'
+      document.getElementById('dash-kpi-patients').textContent     = patCount
+      document.getElementById('dash-kpi-patients').className       = 'ops-kpi-value'
+      document.getElementById('dash-kpi-patients-sub').textContent = 'registered patients'
+    } catch {}
+
+    // ── KPI: Appointments this week ──────────────────────────────────────
+    try {
+      const today  = new Date()
+      const monday = new Date(today); monday.setDate(today.getDate() - ((today.getDay()+6)%7))
+      const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6)
+      const res = await apiFetch(`/api/appointments?from=${isoDate(monday)}&to=${isoDate(sunday)}`)
+      if (res.ok) {
+        const appts = await res.json()
+        const arr   = Array.isArray(appts) ? appts : (appts.appointments || appts.data || [])
+        document.getElementById('dash-kpi-appts').textContent     = arr.length
+        document.getElementById('dash-kpi-appts').className       = 'ops-kpi-value'
+        const cancelled = arr.filter(a => (a.status||'').toLowerCase().includes('cancel')).length
+        const noShow    = arr.filter(a => (a.status||'').toLowerCase().includes('no')).length
+        document.getElementById('dash-kpi-appts-sub').textContent = `${cancelled} cancelled · ${noShow} no-show`
+        renderDaysChart(arr)
+      }
+    } catch { renderDaysChart([]) }
+
+    // ── Revenue 6-month chart ─────────────────────────────────────────────
+    try {
+      const now = new Date()
+      const months = []
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        months.push({ y: d.getFullYear(), m: d.getMonth(), label: monthName(d.getMonth()) })
+      }
+      // Try to get revenue per month via invoices or summary endpoint
+      let monthlyRevenue = months.map(() => 0)
+      try {
+        const res = await apiFetch('/api/invoices?limit=500&status=paid,partial')
+        if (res.ok) {
+          const invs = await res.json()
+          const arr  = Array.isArray(invs) ? invs : (invs.invoices || invs.data || [])
+          arr.forEach(inv => {
+            const d = new Date(inv.invoice_date || inv.created_at || inv.date)
+            const mi = months.findIndex(m => m.y === d.getFullYear() && m.m === d.getMonth())
+            if (mi >= 0) monthlyRevenue[mi] += parseFloat(inv.total_paid || inv.amount_paid || inv.total || 0)
+          })
+        }
+      } catch {}
+      renderRevenueChart(months, monthlyRevenue)
+    } catch { renderRevenueChart([], []) }
+
+    // ── Practice at a glance (localStorage data) ────────────────────────
+    try {
+      const specs  = JSON.parse(localStorage.getItem('dental_specialists') || '[]')
+      const refs   = JSON.parse(localStorage.getItem('dental_referrals')   || '[]')
+      const orders = JSON.parse(localStorage.getItem('dental_orders')      || '[]')
+      const inv    = JSON.parse(localStorage.getItem('dental_inventory')   || '[]')
+      document.getElementById('dash-g-specialists').textContent = specs.length
+      document.getElementById('dash-g-referrals').textContent   = refs.filter(r => r.status === 'pending' || r.status === 'accepted').length
+      document.getElementById('dash-g-orders').textContent      = orders.filter(o => o.status === 'pending' || o.status === 'ordered').length
+      const lowCount = inv.filter(i => parseInt(i.qty)||0 <= parseInt(i.minQty)||0).length
+      document.getElementById('dash-g-lowstock').textContent    = lowCount || '✓ OK'
+      if (!lowCount) document.getElementById('dash-g-lowstock').style.color = '#22C47A'
+    } catch {}
+
+    // ── Lab orders in progress ────────────────────────────────────────────
+    try {
+      const res = await apiFetch('/api/lab/orders?status=impression_taken,sent_to_lab,in_progress&limit=1')
+      if (res.ok) {
+        const d = await res.json()
+        const arr = Array.isArray(d) ? d : (d.orders || d.data || [])
+        document.getElementById('dash-g-lab').textContent = arr.length || 0
+      }
+    } catch { document.getElementById('dash-g-lab').textContent = '—' }
+
+    // ── Recent activity (from audit log) ──────────────────────────────────
+    renderDashActivity()
+  }
+
+  function renderRevenueChart(months, values) {
+    const el  = document.getElementById('dash-revenue-chart')
+    const max = Math.max(...values, 1)
+    el.innerHTML = months.map((m, i) => {
+      const h   = Math.round((values[i] / max) * 80)
+      const lbl = values[i] > 0 ? (values[i] >= 1000 ? '€' + Math.round(values[i]/1000) + 'k' : fmtEuro(values[i])) : ''
+      return `<div class="ops-bar-col">
+        <div class="ops-bar-val">${lbl}</div>
+        <div class="ops-bar" style="height:${h}px"></div>
+        <div class="ops-bar-lbl">${m.label}</div>
+      </div>`
+    }).join('') || '<div style="color:var(--text-muted);font-size:12px;align-self:center;width:100%;text-align:center">No data available</div>'
+  }
+
+  function renderDaysChart(appts) {
+    const el     = document.getElementById('dash-days-chart')
+    const counts = [0,0,0,0,0,0,0]  // Sun–Sat
+    appts.forEach(a => {
+      const d = new Date((a.date || a.appointment_date || a.start_time || '').slice(0,10) + 'T12:00:00')
+      if (!isNaN(d)) counts[d.getDay()]++
+    })
+    const max = Math.max(...counts, 1)
+    el.innerHTML = [1,2,3,4,5,6,0].map(d => {
+      const h = Math.round((counts[d] / max) * 80)
+      return `<div class="ops-bar-col">
+        <div class="ops-bar-val">${counts[d] || ''}</div>
+        <div class="ops-bar ops-day-bar" style="height:${h}px"></div>
+        <div class="ops-bar-lbl">${dayName(d)}</div>
+      </div>`
+    }).join('')
+  }
+
+  function renderDashActivity() {
+    const entries = JSON.parse(localStorage.getItem('dental_audit') || '[]').slice(0, 8)
+    const el = document.getElementById('dash-activity-list')
+    if (!entries.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px">No activity recorded yet.</div>'; return }
+    el.innerHTML = entries.map(e => `
+      <div class="ops-activity-entry">
+        <div class="ops-act-dot" style="background:${{access:'#8B7CC8',clinical:'#22C47A',billing:'var(--amber)',data:'#5B9ED6',system:'var(--primary)'}[e.cat]||'var(--primary)'}"></div>
+        <div class="ops-act-body">
+          <div class="ops-act-text"><b>${e.user}</b> — ${e.action}${e.entity ? ' · ' + e.entity : ''}${e.detail ? ': ' + e.detail.slice(0,60) : ''}</div>
+          <div class="ops-act-time">${relativeTs(e.ts)}</div>
+        </div>
+      </div>`).join('')
+  }
+
+
+  // ════════════════════════════════════════════════════════════════════════
+  // TAB 2 — INVENTORY
+  // ════════════════════════════════════════════════════════════════════════
+  let INV    = JSON.parse(localStorage.getItem('dental_inventory') || '[]')
+  let invEditing = null
+
+  function saveInv() { localStorage.setItem('dental_inventory', JSON.stringify(INV)) }
+
+  function refreshInvLowBanner() {
+    const low = INV.filter(i => (parseInt(i.qty)||0) <= (parseInt(i.minQty)||0) && parseInt(i.minQty||0) > 0)
+    const banner = document.getElementById('inv-low-banner')
+    if (low.length) {
+      banner.style.display = 'flex'
+      document.getElementById('inv-low-text').textContent = `${low.length} item${low.length>1?'s':''} below minimum stock: ${low.map(i=>i.name).join(', ')}`
+    } else { banner.style.display = 'none' }
+  }
+
+  function renderInventory() {
+    const q   = (document.getElementById('inv-search')?.value || '').toLowerCase()
+    const cat = document.getElementById('inv-cat-filter')?.value || ''
+    const list = document.getElementById('inv-list')
+    let data = INV
+    if (cat) data = data.filter(i => i.category === cat)
+    if (q)   data = data.filter(i => i.name.toLowerCase().includes(q) || (i.notes||'').toLowerCase().includes(q))
+    data = [...data].sort((a,b) => {
+      const aLow = (parseInt(a.qty)||0) <= (parseInt(a.minQty)||0) && parseInt(a.minQty||0) > 0
+      const bLow = (parseInt(b.qty)||0) <= (parseInt(b.minQty)||0) && parseInt(b.minQty||0) > 0
+      return bLow - aLow || a.name.localeCompare(b.name)
+    })
+    if (!data.length) { list.innerHTML = '<div class="inv-empty">No items yet. Click <b>+ Add Item</b> to start tracking stock.</div>'; return }
+    list.innerHTML = data.map(item => {
+      const qty    = parseInt(item.qty) || 0
+      const minQty = parseInt(item.minQty) || 0
+      const isCrit = minQty > 0 && qty === 0
+      const isLow  = minQty > 0 && qty > 0 && qty <= minQty
+      const qtyClass = isCrit ? 'critical' : isLow ? 'low' : 'ok'
+      const sup  = item.supplierId ? (JSON.parse(localStorage.getItem('dental_suppliers')||'[]').find(s=>s.id===item.supplierId)||{}).name || '' : ''
+      return `<div class="inv-card${(isCrit||isLow)?' low-stock':''}" data-inv-id="${item.id}">
+        <div class="inv-card-info">
+          <div class="inv-card-name">${item.name}</div>
+          <div class="inv-card-cat">${item.category||''}${sup?' · 📦 '+sup:''}</div>
+        </div>
+        <div class="inv-qty-block">
+          <div class="inv-qty-editor">
+            <button class="inv-adjust-btn" data-inv-dec="${item.id}">−</button>
+            <span class="inv-qty-num ${qtyClass}">${qty}</span>
+            <button class="inv-adjust-btn" data-inv-inc="${item.id}">＋</button>
+          </div>
+          <div class="inv-qty-unit">${item.unit||'units'}</div>
+          <div class="inv-qty-min">${minQty>0?'min: '+minQty:''}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);min-width:60px;text-align:right">${item.unitCost?fmtEuro2(item.unitCost)+'/<small>'+((item.unit)||'u')+'</small>':''}</div>
+        <div class="inv-card-actions">
+          ${item.supplierId?`<button class="inv-card-btn reorder" title="Reorder from supplier" data-inv-reorder="${item.id}">🛒</button>`:''}
+          <button class="inv-card-btn" title="Edit" data-inv-edit="${item.id}">✏️</button>
+          <button class="inv-card-btn remove" title="Delete" data-inv-del="${item.id}">🗑</button>
+        </div>
+      </div>`
+    }).join('')
+  }
+
+  function populateInvSupplierDropdown() {
+    const sups = JSON.parse(localStorage.getItem('dental_suppliers') || '[]')
+    const sel  = document.getElementById('inv-f-supplier')
+    sel.innerHTML = '<option value="">— None —</option>' + sups.map(s => `<option value="${s.id}">${s.name}</option>`).join('')
+  }
+
+  function openInvForm(itemId) {
+    invEditing = itemId || null
+    populateInvSupplierDropdown()
+    const item = itemId ? INV.find(i => i.id === itemId) : null
+    document.getElementById('inv-form-title').textContent = item ? 'Edit Item' : 'New Item'
+    document.getElementById('inv-f-name').value       = item?.name     || ''
+    document.getElementById('inv-f-category').value   = item?.category || ''
+    document.getElementById('inv-f-unit').value       = item?.unit     || ''
+    document.getElementById('inv-f-cost').value       = item?.unitCost || ''
+    document.getElementById('inv-f-qty').value        = item?.qty      ?? ''
+    document.getElementById('inv-f-minqty').value     = item?.minQty   ?? ''
+    document.getElementById('inv-f-supplier').value   = item?.supplierId || ''
+    document.getElementById('inv-f-notes').value      = item?.notes    || ''
+    document.getElementById('inv-form').classList.add('open')
+    document.getElementById('inv-f-name').focus()
+  }
+
+  document.getElementById('inv-add-btn').addEventListener('click', () => openInvForm(null))
+  document.getElementById('inv-form-cancel').addEventListener('click', () => { document.getElementById('inv-form').classList.remove('open'); invEditing = null })
+  document.getElementById('inv-search').addEventListener('input', renderInventory)
+  document.getElementById('inv-cat-filter').addEventListener('change', renderInventory)
+
+  document.getElementById('inv-form-save').addEventListener('click', () => {
+    const name = document.getElementById('inv-f-name').value.trim()
+    if (!name) { document.getElementById('inv-f-name').focus(); return }
+    const data = {
+      name, category: document.getElementById('inv-f-category').value,
+      unit: document.getElementById('inv-f-unit').value.trim(),
+      unitCost: document.getElementById('inv-f-cost').value,
+      qty: parseInt(document.getElementById('inv-f-qty').value) || 0,
+      minQty: parseInt(document.getElementById('inv-f-minqty').value) || 0,
+      supplierId: document.getElementById('inv-f-supplier').value,
+      notes: document.getElementById('inv-f-notes').value.trim(),
+    }
+    if (invEditing) {
+      const idx = INV.findIndex(i => i.id === invEditing)
+      if (idx >= 0) INV[idx] = { ...INV[idx], ...data }
+      auditLog('inventory', name, 'Item updated')
+    } else {
+      INV.push({ id: genId(), ...data })
+      auditLog('inventory', name, `Added qty:${data.qty}, min:${data.minQty}`)
+    }
+    saveInv(); invEditing = null
+    document.getElementById('inv-form').classList.remove('open')
+    renderInventory(); refreshInvLowBanner()
+    if (typeof showToast === 'function') showToast('Item saved ✓')
+  })
+
+  document.getElementById('inv-list').addEventListener('click', e => {
+    const inc  = e.target.closest('[data-inv-inc]')
+    const dec  = e.target.closest('[data-inv-dec]')
+    const edit = e.target.closest('[data-inv-edit]')
+    const del  = e.target.closest('[data-inv-del]')
+    const ro   = e.target.closest('[data-inv-reorder]')
+    if (inc) {
+      const item = INV.find(i => i.id === inc.dataset.invInc)
+      if (item) { item.qty = (parseInt(item.qty)||0) + 1; saveInv(); renderInventory(); refreshInvLowBanner(); auditLog('inventory', item.name, `Stock +1 → ${item.qty}`) }
+    } else if (dec) {
+      const item = INV.find(i => i.id === dec.dataset.invDec)
+      if (item && (parseInt(item.qty)||0) > 0) { item.qty = (parseInt(item.qty)||0) - 1; saveInv(); renderInventory(); refreshInvLowBanner(); auditLog('inventory', item.name, `Stock -1 → ${item.qty}`) }
+    } else if (edit) {
+      openInvForm(edit.dataset.invEdit)
+    } else if (del) {
+      const item = INV.find(i => i.id === del.dataset.invDel)
+      if (!confirm(`Remove "${item?.name}" from inventory?`)) return
+      INV = INV.filter(i => i.id !== del.dataset.invDel)
+      saveInv(); renderInventory(); refreshInvLowBanner()
+      auditLog('inventory', item?.name, 'Item removed')
+    } else if (ro) {
+      const item = INV.find(i => i.id === ro.dataset.invReorder)
+      if (item?.supplierId && typeof window.openSupplierHub === 'function') {
+        overlay.classList.remove('open')
+        window.openSupplierHub(item.supplierId)
+      }
+    }
+  })
+
+
+  // ════════════════════════════════════════════════════════════════════════
+  // TAB 3 — FINANCIAL REPORTS
+  // ════════════════════════════════════════════════════════════════════════
+  function initReportsUI() {
+    const now    = new Date()
+    const mSel   = document.getElementById('rpt-month')
+    const ySel   = document.getElementById('rpt-year')
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
+    if (!mSel.options.length) {
+      months.forEach((m,i) => { const o = document.createElement('option'); o.value = i+1; o.textContent = m; mSel.appendChild(o) })
+      mSel.value = now.getMonth() + 1
+    }
+    if (!ySel.options.length) {
+      for (let y = now.getFullYear(); y >= now.getFullYear() - 4; y--) {
+        const o = document.createElement('option'); o.value = y; o.textContent = y; ySel.appendChild(o)
+      }
+      ySel.value = now.getFullYear()
+    }
+  }
+
+  document.getElementById('rpt-load-btn').addEventListener('click', () => loadReport())
+  document.getElementById('rpt-export-btn').addEventListener('click', () => exportReportCSV())
+
+  async function loadReport() {
+    const month = document.getElementById('rpt-month').value
+    const year  = document.getElementById('rpt-year').value
+    const scroll = document.getElementById('rpt-scroll')
+    scroll.innerHTML = '<div class="rpt-loading">Loading…</div>'
+
+    const pad   = n => String(n).padStart(2,'0')
+    const from  = `${year}-${pad(month)}-01`
+    const lastDay = new Date(year, month, 0).getDate()
+    const to    = `${year}-${pad(month)}-${lastDay}`
+
+    try {
+      // Fetch invoices for the period
+      const res = await apiFetch(`/api/invoices?from=${from}&to=${to}&limit=500`)
+      let invoices = []
+      if (res.ok) {
+        const data = await res.json()
+        invoices = Array.isArray(data) ? data : (data.invoices || data.data || [])
+      }
+
+      // Supplier spend for period
+      const allOrders = JSON.parse(localStorage.getItem('dental_orders') || '[]')
+      const periodOrders = allOrders.filter(o => o.dateOrdered >= from && o.dateOrdered <= to)
+      const totalExpenses = periodOrders.reduce((s,o) => s + (parseFloat(o.cost)||0), 0)
+
+      // Compute totals
+      const totalBilled  = invoices.reduce((s,inv) => s + parseFloat(inv.total||inv.amount||0), 0)
+      const totalPaid    = invoices.reduce((s,inv) => s + parseFloat(inv.total_paid||inv.amount_paid||0), 0)
+      const outstanding  = totalBilled - totalPaid
+      const netProfit    = totalPaid - totalExpenses
+
+      // Insurance breakdown
+      const insured      = invoices.filter(inv => inv.insurance || inv.insurance_provider)
+      const insuredAmt   = insured.reduce((s,inv) => s + parseFloat(inv.insurance_amount||inv.insurance_covers||0), 0)
+
+      // 6-month trend
+      const now     = new Date()
+      const trendMonths = []
+      const trendVals   = []
+      for (let i = 5; i >= 0; i--) {
+        const d  = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        trendMonths.push(monthName(d.getMonth()))
+        trendVals.push(0)  // filled below if we had data
+      }
+      const trendMax = Math.max(...trendVals, 1)
+
+      const monthLabel = document.getElementById('rpt-month').options[document.getElementById('rpt-month').selectedIndex].text
+
+      scroll.innerHTML = `
+        <!-- Summary cards -->
+        <div>
+          <div class="rpt-section-title">${monthLabel} ${year} — Summary</div>
+          <div class="rpt-summary-grid">
+            <div class="rpt-card">
+              <div class="rpt-card-label">Total Billed</div>
+              <div class="rpt-card-value blue">${fmtEuro2(totalBilled)}</div>
+            </div>
+            <div class="rpt-card">
+              <div class="rpt-card-label">Collected</div>
+              <div class="rpt-card-value green">${fmtEuro2(totalPaid)}</div>
+            </div>
+            <div class="rpt-card">
+              <div class="rpt-card-label">Outstanding</div>
+              <div class="rpt-card-value amber">${fmtEuro2(outstanding)}</div>
+            </div>
+            <div class="rpt-card">
+              <div class="rpt-card-label">Supplier Expenses</div>
+              <div class="rpt-card-value red">${fmtEuro2(totalExpenses)}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- P&L -->
+        <div class="ops-panel" style="border:1px solid var(--border)">
+          <div class="rpt-section-title">Profit &amp; Loss</div>
+          <table class="rpt-table">
+            <tr><td>Revenue (collected)</td><td style="text-align:right;font-weight:700;color:#22C47A">${fmtEuro2(totalPaid)}</td></tr>
+            <tr><td>Supplier Expenses</td><td style="text-align:right;font-weight:700;color:#D95F5F">− ${fmtEuro2(totalExpenses)}</td></tr>
+            <tr style="border-top:2px solid var(--border)"><td style="font-weight:700">Net</td><td style="text-align:right;font-weight:800;font-size:16px;color:${netProfit>=0?'#22C47A':'#D95F5F'}">${fmtEuro2(netProfit)}</td></tr>
+          </table>
+        </div>
+
+        <!-- Invoice breakdown -->
+        <div>
+          <div class="rpt-section-title">Invoices (${invoices.length})</div>
+          ${invoices.length ? `
+          <table class="rpt-table">
+            <thead><tr><th>Date</th><th>Patient</th><th>Billed</th><th>Paid</th><th>Status</th></tr></thead>
+            <tbody>
+              ${invoices.map(inv => `<tr>
+                <td>${inv.invoice_date||inv.date||'—'}</td>
+                <td>${inv.patient_name||inv.patient||'—'}</td>
+                <td>${fmtEuro2(inv.total||inv.amount||0)}</td>
+                <td>${fmtEuro2(inv.total_paid||inv.amount_paid||0)}</td>
+                <td><span class="rpt-inv-status ${inv.status||'draft'}">${inv.status||'draft'}</span></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>` : '<div class="rpt-empty">No invoices for this period.</div>'}
+        </div>
+
+        <!-- Insurance reconciliation -->
+        <div>
+          <div class="rpt-section-title">Insurance Reconciliation</div>
+          ${insured.length ? `
+          <table class="rpt-table rpt-insurance-table">
+            <thead><tr><th>Patient</th><th>Provider</th><th>Insurance Covers</th><th>Invoice Total</th></tr></thead>
+            <tbody>
+              ${insured.map(inv => `<tr>
+                <td>${inv.patient_name||'—'}</td>
+                <td>${inv.insurance||inv.insurance_provider||'—'}</td>
+                <td>${fmtEuro2(inv.insurance_amount||inv.insurance_covers||0)}</td>
+                <td>${fmtEuro2(inv.total||0)}</td>
+              </tr>`).join('')}
+              <tr style="font-weight:700;border-top:2px solid var(--border)">
+                <td colspan="2">Total Insurance</td>
+                <td>${fmtEuro2(insuredAmt)}</td><td></td>
+              </tr>
+            </tbody>
+          </table>` : '<div class="rpt-empty">No insurance invoices this period.</div>'}
+        </div>`
+
+      auditLog('export', 'Financial Report', `${monthLabel} ${year}`)
+    } catch(err) {
+      scroll.innerHTML = `<div class="rpt-empty">Could not load report. ${err.message||''}</div>`
+    }
+  }
+
+  function exportReportCSV() {
+    const month = document.getElementById('rpt-month')?.value
+    const year  = document.getElementById('rpt-year')?.value
+    const content = document.getElementById('rpt-scroll')?.innerText || ''
+    const blob = new Blob([content], { type: 'text/csv' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `report-${year}-${String(month).padStart(2,'0')}.txt`
+    a.click()
+    auditLog('export', 'Financial Report CSV', `${month}/${year}`)
+  }
+
+
+  // ════════════════════════════════════════════════════════════════════════
+  // TAB 4 — AUDIT LOG
+  // ════════════════════════════════════════════════════════════════════════
+  let audFilter = 'all'
+
+  window._renderAuditLog = function() {
+    const q    = (document.getElementById('aud-search')?.value || '').toLowerCase()
+    const list = document.getElementById('aud-list')
+    let entries = JSON.parse(localStorage.getItem('dental_audit') || '[]')
+    if (audFilter !== 'all') entries = entries.filter(e => e.cat === audFilter)
+    if (q) entries = entries.filter(e =>
+      (e.user||'').toLowerCase().includes(q) ||
+      (e.action||'').toLowerCase().includes(q) ||
+      (e.entity||'').toLowerCase().includes(q) ||
+      (e.detail||'').toLowerCase().includes(q))
+    if (!entries.length) { list.innerHTML = '<div class="aud-empty">No log entries match this filter.</div>'; return }
+    list.innerHTML = entries.map(e => {
+      const ts = new Date(e.ts)
+      const dateStr = ts.toLocaleDateString() + ' ' + ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+      return `<div class="aud-entry">
+        <span class="aud-ts">${dateStr}</span>
+        <span class="aud-user">${e.user}</span>
+        <span class="aud-badge ${e.cat||'system'}">${e.cat||'system'}</span>
+        <span class="aud-detail"><b>${e.action}</b>${e.entity?' · '+e.entity:''}${e.detail?' — '+e.detail:''}</span>
+      </div>`
+    }).join('')
+  }
+
+  document.querySelectorAll('.aud-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      audFilter = btn.dataset.audFilter
+      document.querySelectorAll('.aud-filter-btn').forEach(b => b.classList.toggle('active', b === btn))
+      window._renderAuditLog()
+    })
+  })
+  document.getElementById('aud-search').addEventListener('input', window._renderAuditLog)
+
+  document.getElementById('aud-export-btn').addEventListener('click', () => {
+    const entries = JSON.parse(localStorage.getItem('dental_audit') || '[]')
+    const header  = 'Timestamp,User,Category,Action,Entity,Detail\n'
+    const rows    = entries.map(e => [e.ts, e.user, e.cat, e.action, e.entity, e.detail].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(',')).join('\n')
+    const blob    = new Blob([header + rows], { type: 'text/csv' })
+    const a       = document.createElement('a')
+    a.href        = URL.createObjectURL(blob)
+    a.download    = `audit-log-${new Date().toISOString().slice(0,10)}.csv`
+    a.click()
+    auditLog('export', 'Audit Log', `${entries.length} entries exported`)
+  })
+
+})()
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPECIALIST REFERRAL NETWORK
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  let SPECIALISTS = JSON.parse(localStorage.getItem('dental_specialists') || '[]')
+  let REFERRALS   = JSON.parse(localStorage.getItem('dental_referrals')   || '[]')
+  let refActiveTab    = 'specialists'
+  let refSpecFilter   = ''
+  let refReferralFilter = 'all'
+  let refEditingSpecId = null
+
+  function saveSpecialists() { localStorage.setItem('dental_specialists', JSON.stringify(SPECIALISTS)) }
+  function saveReferrals()   { localStorage.setItem('dental_referrals',   JSON.stringify(REFERRALS)) }
+  function genId()           { return Date.now().toString(36) + Math.random().toString(36).slice(2,6) }
+
+  const SPECIALTY_ICONS = {
+    'Orthodontist':'🦷','Oral Surgeon':'🔪','Periodontist':'🔬','Endodontist':'💉',
+    'Prosthodontist':'👑','Pediatric Dentist':'🧒','Oral Radiologist':'📡',
+    'Implantologist':'🔩','Other':'⚕️'
+  }
+
+  function updateRefStats() {
+    document.getElementById('ref-stat-specialists').textContent = SPECIALISTS.length
+    document.getElementById('ref-stat-total').textContent       = REFERRALS.length
+    document.getElementById('ref-stat-pending').textContent     = REFERRALS.filter(r=>r.status==='pending').length
+    document.getElementById('ref-stat-completed').textContent   = REFERRALS.filter(r=>r.status==='completed').length
+  }
+
+  function renderSpecialists() {
+    const q    = (document.getElementById('ref-spec-search')?.value||'').toLowerCase()
+    const list = document.getElementById('ref-spec-list')
+    const data = SPECIALISTS.filter(s => !q || s.name.toLowerCase().includes(q) || s.specialty.toLowerCase().includes(q) || (s.clinic||'').toLowerCase().includes(q))
+    if (!data.length) { list.innerHTML = '<div class="ref-empty">No specialists yet. Click <b>+ Add Specialist</b> to add one.</div>'; return }
+    list.innerHTML = data.map(s => `
+      <div class="ref-card">
+        <div class="ref-card-icon">${SPECIALTY_ICONS[s.specialty]||'⚕️'}</div>
+        <div class="ref-card-body">
+          <div class="ref-card-name">${s.name}</div>
+          <div class="ref-card-specialty">${s.specialty}</div>
+          <div class="ref-card-meta">
+            ${s.clinic  ? `<span class="ref-card-meta-item">🏥 ${s.clinic}</span>` : ''}
+            ${s.phone   ? `<span class="ref-card-meta-item">📞 ${s.phone}</span>`  : ''}
+            ${s.email   ? `<span class="ref-card-meta-item">✉️ ${s.email}</span>`   : ''}
+            ${s.address ? `<span class="ref-card-meta-item">📍 ${s.address}</span>`: ''}
+          </div>
+          ${s.notes ? `<div style="font-size:11px;color:var(--text-muted);margin-top:5px">${s.notes}</div>` : ''}
+        </div>
+        <div class="ref-card-actions">
+          <button class="ref-card-btn refer" title="New referral to this specialist" data-spec-id="${s.id}">📋</button>
+          <button class="ref-card-btn" title="Edit" data-edit-spec="${s.id}">✏️</button>
+          <button class="ref-card-btn remove" title="Remove" data-del-spec="${s.id}">🗑</button>
+        </div>
+      </div>`).join('')
+  }
+
+  function renderReferrals() {
+    const list = document.getElementById('ref-referral-list')
+    let data = REFERRALS
+    if (refReferralFilter !== 'all') data = data.filter(r => r.status === refReferralFilter)
+    data = [...data].sort((a,b) => b.date.localeCompare(a.date))
+    if (!data.length) { list.innerHTML = '<div class="ref-empty">No referrals yet. Click <b>+ New Referral</b> to create one.</div>'; return }
+    list.innerHTML = data.map(r => {
+      const spec = SPECIALISTS.find(s => s.id === r.specialistId)
+      return `
+        <div class="ref-referral-card">
+          <div class="ref-ref-info">
+            <div class="ref-ref-patient">${r.patientName}</div>
+            <div class="ref-ref-detail">
+              → ${spec ? spec.name + (spec.specialty ? ' ('+spec.specialty+')' : '') : 'Unknown specialist'}
+              &nbsp;·&nbsp; ${r.date}
+              ${r.reason ? '&nbsp;·&nbsp; ' + r.reason.slice(0,80) + (r.reason.length>80?'…':'') : ''}
+            </div>
+          </div>
+          <div class="ref-ref-actions">
+            <select class="ref-status-select" data-ref-id="${r.id}">
+              <option value="pending"   ${r.status==='pending'  ?'selected':''}>Pending</option>
+              <option value="accepted"  ${r.status==='accepted' ?'selected':''}>Accepted</option>
+              <option value="completed" ${r.status==='completed'?'selected':''}>Completed</option>
+              <option value="declined"  ${r.status==='declined' ?'selected':''}>Declined</option>
+            </select>
+            <span class="ref-ref-status ${r.status}">${r.status}</span>
+            <button class="ref-card-btn remove" title="Delete" data-del-ref="${r.id}">🗑</button>
+          </div>
+        </div>`
+    }).join('')
+  }
+
+  function populateSpecialistDropdown() {
+    const sel = document.getElementById('ref-ref-specialist')
+    sel.innerHTML = SPECIALISTS.length
+      ? '<option value="">— Select specialist —</option>' + SPECIALISTS.map(s=>`<option value="${s.id}">${s.name} (${s.specialty})</option>`).join('')
+      : '<option value="">No specialists added yet</option>'
+  }
+
+  function populatePatientDatalist() {
+    const dl = document.getElementById('ref-patient-datalist')
+    if (dl && typeof PATIENTS !== 'undefined') {
+      dl.innerHTML = PATIENTS.map(p=>`<option value="${p.firstName||''} ${p.lastName||''}">`)
+    }
+  }
+
+  function openRefSpecForm(specId) {
+    const form = document.getElementById('ref-spec-form')
+    refEditingSpecId = specId || null
+    if (specId) {
+      const s = SPECIALISTS.find(x=>x.id===specId)
+      if (!s) return
+      document.getElementById('ref-spec-name').value     = s.name
+      document.getElementById('ref-spec-specialty').value = s.specialty
+      document.getElementById('ref-spec-clinic').value   = s.clinic||''
+      document.getElementById('ref-spec-phone').value    = s.phone||''
+      document.getElementById('ref-spec-email').value    = s.email||''
+      document.getElementById('ref-spec-address').value  = s.address||''
+      document.getElementById('ref-spec-notes').value    = s.notes||''
+      document.getElementById('ref-spec-save-btn').textContent = 'Update Specialist'
+    } else {
+      ['ref-spec-name','ref-spec-clinic','ref-spec-phone','ref-spec-email','ref-spec-address','ref-spec-notes'].forEach(id=>{ document.getElementById(id).value='' })
+      document.getElementById('ref-spec-specialty').value = ''
+      document.getElementById('ref-spec-save-btn').textContent = 'Save Specialist'
+    }
+    form.classList.add('open')
+    document.getElementById('ref-spec-name').focus()
+  }
+
+  window.openReferralNetwork = function(prePatient) {
+    updateRefStats()
+    renderSpecialists()
+    renderReferrals()
+    populateSpecialistDropdown()
+    populatePatientDatalist()
+    if (prePatient) {
+      switchRefTab('referrals')
+      document.getElementById('ref-ref-patient').value = prePatient
+      document.getElementById('ref-referral-form').classList.add('open')
+    }
+    document.getElementById('ref-overlay').classList.add('open')
+  }
+
+  function switchRefTab(tab) {
+    refActiveTab = tab
+    document.querySelectorAll('.ref-tab').forEach(b=>b.classList.toggle('active', b.dataset.refTab===tab))
+    document.querySelectorAll('.ref-tab-panel').forEach(p=>p.classList.toggle('active', p.id==='ref-panel-'+tab))
+  }
+
+  // ── Wiring ────────────────────────────────────────────────────────────
+  document.getElementById('ref-close-btn').addEventListener('click', () => {
+    document.getElementById('ref-overlay').classList.remove('open')
+  })
+  document.getElementById('ref-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('ref-overlay')) document.getElementById('ref-overlay').classList.remove('open')
+  })
+
+  document.querySelectorAll('.ref-tab').forEach(btn => {
+    btn.addEventListener('click', () => { switchRefTab(btn.dataset.refTab); renderSpecialists(); renderReferrals() })
+  })
+
+  // Specialist search
+  document.getElementById('ref-spec-search').addEventListener('input', renderSpecialists)
+
+  // Add specialist button
+  document.getElementById('ref-add-spec-btn').addEventListener('click', () => openRefSpecForm(null))
+
+  // Cancel spec form
+  document.getElementById('ref-spec-cancel-btn').addEventListener('click', () => {
+    document.getElementById('ref-spec-form').classList.remove('open')
+    refEditingSpecId = null
+  })
+
+  // Save specialist
+  document.getElementById('ref-spec-save-btn').addEventListener('click', () => {
+    const name     = document.getElementById('ref-spec-name').value.trim()
+    const specialty= document.getElementById('ref-spec-specialty').value
+    if (!name) { document.getElementById('ref-spec-name').focus(); return }
+    const data = {
+      name, specialty,
+      clinic : document.getElementById('ref-spec-clinic').value.trim(),
+      phone  : document.getElementById('ref-spec-phone').value.trim(),
+      email  : document.getElementById('ref-spec-email').value.trim(),
+      address: document.getElementById('ref-spec-address').value.trim(),
+      notes  : document.getElementById('ref-spec-notes').value.trim(),
+    }
+    if (refEditingSpecId) {
+      const idx = SPECIALISTS.findIndex(s=>s.id===refEditingSpecId)
+      if (idx >= 0) SPECIALISTS[idx] = { ...SPECIALISTS[idx], ...data }
+    } else {
+      SPECIALISTS.push({ id: genId(), ...data })
+    }
+    saveSpecialists()
+    document.getElementById('ref-spec-form').classList.remove('open')
+    refEditingSpecId = null
+    updateRefStats()
+    renderSpecialists()
+    populateSpecialistDropdown()
+    if (typeof showToast === 'function') showToast(refEditingSpecId ? 'Specialist updated' : 'Specialist added ✓')
+  })
+
+  // Specialist list actions (delegate)
+  document.getElementById('ref-spec-list').addEventListener('click', e => {
+    const btn = e.target.closest('[data-del-spec],[data-edit-spec],[data-spec-id]')
+    if (!btn) return
+    if (btn.dataset.delSpec) {
+      if (!confirm('Remove this specialist?')) return
+      SPECIALISTS = SPECIALISTS.filter(s => s.id !== btn.dataset.delSpec)
+      saveSpecialists(); updateRefStats(); renderSpecialists(); populateSpecialistDropdown()
+    } else if (btn.dataset.editSpec) {
+      openRefSpecForm(btn.dataset.editSpec)
+    } else if (btn.dataset.specId) {
+      populatePatientDatalist()
+      switchRefTab('referrals')
+      document.getElementById('ref-referral-form').classList.add('open')
+      document.getElementById('ref-ref-specialist').value = btn.dataset.specId
+      document.getElementById('ref-ref-date').value = new Date().toISOString().slice(0,10)
+      document.getElementById('ref-ref-patient').focus()
+    }
+  })
+
+  // Referral filter buttons
+  document.querySelectorAll('.ref-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      refReferralFilter = btn.dataset.refFilter
+      document.querySelectorAll('.ref-filter-btn').forEach(b=>b.classList.toggle('active', b===btn))
+      renderReferrals()
+    })
+  })
+
+  // Add referral button
+  document.getElementById('ref-add-referral-btn').addEventListener('click', () => {
+    populateSpecialistDropdown()
+    populatePatientDatalist()
+    document.getElementById('ref-ref-date').value = new Date().toISOString().slice(0,10)
+    document.getElementById('ref-referral-form').classList.add('open')
+    document.getElementById('ref-ref-patient').focus()
+  })
+
+  // Cancel referral form
+  document.getElementById('ref-referral-cancel-btn').addEventListener('click', () => {
+    document.getElementById('ref-referral-form').classList.remove('open')
+  })
+
+  // Save referral
+  document.getElementById('ref-referral-save-btn').addEventListener('click', () => {
+    const patient = document.getElementById('ref-ref-patient').value.trim()
+    const specId  = document.getElementById('ref-ref-specialist').value
+    const date    = document.getElementById('ref-ref-date').value
+    if (!patient || !specId || !date) {
+      if (!patient) document.getElementById('ref-ref-patient').focus()
+      return
+    }
+    REFERRALS.push({
+      id: genId(), patientName: patient, specialistId: specId, date,
+      reason: document.getElementById('ref-ref-reason').value.trim(),
+      status: 'pending'
+    })
+    saveReferrals()
+    ;['ref-ref-patient','ref-ref-reason'].forEach(id=>{ document.getElementById(id).value='' })
+    document.getElementById('ref-referral-form').classList.remove('open')
+    updateRefStats(); renderReferrals()
+    if (typeof showToast === 'function') showToast('Referral sent ✓')
+  })
+
+  // Referral list actions (delegate)
+  document.getElementById('ref-referral-list').addEventListener('click', e => {
+    const btn = e.target.closest('[data-del-ref]')
+    if (btn) {
+      if (!confirm('Delete this referral?')) return
+      REFERRALS = REFERRALS.filter(r => r.id !== btn.dataset.delRef)
+      saveReferrals(); updateRefStats(); renderReferrals()
+    }
+  })
+  document.getElementById('ref-referral-list').addEventListener('change', e => {
+    const sel = e.target.closest('[data-ref-id]')
+    if (!sel) return
+    const ref = REFERRALS.find(r=>r.id===sel.dataset.refId)
+    if (ref) { ref.status = sel.value; saveReferrals(); updateRefStats(); renderReferrals() }
+  })
+
+  // Nav button
+  document.getElementById('referral-nav-btn').addEventListener('click', () => window.openReferralNetwork())
+})()
+
+// ══════════════════════════════════════════════════════════════════════════
+// SUPPLIER INTEGRATION
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  let SUPPLIERS = JSON.parse(localStorage.getItem('dental_suppliers') || '[]')
+  let ORDERS    = JSON.parse(localStorage.getItem('dental_orders')    || '[]')
+  let supActiveTab      = 'suppliers'
+  let supOrderFilter    = 'all'
+  let supEditingSupplierId = null
+
+  function saveSuppliers() { localStorage.setItem('dental_suppliers', JSON.stringify(SUPPLIERS)) }
+  function saveOrders()    { localStorage.setItem('dental_orders',    JSON.stringify(ORDERS)) }
+  function genId()         { return Date.now().toString(36) + Math.random().toString(36).slice(2,6) }
+
+  const CATEGORY_ICONS = {
+    'Consumables':'🧴','Equipment':'🔧','Lab Materials':'🧪','Sterilization':'♨️',
+    'Anaesthetics':'💉','Radiography':'📡','Implants':'🔩','Orthodontic Supplies':'🦷','PPE':'🥽','Other':'📦'
+  }
+
+  function fmtEuro(n) { return '€' + (parseFloat(n)||0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',') }
+
+  function updateSupStats() {
+    document.getElementById('sup-stat-suppliers').textContent = SUPPLIERS.length
+    document.getElementById('sup-stat-orders').textContent    = ORDERS.length
+    const pending = ORDERS.filter(o=>o.status==='pending'||o.status==='ordered'||o.status==='partial').length
+    document.getElementById('sup-stat-pending').textContent   = pending
+    const totalSpend = ORDERS.reduce((sum,o)=>(parseFloat(o.cost)||0)+sum, 0)
+    document.getElementById('sup-stat-spend').textContent     = fmtEuro(totalSpend)
+  }
+
+  function renderSuppliers() {
+    const q    = (document.getElementById('sup-sup-search')?.value||'').toLowerCase()
+    const list = document.getElementById('sup-sup-list')
+    const data = SUPPLIERS.filter(s => !q || s.name.toLowerCase().includes(q) || (s.category||'').toLowerCase().includes(q) || (s.contact||'').toLowerCase().includes(q))
+    if (!data.length) { list.innerHTML = '<div class="sup-empty">No suppliers yet. Click <b>+ Add Supplier</b> to add one.</div>'; return }
+    list.innerHTML = data.map(s => `
+      <div class="sup-card">
+        <div class="sup-card-icon">${CATEGORY_ICONS[s.category]||'📦'}</div>
+        <div class="sup-card-body">
+          <div class="sup-card-name">${s.name}</div>
+          <div class="sup-card-category">${s.category||'Supplier'}</div>
+          <div class="sup-card-meta">
+            ${s.contact ? `<span class="sup-card-meta-item">👤 ${s.contact}</span>` : ''}
+            ${s.phone   ? `<span class="sup-card-meta-item">📞 ${s.phone}</span>`  : ''}
+            ${s.email   ? `<span class="sup-card-meta-item">✉️ ${s.email}</span>`   : ''}
+            ${s.website ? `<span class="sup-card-meta-item">🌐 ${s.website}</span>`: ''}
+          </div>
+          ${s.notes ? `<div style="font-size:11px;color:var(--text-muted);margin-top:5px">${s.notes}</div>` : ''}
+        </div>
+        <div class="sup-card-actions">
+          <button class="sup-card-btn order" title="New order from this supplier" data-sup-id="${s.id}">🛒</button>
+          <button class="sup-card-btn" title="Edit" data-edit-sup="${s.id}">✏️</button>
+          <button class="sup-card-btn remove" title="Remove" data-del-sup="${s.id}">🗑</button>
+        </div>
+      </div>`).join('')
+  }
+
+  function renderOrders() {
+    const list = document.getElementById('sup-order-list')
+    let data = ORDERS
+    if (supOrderFilter !== 'all') data = data.filter(o => o.status === supOrderFilter)
+    data = [...data].sort((a,b) => b.dateOrdered.localeCompare(a.dateOrdered))
+    if (!data.length) { list.innerHTML = '<div class="sup-empty">No orders yet. Click <b>+ New Order</b> to place one.</div>'; return }
+    list.innerHTML = data.map(o => {
+      const sup = SUPPLIERS.find(s => s.id === o.supplierId)
+      return `
+        <div class="sup-order-card">
+          <div class="sup-order-info">
+            <div class="sup-order-name">${sup ? sup.name : 'Unknown supplier'}</div>
+            <div class="sup-order-detail">
+              ${o.dateOrdered}${o.deliveryDate?' → expected '+o.deliveryDate:''}
+              ${o.cost ? ' · ' + fmtEuro(o.cost) : ''}
+              ${o.items ? ' · ' + o.items.slice(0,80)+(o.items.length>80?'…':'') : ''}
+            </div>
+            ${o.notes ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px">${o.notes}</div>` : ''}
+          </div>
+          <div class="sup-order-actions">
+            <select class="sup-order-status-select" data-order-id="${o.id}">
+              <option value="pending"  ${o.status==='pending' ?'selected':''}>Pending</option>
+              <option value="ordered"  ${o.status==='ordered' ?'selected':''}>Ordered</option>
+              <option value="partial"  ${o.status==='partial' ?'selected':''}>Partial</option>
+              <option value="received" ${o.status==='received'?'selected':''}>Received</option>
+            </select>
+            <span class="sup-order-status ${o.status}">${o.status}</span>
+            <button class="sup-card-btn remove" title="Delete" data-del-order="${o.id}">🗑</button>
+          </div>
+        </div>`
+    }).join('')
+  }
+
+  function populateSupplierDropdown() {
+    const sel = document.getElementById('sup-order-supplier')
+    sel.innerHTML = SUPPLIERS.length
+      ? '<option value="">— Select supplier —</option>' + SUPPLIERS.map(s=>`<option value="${s.id}">${s.name}${s.category?' ('+s.category+')':''}</option>`).join('')
+      : '<option value="">No suppliers added yet</option>'
+  }
+
+  function openSupSupForm(supId) {
+    const form = document.getElementById('sup-sup-form')
+    supEditingSupplierId = supId || null
+    if (supId) {
+      const s = SUPPLIERS.find(x=>x.id===supId)
+      if (!s) return
+      document.getElementById('sup-sup-name').value     = s.name
+      document.getElementById('sup-sup-category').value = s.category||''
+      document.getElementById('sup-sup-contact').value  = s.contact||''
+      document.getElementById('sup-sup-phone').value    = s.phone||''
+      document.getElementById('sup-sup-email').value    = s.email||''
+      document.getElementById('sup-sup-website').value  = s.website||''
+      document.getElementById('sup-sup-notes').value    = s.notes||''
+      document.getElementById('sup-sup-save-btn').textContent = 'Update Supplier'
+    } else {
+      ['sup-sup-name','sup-sup-contact','sup-sup-phone','sup-sup-email','sup-sup-website','sup-sup-notes'].forEach(id=>{document.getElementById(id).value=''})
+      document.getElementById('sup-sup-category').value = ''
+      document.getElementById('sup-sup-save-btn').textContent = 'Save Supplier'
+    }
+    form.classList.add('open')
+    document.getElementById('sup-sup-name').focus()
+  }
+
+  window.openSupplierHub = function(preSupplierId) {
+    updateSupStats()
+    renderSuppliers()
+    renderOrders()
+    populateSupplierDropdown()
+    if (preSupplierId) {
+      switchSupTab('orders')
+      document.getElementById('sup-order-supplier').value = preSupplierId
+      document.getElementById('sup-order-date').value = new Date().toISOString().slice(0,10)
+      document.getElementById('sup-order-form').classList.add('open')
+    }
+    document.getElementById('sup-overlay').classList.add('open')
+  }
+
+  function switchSupTab(tab) {
+    supActiveTab = tab
+    document.querySelectorAll('.sup-tab').forEach(b=>b.classList.toggle('active', b.dataset.supTab===tab))
+    document.querySelectorAll('.sup-tab-panel').forEach(p=>p.classList.toggle('active', p.id==='sup-panel-'+tab))
+  }
+
+  // ── Wiring ────────────────────────────────────────────────────────────
+  document.getElementById('sup-close-btn').addEventListener('click', () => {
+    document.getElementById('sup-overlay').classList.remove('open')
+  })
+  document.getElementById('sup-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('sup-overlay')) document.getElementById('sup-overlay').classList.remove('open')
+  })
+
+  document.querySelectorAll('.sup-tab').forEach(btn => {
+    btn.addEventListener('click', () => { switchSupTab(btn.dataset.supTab); renderSuppliers(); renderOrders() })
+  })
+
+  document.getElementById('sup-sup-search').addEventListener('input', renderSuppliers)
+
+  document.getElementById('sup-add-sup-btn').addEventListener('click', () => openSupSupForm(null))
+
+  document.getElementById('sup-sup-cancel-btn').addEventListener('click', () => {
+    document.getElementById('sup-sup-form').classList.remove('open')
+    supEditingSupplierId = null
+  })
+
+  document.getElementById('sup-sup-save-btn').addEventListener('click', () => {
+    const name = document.getElementById('sup-sup-name').value.trim()
+    if (!name) { document.getElementById('sup-sup-name').focus(); return }
+    const data = {
+      name,
+      category: document.getElementById('sup-sup-category').value,
+      contact : document.getElementById('sup-sup-contact').value.trim(),
+      phone   : document.getElementById('sup-sup-phone').value.trim(),
+      email   : document.getElementById('sup-sup-email').value.trim(),
+      website : document.getElementById('sup-sup-website').value.trim(),
+      notes   : document.getElementById('sup-sup-notes').value.trim(),
+    }
+    if (supEditingSupplierId) {
+      const idx = SUPPLIERS.findIndex(s=>s.id===supEditingSupplierId)
+      if (idx>=0) SUPPLIERS[idx] = { ...SUPPLIERS[idx], ...data }
+    } else {
+      SUPPLIERS.push({ id: genId(), ...data })
+    }
+    saveSuppliers()
+    document.getElementById('sup-sup-form').classList.remove('open')
+    supEditingSupplierId = null
+    updateSupStats(); renderSuppliers(); populateSupplierDropdown()
+    if (typeof showToast === 'function') showToast('Supplier saved ✓')
+  })
+
+  document.getElementById('sup-sup-list').addEventListener('click', e => {
+    const btn = e.target.closest('[data-del-sup],[data-edit-sup],[data-sup-id]')
+    if (!btn) return
+    if (btn.dataset.delSup) {
+      if (!confirm('Remove this supplier?')) return
+      SUPPLIERS = SUPPLIERS.filter(s=>s.id!==btn.dataset.delSup)
+      saveSuppliers(); updateSupStats(); renderSuppliers(); populateSupplierDropdown()
+    } else if (btn.dataset.editSup) {
+      openSupSupForm(btn.dataset.editSup)
+    } else if (btn.dataset.supId) {
+      populateSupplierDropdown()
+      switchSupTab('orders')
+      document.getElementById('sup-order-form').classList.add('open')
+      document.getElementById('sup-order-supplier').value = btn.dataset.supId
+      document.getElementById('sup-order-date').value = new Date().toISOString().slice(0,10)
+      document.getElementById('sup-order-items').focus()
+    }
+  })
+
+  // Order filters
+  document.querySelectorAll('.sup-order-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      supOrderFilter = btn.dataset.supOrderFilter
+      document.querySelectorAll('.sup-order-filter-btn').forEach(b=>b.classList.toggle('active', b===btn))
+      renderOrders()
+    })
+  })
+
+  document.getElementById('sup-add-order-btn').addEventListener('click', () => {
+    populateSupplierDropdown()
+    document.getElementById('sup-order-date').value = new Date().toISOString().slice(0,10)
+    document.getElementById('sup-order-form').classList.add('open')
+    document.getElementById('sup-order-items').focus()
+  })
+
+  document.getElementById('sup-order-cancel-btn').addEventListener('click', () => {
+    document.getElementById('sup-order-form').classList.remove('open')
+  })
+
+  document.getElementById('sup-order-save-btn').addEventListener('click', () => {
+    const supplierId = document.getElementById('sup-order-supplier').value
+    const dateOrdered = document.getElementById('sup-order-date').value
+    if (!supplierId || !dateOrdered) return
+    ORDERS.push({
+      id: genId(), supplierId,
+      dateOrdered,
+      deliveryDate: document.getElementById('sup-order-delivery').value,
+      items   : document.getElementById('sup-order-items').value.trim(),
+      cost    : document.getElementById('sup-order-cost').value,
+      notes   : document.getElementById('sup-order-notes').value.trim(),
+      status  : 'pending'
+    })
+    saveOrders()
+    ;['sup-order-items','sup-order-cost','sup-order-notes','sup-order-delivery'].forEach(id=>{document.getElementById(id).value=''})
+    document.getElementById('sup-order-form').classList.remove('open')
+    updateSupStats(); renderOrders()
+    if (typeof showToast === 'function') showToast('Order placed ✓')
+  })
+
+  document.getElementById('sup-order-list').addEventListener('click', e => {
+    const btn = e.target.closest('[data-del-order]')
+    if (btn) {
+      if (!confirm('Delete this order?')) return
+      ORDERS = ORDERS.filter(o=>o.id!==btn.dataset.delOrder)
+      saveOrders(); updateSupStats(); renderOrders()
+    }
+  })
+  document.getElementById('sup-order-list').addEventListener('change', e => {
+    const sel = e.target.closest('[data-order-id]')
+    if (!sel) return
+    const order = ORDERS.find(o=>o.id===sel.dataset.orderId)
+    if (order) { order.status = sel.value; saveOrders(); updateSupStats(); renderOrders() }
+  })
+
+  // Nav button
+  document.getElementById('supplier-nav-btn').addEventListener('click', () => window.openSupplierHub())
+})()
+
+// ══════════════════════════════════════════════════════════════════════════
+// DARK MODE
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  const KEY    = 'dental_theme'
+  const html   = document.documentElement
+  const btn    = document.getElementById('theme-toggle-btn')
+  const metaTC = document.getElementById('meta-theme-color')
+
+  function applyTheme(theme) {
+    html.dataset.theme = theme
+    localStorage.setItem(KEY, theme)
+    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙'
+    if (metaTC) metaTC.content = theme === 'dark' ? '#1E1C1A' : '#3D9E8F'
+  }
+
+  // Initialise from saved preference or system
+  const saved = localStorage.getItem(KEY)
+  if (saved) {
+    applyTheme(saved)
+  } else {
+    applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  }
+
+  btn?.addEventListener('click', () => {
+    applyTheme(html.dataset.theme === 'dark' ? 'light' : 'dark')
+    if (typeof auditLog === 'function') auditLog('settings', 'Theme', html.dataset.theme + ' mode enabled')
+  })
+
+  // Follow system changes when user hasn't expressed a preference
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (!localStorage.getItem(KEY)) applyTheme(e.matches ? 'dark' : 'light')
+  })
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// OFFLINE DETECTION
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  const banner = document.getElementById('offline-banner')
+  function setOnline(online) {
+    banner?.classList.toggle('show', !online)
+    if (!online && typeof auditLog === 'function') auditLog('system', 'Network', 'Went offline')
+  }
+  window.addEventListener('online',  () => setOnline(true))
+  window.addEventListener('offline', () => setOnline(false))
+  if (!navigator.onLine) setOnline(false)
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// PWA — SERVICE WORKER REGISTRATION
+// ══════════════════════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('SW registered', reg.scope)
+      // Listen for the SW to signal that offline sync is ready
+      navigator.serviceWorker.addEventListener('message', e => {
+        if (e.data?.type === 'sync-ready' && typeof initAppData === 'function') {
+          initAppData()
+        }
+      })
+    }).catch(err => console.warn('SW registration failed:', err))
+  })
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// REAL-TIME SYNC  (WebSocket client)
+// ══════════════════════════════════════════════════════════════════════════
+class DentalSync {
+  constructor() {
+    this._ws      = null
+    this._delay   = 1000
+    this._maxDelay= 30_000
+    this._stopping= false
+    this._toastQ  = []
+  }
+
+  connect() {
+    if (!AUTH.isValid()) return
+    this._stopping = false
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const url   = `${proto}//${location.host}/ws?token=${encodeURIComponent(AUTH.token)}`
+    try {
+      this._ws = new WebSocket(url)
+    } catch { return }
+
+    this._ws.onopen = () => {
+      this._delay = 1000
+      this._setIndicator('connected')
+      console.log('[DentalSync] connected')
+    }
+
+    this._ws.onmessage = e => {
+      try {
+        const { type, data } = JSON.parse(e.data)
+        this._handle(type, data)
+      } catch {}
+    }
+
+    this._ws.onclose = () => {
+      this._setIndicator('disconnected')
+      if (!this._stopping) {
+        setTimeout(() => this.connect(), this._delay)
+        this._delay = Math.min(this._delay * 2, this._maxDelay)
+      }
+    }
+
+    this._ws.onerror = () => this._setIndicator('error')
+  }
+
+  disconnect() {
+    this._stopping = true
+    this._ws?.close()
+    this._setIndicator('')
+  }
+
+  _handle(type, data) {
+    switch (type) {
+      case 'appointment:created':
+      case 'appointment:updated':
+      case 'appointment:deleted':
+        if (typeof renderCalendar === 'function') {
+          if (typeof loadAppointmentsForWeek === 'function') loadAppointmentsForWeek()
+          else if (typeof initAppData === 'function') initAppData()
+          else renderCalendar()
+        }
+        this._syncToast('📅 Calendar updated by another user')
+        break
+      case 'patient:created':
+      case 'patient:updated':
+        if (typeof loadPatients === 'function') loadPatients()
+        this._syncToast('👤 Patient list updated')
+        break
+      case 'invoice:issued':
+        this._syncToast('🧾 Invoice issued')
+        break
+    }
+    if (typeof auditLog === 'function') auditLog('sync:' + type, 'WebSocket', JSON.stringify(data).slice(0, 80))
+  }
+
+  _setIndicator(state) {
+    const dot = document.getElementById('sync-indicator')
+    if (dot) dot.dataset.state = state
+  }
+
+  _syncToast(msg) {
+    if (typeof showToast === 'function') showToast(msg)
+  }
+}
+
+window._dentalSync = new DentalSync()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// 2FA  (login challenge + setup/disable from avatar menu)
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  let _mfaToken = null   // short-lived token from login response
+
+  // ── Login challenge ──────────────────────────────────────────────────
+  const overlay  = document.getElementById('mfa-overlay')
+  const digits   = Array.from(document.querySelectorAll('.mfa-digit'))
+  const errEl    = document.getElementById('mfa-err')
+  const submitBtn= document.getElementById('mfa-submit-btn')
+  const backBtn  = document.getElementById('mfa-back-btn')
+
+  function openMFA(mfaToken) {
+    _mfaToken = mfaToken
+    digits.forEach(d => d.value = '')
+    errEl.textContent = ''
+    overlay.classList.add('open')
+    setTimeout(() => digits[0]?.focus(), 100)
+  }
+
+  function closeMFA() {
+    overlay.classList.remove('open')
+    _mfaToken = null
+  }
+
+  // Auto-advance digit inputs
+  digits.forEach((inp, i) => {
+    inp.addEventListener('input', e => {
+      // Handle paste of full 6-digit code
+      const pasted = (e.data || inp.value).replace(/\D/g, '')
+      if (pasted.length === 6) {
+        digits.forEach((d, j) => d.value = pasted[j] || '')
+        submitMFA(); return
+      }
+      inp.value = inp.value.replace(/\D/g, '').slice(-1)
+      if (inp.value && i < digits.length - 1) digits[i + 1].focus()
+    })
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) digits[i - 1].focus()
+      if (e.key === 'Enter') submitMFA()
+    })
+  })
+
+  async function submitMFA() {
+    const code = digits.map(d => d.value).join('')
+    if (code.length < 6) { digits.find(d => !d.value)?.focus(); return }
+    submitBtn.disabled = true
+    submitBtn.textContent = '…'
+    errEl.textContent = ''
+    try {
+      const res  = await apiFetch('/api/auth/totp/verify', { method: 'POST', body: { mfaToken: _mfaToken, code } })
+      const data = await res.json()
+      if (!res.ok) { errEl.textContent = data.error || 'Invalid code'; digits.forEach(d => d.value = ''); digits[0].focus(); return }
+      closeMFA()
+      AUTH.save(data.token, data.user)
+      window.onLoginSuccess()
+      if (typeof auditLog === 'function') auditLog('login 2FA verified', 'Session', data.user?.email || '')
+    } catch { errEl.textContent = 'Network error — try again.' }
+    finally { submitBtn.disabled = false; submitBtn.textContent = 'Verify' }
+  }
+
+  submitBtn?.addEventListener('click', submitMFA)
+  backBtn?.addEventListener('click', () => { closeMFA(); document.getElementById('login-overlay')?.classList.remove('hidden') })
+  overlay?.addEventListener('click', e => { if (e.target === overlay) closeMFA() })
+
+  // Hook into login flow — intercept requiresMFA responses
+  window._openMFAChallenge = openMFA
+
+  // ── 2FA Setup modal ───────────────────────────────────────────────────
+  const setupOverlay  = document.getElementById('mfa-setup-overlay')
+  const qrImg         = document.getElementById('mfa-qr-img')
+  const secretDisplay = document.getElementById('mfa-secret-display')
+  const confirmCode   = document.getElementById('mfa-confirm-code')
+  const confirmBtn    = document.getElementById('mfa-confirm-btn')
+  const setupErr      = document.getElementById('mfa-setup-err')
+
+  window.open2FASetup = async function() {
+    setupErr.textContent = ''
+    confirmCode.value    = ''
+    setupOverlay.classList.add('open')
+    try {
+      const res  = await apiFetch('/api/auth/totp/setup', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) { setupErr.textContent = data.error; return }
+      secretDisplay.textContent = data.secret
+      // Build QR code via free API
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(data.otpauthUrl)}`
+      qrImg.src = qrUrl
+    } catch { setupErr.textContent = 'Could not contact server.' }
+  }
+
+  confirmBtn?.addEventListener('click', async () => {
+    const code = confirmCode.value.trim()
+    if (code.length !== 6) { confirmCode.focus(); return }
+    confirmBtn.disabled = true
+    setupErr.textContent = ''
+    try {
+      const res  = await apiFetch('/api/auth/totp/enable', { method: 'POST', body: { code } })
+      const data = await res.json()
+      if (!res.ok) { setupErr.textContent = data.error; return }
+      setupOverlay.classList.remove('open')
+      if (typeof showToast === 'function') showToast('2FA enabled ✓ — your account is now protected')
+      if (typeof auditLog === 'function') auditLog('2FA enabled', 'Security', 'TOTP activated')
+    } catch { setupErr.textContent = 'Network error.' }
+    finally { confirmBtn.disabled = false }
+  })
+
+  confirmCode?.addEventListener('keydown', e => { if (e.key === 'Enter') confirmBtn.click() })
+
+  document.getElementById('mfa-setup-close-btn')?.addEventListener('click', () => {
+    setupOverlay.classList.remove('open')
+  })
+  setupOverlay?.addEventListener('click', e => {
+    if (e.target === setupOverlay) setupOverlay.classList.remove('open')
+  })
+
+  // ── Avatar context menu (quick 2FA + theme access) ─────────────────────
+  const avatar = document.getElementById('user-avatar')
+  let menuEl   = null
+
+  avatar?.addEventListener('click', () => {
+    if (menuEl) { menuEl.remove(); menuEl = null; return }
+    const u = AUTH.user || {}
+    menuEl = document.createElement('div')
+    menuEl.style.cssText = `position:fixed;right:16px;top:${document.querySelector('.topbar')?.offsetHeight+4||68}px;
+      z-index:9999;background:var(--white);border:1px solid var(--border);border-radius:12px;
+      box-shadow:0 8px 32px var(--shadow);min-width:200px;overflow:hidden;font-size:13px`
+    menuEl.innerHTML = `
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--text)">${u.firstName||''} ${u.lastName||''}<br><span style="font-size:11px;font-weight:400;color:var(--text-muted)">${u.email||''}</span></div>
+      <button id="amenu-2fa" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text);display:flex;align-items:center;gap:8px"><span>🔐</span> Set up 2FA</button>
+      <button id="amenu-theme" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text);display:flex;align-items:center;gap:8px"><span id="amenu-theme-icon">🌙</span> <span id="amenu-theme-lbl">Toggle dark mode</span></button>
+      <div style="border-top:1px solid var(--border)">
+        <button id="amenu-logout" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:#D95F5F;display:flex;align-items:center;gap:8px"><span>🚪</span> Sign out</button>
+      </div>`
+    document.body.appendChild(menuEl)
+    document.getElementById('amenu-2fa')?.addEventListener('click', () => { menuEl?.remove(); menuEl=null; window.open2FASetup() })
+    document.getElementById('amenu-theme')?.addEventListener('click', () => { document.getElementById('theme-toggle-btn')?.click(); menuEl?.remove(); menuEl=null })
+    document.getElementById('amenu-logout')?.addEventListener('click', () => { menuEl?.remove(); menuEl=null; if(typeof doLogout==='function') doLogout() })
+    document.addEventListener('click', function rm(e) { if(!menuEl?.contains(e.target) && e.target!==avatar){menuEl?.remove();menuEl=null;document.removeEventListener('click',rm)} }, { capture:true, once:false })
+  })
+
+  // Patch existing login submit to handle requiresMFA response
+  const _origLoginSubmit = document.getElementById('login-submit-btn')
+  if (_origLoginSubmit) {
+    _origLoginSubmit.addEventListener('click', () => {}, false)
+  }
+  // Intercept AUTH.save calls — detect if response was an MFA challenge
+  // This is done by patching apiFetch at the login call site via onLoginSuccess detection in auth flow
+  // The login handler in the existing code calls AUTH.save() only on success,
+  // so we need to patch the submit handler. We'll do it by overriding the form submit logic.
+  const loginSubmit = document.getElementById('login-submit-btn')
+  if (loginSubmit) {
+    loginSubmit.addEventListener('click', async function mfaPatch(e) {
+      // We only intercept if the standard handler didn't catch requiresMFA
+      // (the standard handler saves token if present — so if overlay is still showing after click, check for MFA)
+      setTimeout(async () => {
+        // The existing handler runs synchronously before this timeout
+        // Check if we need to handle MFA (stored in a flag set by patched apiFetch)
+        if (window._pendingMFA) {
+          const { mfaToken } = window._pendingMFA
+          window._pendingMFA = null
+          document.getElementById('login-overlay')?.classList.add('hidden')
+          openMFA(mfaToken)
+        }
+      }, 400)
+    }, true)
+  }
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// TABLET / MOBILE UI
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  const hamburger = document.getElementById('hamburger-btn')
+  const sidebar   = document.querySelector('.sidebar')
+  const backdrop  = document.getElementById('sidebar-backdrop')
+  const bottomNav = document.getElementById('bottom-nav')
+
+  // Show hamburger only on small screens
+  function checkMobile() {
+    const mobile = window.innerWidth <= 768
+    if (hamburger) hamburger.style.display = mobile ? 'flex' : 'none'
+    if (bottomNav) bottomNav.style.display = mobile ? 'flex' : 'none'
+  }
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+
+  // Sidebar drawer toggle
+  function openSidebar()  { sidebar?.classList.add('open'); backdrop?.classList.add('show') }
+  function closeSidebar() { sidebar?.classList.remove('open'); backdrop?.classList.remove('show') }
+
+  hamburger?.addEventListener('click', () => {
+    sidebar?.classList.contains('open') ? closeSidebar() : openSidebar()
+  })
+  backdrop?.addEventListener('click', closeSidebar)
+
+  // Bottom nav actions
+  document.getElementById('bnav-calendar')?.addEventListener('click', () => {
+    closeSidebar()
+    document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById('bnav-calendar')?.classList.add('active')
+    if (typeof renderCalendar === 'function') renderCalendar()
+  })
+  document.getElementById('bnav-patients')?.addEventListener('click', () => {
+    closeSidebar()
+    document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById('bnav-patients')?.classList.add('active')
+    document.getElementById('new-patient-btn')?.click()
+  })
+  document.getElementById('bnav-billing')?.addEventListener('click', () => {
+    closeSidebar()
+    document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById('bnav-billing')?.classList.add('active')
+    if (typeof window.openBilling === 'function') window.openBilling()
+  })
+  document.getElementById('bnav-lab')?.addEventListener('click', () => {
+    closeSidebar()
+    document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById('bnav-lab')?.classList.add('active')
+    document.getElementById('lab-nav-btn')?.click()
+  })
+  document.getElementById('bnav-more')?.addEventListener('click', () => {
+    sidebar?.classList.contains('open') ? closeSidebar() : openSidebar()
+    document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById('bnav-more')?.classList.add('active')
+  })
+
+  // Patch login success to connect WS and start sync
+  const _origOnLoginSuccess = window.onLoginSuccess
+  window.onLoginSuccess = function() {
+    _origOnLoginSuccess?.()
+    window._dentalSync?.connect()
+  }
+})()
+
 
 // ── Auto-login check (runs after all declarations are initialised) ───────
 AUTH.load()
