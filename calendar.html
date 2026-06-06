@@ -3181,6 +3181,69 @@
 
     body[data-role="dentist"] #ops-nav-btn { display:none !important; }
 
+    /* ── Plan badge & upgrade banner ────────────────────────────────────── */
+    .plan-badge-btn {
+      padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+      cursor: pointer; border: none; font-family: inherit; white-space: nowrap;
+      display: flex; align-items: center; gap: 5px; transition: all .15s;
+    }
+    .plan-badge-btn.trial   { background: #1a3a2a; color: #22C47A; }
+    .plan-badge-btn.solo    { background: #1a2a3a; color: #5B9ED6; }
+    .plan-badge-btn.clinic  { background: #2a1a3a; color: #B794F4; }
+    .plan-badge-btn.group   { background: #3a2a10; color: #E8A87C; }
+    .plan-badge-btn.past_due{ background: #FEF3C7; color: #92400E; }
+    .plan-badge-btn.cancelled{ background: #FEE2E2; color: #991B1B; }
+    .plan-badge-btn:hover   { opacity: .85; }
+
+    /* Upgrade modal */
+    .upgrade-overlay {
+      position: fixed; inset: 0; z-index: 99500; display: flex;
+      align-items: center; justify-content: center;
+      background: rgba(20,19,17,.85); backdrop-filter: blur(6px);
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .upgrade-overlay.open { opacity: 1; pointer-events: all; }
+    .upgrade-modal {
+      width: 640px; max-width: 96vw; background: var(--white);
+      border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,.4); overflow: hidden;
+    }
+    .upgrade-header { padding: 28px 32px 20px; background: linear-gradient(135deg,#2C2A27,#3D3B37); text-align: center; }
+    .upgrade-title  { font-size: 22px; font-weight: 800; color: #fff; margin: 8px 0 4px; }
+    .upgrade-sub    { font-size: 14px; color: rgba(255,255,255,.6); }
+    .upgrade-plans  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 24px; }
+    .upgrade-plan   {
+      border: 2px solid var(--border); border-radius: 14px; padding: 20px 16px;
+      text-align: center; cursor: pointer; transition: all .15s;
+    }
+    .upgrade-plan:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .upgrade-plan.recommended { border-color: var(--primary); }
+    .upgrade-plan-name  { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .upgrade-plan-price { font-size: 26px; font-weight: 900; color: var(--primary); }
+    .upgrade-plan-per   { font-size: 11px; color: var(--text-muted); }
+    .upgrade-plan-features { font-size: 12px; color: var(--text-mid); margin: 12px 0; line-height: 1.7; text-align: left; }
+    .upgrade-plan-btn {
+      width: 100%; padding: 9px; border-radius: 9px; border: none;
+      background: var(--primary); color: #fff; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit; margin-top: 8px;
+    }
+    .upgrade-plan-btn:hover { background: #2D8B7A; }
+    .upgrade-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 8px; border: none; background: rgba(255,255,255,.15); color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* Forgot password in login overlay */
+    .forgot-link { font-size: 12px; color: var(--text-muted); cursor: pointer; text-align: center; margin-top: 8px; }
+    .forgot-link:hover { color: var(--primary); }
+    #forgot-form, #reset-form { display: none; }
+    #forgot-form.show, #reset-form.show { display: block; }
+    .reset-success { background: var(--primary-light); border: 1px solid var(--primary-mid); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--primary); margin-bottom: 12px; display: none; }
+    .reset-success.show { display: block; }
+
+    /* Impersonation banner */
+    .impersonation-banner {
+      background: #92400E; color: #FEF3C7; text-align: center;
+      font-size: 12px; font-weight: 700; padding: 6px 16px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 99998; letter-spacing: .03em;
+    }
+
     /* ── Prescription Module ────────────────────────────────────────────── */
     .rx-overlay {
       position:fixed; inset:0; z-index:8300; display:flex; align-items:center; justify-content:center;
@@ -4297,6 +4360,60 @@
   </div>
 </div>
 
+<!-- ── Impersonation banner ───────────────────────────────────────────── -->
+<div class="impersonation-banner" id="impersonation-banner" style="display:none">
+  ⚠️ SUPERADMIN — You are viewing this practice as <span id="impersonation-target"></span>. <a href="/superadmin" style="color:#FEF3C7;font-weight:900">← Back to Admin Panel</a>
+</div>
+
+<!-- ── Upgrade modal ──────────────────────────────────────────────────── -->
+<div class="upgrade-overlay" id="upgrade-overlay">
+  <div class="upgrade-modal" style="position:relative">
+    <button class="upgrade-close" id="upgrade-close-btn">✕</button>
+    <div class="upgrade-header">
+      <div style="font-size:36px">🚀</div>
+      <div class="upgrade-title" data-en="Upgrade Your Plan" data-el="Αναβάθμιση Πλάνου">Upgrade Your Plan</div>
+      <div class="upgrade-sub" id="upgrade-reason">Unlock the full power of Dental Assistant Pro</div>
+    </div>
+    <div class="upgrade-plans">
+
+      <div class="upgrade-plan" data-plan="solo">
+        <div class="upgrade-plan-name">Solo</div>
+        <div class="upgrade-plan-price">€49</div>
+        <div class="upgrade-plan-per">/month</div>
+        <div class="upgrade-plan-features">
+          ✓ 1 dentist<br>✓ Unlimited patients<br>✓ All clinical features<br>✓ Billing & invoicing<br>✓ WhatsApp reminders
+        </div>
+        <button class="upgrade-plan-btn" data-plan="solo">Choose Solo</button>
+      </div>
+
+      <div class="upgrade-plan recommended" data-plan="clinic">
+        <div style="font-size:10px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Most Popular</div>
+        <div class="upgrade-plan-name">Clinic</div>
+        <div class="upgrade-plan-price">€99</div>
+        <div class="upgrade-plan-per">/month</div>
+        <div class="upgrade-plan-features">
+          ✓ Up to 5 dentists<br>✓ Unlimited patients<br>✓ All features + Lab portal<br>✓ Referral network<br>✓ Analytics dashboard
+        </div>
+        <button class="upgrade-plan-btn" data-plan="clinic">Choose Clinic</button>
+      </div>
+
+      <div class="upgrade-plan" data-plan="group">
+        <div class="upgrade-plan-name">Group</div>
+        <div class="upgrade-plan-price">€199</div>
+        <div class="upgrade-plan-per">/month</div>
+        <div class="upgrade-plan-features">
+          ✓ Unlimited dentists<br>✓ Multi-location<br>✓ All features<br>✓ Priority support<br>✓ Custom onboarding
+        </div>
+        <button class="upgrade-plan-btn" data-plan="group">Choose Group</button>
+      </div>
+
+    </div>
+    <div style="text-align:center;padding:0 24px 20px;font-size:12px;color:var(--text-muted)">
+      Secure payment via Stripe · Cancel anytime · 14-day money-back guarantee
+    </div>
+  </div>
+</div>
+
 <!-- ── Print area for prescriptions ──────────────────────────────────── -->
 <div id="rx-print-area"></div>
 
@@ -5087,6 +5204,33 @@
           <span id="lbl-no-account">New practice?</span>
           <a href="#" id="goto-register"> Register here</a>
         </div>
+        <div class="forgot-link" id="goto-forgot">Forgot password?</div>
+      </div>
+
+      <!-- Forgot password form -->
+      <div id="forgot-form">
+        <div class="reset-success" id="forgot-success">Check your email — a reset link is on its way.</div>
+        <div class="login-err" id="forgot-err"></div>
+        <div class="lf">
+          <label>Your email address</label>
+          <input type="email" id="forgot-email" placeholder="doctor@clinic.gr" autocomplete="email" />
+        </div>
+        <button class="login-btn" id="forgot-submit-btn">Send reset link</button>
+        <div class="forgot-link" id="goto-login-from-forgot">← Back to sign in</div>
+      </div>
+
+      <!-- Reset password form (shown when ?reset=token in URL) -->
+      <div id="reset-form">
+        <div class="login-err" id="reset-err"></div>
+        <div class="lf">
+          <label>New password</label>
+          <input type="password" id="reset-password" placeholder="Min. 8 characters" autocomplete="new-password" />
+        </div>
+        <div class="lf">
+          <label>Confirm password</label>
+          <input type="password" id="reset-confirm" placeholder="Repeat new password" autocomplete="new-password" />
+        </div>
+        <button class="login-btn" id="reset-submit-btn">Set new password</button>
       </div>
 
       <!-- Register form -->
@@ -5191,6 +5335,7 @@
       <span data-en="New Appointment" data-el="Νέο Ραντεβού">New Appointment</span>
     </button>
     <span class="role-chip" id="role-chip" style="display:none"></span>
+    <button class="plan-badge-btn trial" id="plan-badge-btn" style="display:none"></button>
     <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode">🌙</button>
     <div class="sync-indicator" id="sync-indicator" data-state="" title="Sync status"></div>
     <div class="avatar" id="user-avatar" title="User" style="cursor:pointer">MP</div>
@@ -13623,6 +13768,277 @@ window._dentalSync = new DentalSync()
     _origOnLoginSuccess?.()
     window._dentalSync?.connect()
   }
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SAAS — BILLING, PLAN BADGE, UPGRADE MODAL
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  let _planStatus = null
+
+  const PLAN_LABELS = { trial:'Free Trial', solo:'Solo', clinic:'Clinic', group:'Group', enterprise:'Enterprise' }
+
+  async function loadBillingStatus() {
+    try {
+      const res  = await apiFetch('/api/billing/status')
+      if (!res.ok) return
+      const data = await res.json()
+      _planStatus = data
+      renderPlanBadge(data)
+    } catch {}
+  }
+
+  function renderPlanBadge(data) {
+    const btn = document.getElementById('plan-badge-btn')
+    if (!btn) return
+    btn.style.display = 'flex'
+
+    if (data.planStatus === 'trialing') {
+      const days = data.trialDaysLeft ?? 0
+      btn.className = 'plan-badge-btn trial'
+      btn.textContent = days > 0 ? `Trial · ${days}d left` : 'Trial expired'
+      if (days <= 3) btn.style.background = '#FEE2E2', btn.style.color = '#991B1B'
+    } else if (data.planStatus === 'past_due') {
+      btn.className = 'plan-badge-btn past_due'
+      btn.textContent = '⚠ Payment overdue'
+    } else if (data.planStatus === 'cancelled') {
+      btn.className = 'plan-badge-btn cancelled'
+      btn.textContent = 'Subscription cancelled'
+    } else {
+      btn.className = `plan-badge-btn ${data.plan}`
+      btn.textContent = PLAN_LABELS[data.plan] || data.plan
+    }
+  }
+
+  // Plan badge click → upgrade modal (or portal for paying customers)
+  document.getElementById('plan-badge-btn')?.addEventListener('click', () => {
+    if (_planStatus?.planStatus === 'active' && _planStatus?.plan !== 'trial') {
+      openBillingPortal()
+    } else {
+      openUpgradeModal()
+    }
+  })
+
+  // ── Upgrade modal ──────────────────────────────────────────────────────
+  const upgradeOverlay = document.getElementById('upgrade-overlay')
+
+  window.openUpgradeModal = function(reason) {
+    if (reason) document.getElementById('upgrade-reason').textContent = reason
+    upgradeOverlay?.classList.add('open')
+    if (typeof auditLog === 'function') auditLog('view', 'Upgrade modal', reason || '')
+  }
+
+  document.getElementById('upgrade-close-btn')?.addEventListener('click', () => upgradeOverlay?.classList.remove('open'))
+  upgradeOverlay?.addEventListener('click', e => { if (e.target === upgradeOverlay) upgradeOverlay.classList.remove('open') })
+
+  document.querySelectorAll('.upgrade-plan-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const plan = btn.dataset.plan
+      btn.disabled = true; btn.textContent = 'Loading…'
+      try {
+        const res  = await apiFetch('/api/billing/create-checkout', { method: 'POST', body: { plan } })
+        const data = await res.json()
+        if (data.url) {
+          window.location.href = data.url
+        } else {
+          if (typeof showToast === 'function') showToast(data.error || 'Could not start checkout.')
+          btn.disabled = false; btn.textContent = `Choose ${plan.charAt(0).toUpperCase() + plan.slice(1)}`
+        }
+      } catch {
+        if (typeof showToast === 'function') showToast('Network error — please try again.')
+        btn.disabled = false
+      }
+    })
+  })
+
+  async function openBillingPortal() {
+    try {
+      const res  = await apiFetch('/api/billing/portal', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) window.open(data.url, '_blank')
+      else if (typeof showToast === 'function') showToast(data.error || 'Could not open billing portal.')
+    } catch { if (typeof showToast === 'function') showToast('Network error.') }
+  }
+
+  // Handle ?billing=success|cancelled in URL after Stripe redirect
+  const urlP = new URLSearchParams(location.search)
+  if (urlP.get('billing') === 'success') {
+    setTimeout(() => {
+      if (typeof showToast === 'function') showToast('🎉 Subscription activated! Welcome aboard.')
+      loadBillingStatus()
+    }, 800)
+    history.replaceState({}, '', location.pathname)
+  }
+  if (urlP.get('billing') === 'cancelled') {
+    history.replaceState({}, '', location.pathname)
+  }
+
+  // ── Plan enforcement — check before dentist/patient is added ────────────
+  window.checkPlanLimit = async function(resource) {
+    try {
+      const res  = await apiFetch('/api/billing/status')
+      if (!res.ok) return true  // fail open
+      const data = await res.json()
+      const { limits, usage } = data
+      if (resource === 'dentist' && limits.maxDentists && usage.dentists >= limits.maxDentists) {
+        openUpgradeModal(`You've reached your plan limit of ${limits.maxDentists} dentist${limits.maxDentists > 1 ? 's' : ''}. Upgrade to add more.`)
+        return false
+      }
+      if (resource === 'patient' && limits.maxPatients && usage.patients >= limits.maxPatients) {
+        openUpgradeModal(`You've reached your plan limit of ${limits.maxPatients} patients. Upgrade for unlimited patients.`)
+        return false
+      }
+    } catch {}
+    return true
+  }
+
+  // ── Billing info in avatar menu (injected by avatar menu builder) ────────
+  window._getBillingMenuHtml = function() {
+    if (!_planStatus) return ''
+    const { planName, planStatus, trialDaysLeft } = _planStatus
+    const label = planStatus === 'trialing' ? `Trial · ${trialDaysLeft}d left` : planName
+    return `
+      <div style="padding:10px 16px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Plan</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${label}</div>
+      </div>
+      <button id="amenu-upgrade" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--primary);display:flex;align-items:center;gap:8px;font-weight:600"><span>🚀</span> ${planStatus === 'active' && _planStatus.plan !== 'trial' ? 'Manage Billing' : 'Upgrade Plan'}</button>
+      <button id="amenu-export" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text);display:flex;align-items:center;gap:8px"><span>⬇</span> Export my data</button>`
+  }
+
+  // Hook into onLoginSuccess to load billing
+  const _prevLoginSuccess = window.onLoginSuccess
+  window.onLoginSuccess = function() {
+    _prevLoginSuccess?.()
+    if (AUTH.user?.role === 'admin') loadBillingStatus()
+  }
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// PASSWORD RESET FLOW
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  function showLoginSection(which) {
+    // which: 'login' | 'register' | 'forgot' | 'reset'
+    document.getElementById('login-form')?.classList.toggle('hide', which !== 'login')
+    document.getElementById('reg-form')?.classList.toggle('show', which === 'register')
+    document.getElementById('forgot-form')?.classList.toggle('show', which === 'forgot')
+    document.getElementById('reset-form')?.classList.toggle('show', which === 'reset')
+  }
+
+  // Forgot password link
+  document.getElementById('goto-forgot')?.addEventListener('click', () => showLoginSection('forgot'))
+  document.getElementById('goto-login-from-forgot')?.addEventListener('click', () => showLoginSection('login'))
+
+  // Send reset link
+  document.getElementById('forgot-submit-btn')?.addEventListener('click', async () => {
+    const email = document.getElementById('forgot-email')?.value.trim()
+    const errEl = document.getElementById('forgot-err')
+    const successEl = document.getElementById('forgot-success')
+    errEl.textContent = ''
+    successEl.classList.remove('show')
+    if (!email) { errEl.textContent = 'Enter your email address.'; return }
+    const btn = document.getElementById('forgot-submit-btn')
+    btn.disabled = true; btn.textContent = 'Sending…'
+    try {
+      await apiFetch('/api/account/forgot-password', { method: 'POST', body: { email } })
+      successEl.classList.add('show')
+      document.getElementById('forgot-email').value = ''
+    } catch { errEl.textContent = 'Network error — try again.' }
+    finally { btn.disabled = false; btn.textContent = 'Send reset link' }
+  })
+
+  // Check for ?reset=token in URL on page load
+  const urlP  = new URLSearchParams(location.search)
+  const token = urlP.get('reset')
+  if (token) {
+    history.replaceState({}, '', location.pathname)
+    // Show reset form once login overlay is visible
+    window._pendingResetToken = token
+  }
+
+  function activateResetForm(token) {
+    showLoginSection('reset')
+    document.getElementById('reset-submit-btn')?.addEventListener('click', async () => {
+      const pwd     = document.getElementById('reset-password')?.value
+      const confirm = document.getElementById('reset-confirm')?.value
+      const errEl   = document.getElementById('reset-err')
+      errEl.textContent = ''
+      if (!pwd || pwd.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; return }
+      if (pwd !== confirm) { errEl.textContent = 'Passwords do not match.'; return }
+      const btn = document.getElementById('reset-submit-btn')
+      btn.disabled = true; btn.textContent = 'Updating…'
+      try {
+        const res  = await apiFetch('/api/account/reset-password', { method: 'POST', body: { token, password: pwd } })
+        const data = await res.json()
+        if (res.ok) {
+          showLoginSection('login')
+          if (typeof showToast === 'function') showToast('Password updated — please sign in.')
+        } else {
+          errEl.textContent = data.error || 'Reset failed. The link may have expired.'
+        }
+      } catch { errEl.textContent = 'Network error — try again.' }
+      finally { btn.disabled = false; btn.textContent = 'Set new password' }
+    }, { once: true })
+  }
+
+  // Activate after DOM is ready + login overlay shown
+  if (window._pendingResetToken) {
+    setTimeout(() => activateResetForm(window._pendingResetToken), 200)
+  }
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// IMPERSONATION — handle ?_impersonate= token from superadmin panel
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  const urlP = new URLSearchParams(location.search)
+  const raw  = urlP.get('_impersonate')
+  if (!raw) return
+  history.replaceState({}, '', location.pathname)
+  try {
+    const { token, user } = JSON.parse(decodeURIComponent(raw))
+    AUTH.save(token, user)
+    const banner = document.getElementById('impersonation-banner')
+    const target = document.getElementById('impersonation-target')
+    if (banner && target) {
+      target.textContent = `${user.email} (${user.practiceName || user.practiceId})`
+      banner.style.display = 'block'
+      // Push topbar down to account for banner
+      document.querySelector('.topbar')?.style.setProperty('margin-top', '32px')
+    }
+    if (typeof auditLog === 'function') auditLog('impersonation', user.email, 'Superadmin session started')
+  } catch {}
+})()
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// AVATAR MENU — inject billing items (patch the existing menu builder)
+// ══════════════════════════════════════════════════════════════════════════
+;(function() {
+  // The avatar menu is built inside the 2FA IIFE — we patch it by
+  // extending the click handler via event delegation on the body
+  document.body.addEventListener('click', e => {
+    const upgradeBtn = e.target.closest('#amenu-upgrade')
+    const exportBtn  = e.target.closest('#amenu-export')
+    if (upgradeBtn) {
+      const isActive = window._planStatus?.planStatus === 'active' && window._planStatus?.plan !== 'trial'
+      if (isActive) {
+        apiFetch('/api/billing/portal', { method: 'POST' })
+          .then(r => r.json()).then(d => { if (d.url) window.open(d.url, '_blank') })
+          .catch(() => {})
+      } else {
+        window.openUpgradeModal?.()
+      }
+    }
+    if (exportBtn) {
+      window.open('/api/account/export', '_blank')
+      if (typeof auditLog === 'function') auditLog('export', 'Account data', 'GDPR Art. 20')
+    }
+  })
 })()
 
 

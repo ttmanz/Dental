@@ -42,12 +42,19 @@ app.use('/api/surveys',         require('./routes/surveys'))
 app.use('/api/whatsapp',        require('./routes/whatsapp'))
 app.use('/api/organizations',   require('./routes/organizations'))
 
+// ── Stripe webhook needs raw body — mount BEFORE express.json() ───────────
+app.use('/api/billing/webhook', require('express').raw({ type: 'application/json' }), require('./routes/billing').router)
+app.use('/api/billing',    require('./routes/billing').router)
+app.use('/api/account',    require('./routes/account'))
+app.use('/api/superadmin', require('./routes/superadmin'))
+
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
 
 // Serve patient portal + app
 const ROOT = path.resolve(__dirname, '../../')
-app.get('/portal', (_, res) => res.sendFile(path.join(ROOT, 'patient-portal.html')))
-app.get('/',       (_, res) => res.sendFile(path.join(ROOT, 'calendar.html')))
+app.get('/portal',     (_, res) => res.sendFile(path.join(ROOT, 'patient-portal.html')))
+app.get('/superadmin', (_, res) => res.sendFile(path.join(ROOT, 'superadmin.html')))
+app.get('/',           (_, res) => res.sendFile(path.join(ROOT, 'calendar.html')))
 app.use(express.static(ROOT))
 
 app.use((err, req, res, _next) => {

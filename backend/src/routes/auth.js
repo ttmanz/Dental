@@ -91,6 +91,9 @@ router.post('/register-practice', async (req, res) => {
     )
 
     await queryRaw(`INSERT INTO ai_settings (practice_id) VALUES ($1)`, [practice.id])
+    // Send welcome email (non-blocking)
+    const appUrl = process.env.APP_URL || 'http://localhost:3001'
+    require('../email').sendWelcome({ to: email, name: first, practiceName: practiceName.trim(), loginUrl: appUrl }).catch(() => {})
 
     // Seed default procedures catalog for new practice
     await queryRaw(`
