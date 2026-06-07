@@ -13813,55 +13813,45 @@ window.auditLog = (function() {
 // NEXT AVAILABLE SLOTS
 // ══════════════════════════════════════════════════════════════════════════
 ;(function() {
-  const SLOT_MINS   = 30
-  const DAY_START   = 8    // 08:00
-  const DAY_END     = 19   // last slot starts at 18:30
-  const SLOTS_PER   = 3    // slots to find per dentist
-  const LOOK_AHEAD  = 60   // days to search ahead
+  const SLOT_MINS  = 30
+  const DAY_START  = 8    // 08:00
+  const DAY_END    = 19   // last slot starts 18:30
+  const SLOTS_PER  = 3
+  const LOOK_AHEAD = 60
 
-  function dateStr(d) { return d.toISOString().slice(0,10) }
-
-  function fmtSlot(date, h, m) {
-    const dd = String(date.getDate()).padStart(2,'0')
-    const mm = String(date.getMonth()+1).padStart(2,'0')
-    const hh = String(h).padStart(2,'0')
-    const mn = String(m).padStart(2,'0')
-    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
-    return { day: `${days[date.getDay()]} ${dd}/${mm}`, time: `${hh}:${mn}` }
+  function localDateStr(d) {
+    return d.getFullYear() + '-' +
+      String(d.getMonth()+1).padStart(2,'0') + '-' +
+      String(d.getDate()).padStart(2,'0')
   }
 
-  function findSlotsForDentist(dentistName, fromDate) {
+  function fmtSlot(date, h, m) {
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+    return {
+      day:  days[date.getDay()] + ' ' + String(date.getDate()).padStart(2,'0') + '/' + String(date.getMonth()+1).padStart(2,'0'),
+      time: String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0')
+    }
+  }
+
+  function findSlotsForDentist(dentistName, appts, fromDate) {
     const slots = []
-    const today = new Date(fromDate); today.setHours(0,0,0,0)
+    const base  = new Date(fromDate); base.setHours(0,0,0,0)
 
     for (let di = 0; di < LOOK_AHEAD && slots.length < SLOTS_PER; di++) {
-      const d = new Date(today); d.setDate(today.getDate() + di)
-      const ds = dateStr(d)
-      const dayAppts = APPTS.filter(a =>
-        a.dentist === dentistName &&
-        a.date    === ds &&
-        a.status  !== 'cancelled'
+      const d  = new Date(base); d.setDate(base.getDate() + di)
+      const ds = localDateStr(d)
+      const dayAppts = appts.filter(a =>
+        a.dentist === dentistName && a.date === ds && a.status !== 'cancelled'
       )
-
-      // walk 30-min slots through the day
       for (let h = DAY_START; h < DAY_END && slots.length < SLOTS_PER; h++) {
         for (let m = 0; m < 60 && slots.length < SLOTS_PER; m += SLOT_MINS) {
-          // skip past slots on today
-          if (di === 0) {
-            const now = new Date(fromDate)
-            if (h * 60 + m <= now.getHours() * 60 + now.getMinutes()) continue
-          }
-          const slotStart = h * 60 + m
-          const slotEnd   = slotStart + SLOT_MINS
+          if (di === 0 && h * 60 + m <= fromDate.getHours() * 60 + fromDate.getMinutes()) continue
+          const sS = h * 60 + m, sE = sS + SLOT_MINS
           const busy = dayAppts.some(a => {
-            const aStart = a.hour * 60 + a.min
-            const aEnd   = aStart + (a.dur || 30)
-            return aStart < slotEnd && aEnd > slotStart
+            const aS = a.hour * 60 + (a.min||0), aE = aS + (a.dur||30)
+            return aS < sE && aE > sS
           })
-          if (!busy) {
-            const fmt = fmtSlot(d, h, m)
-            slots.push(fmt)
-          }
+          if (!busy) slots.push(fmtSlot(d, h, m))
         }
       }
     }
@@ -13871,44 +13861,59 @@ window.auditLog = (function() {
   window.openNextAvailable = function() {
     const panel   = document.getElementById('next-ava-panel')
     const content = document.getElementById('next-ava-content')
+    if (!panel) return
 
-    if (panel.style.display !== 'none') { panel.style.display = 'none'; return }
+    // toggle
+    if (panel.style.display === 'block') { panel.style.display = 'none'; return }
+
+    panel.style.display = 'block'
+    content.innerHTML   = '<div style="padding:12px 14px;color:var(--text-muted);font-size:12px">Scanning…</div>'
 
     const dentists = window._DENTISTS || []
     if (!dentists.length) {
-      content.innerHTML = '<div style="padding:12px 14px;color:var(--text-muted);font-size:12px">No dentists found.</div>'
-      panel.style.display = 'block'
+      content.innerHTML = '<div style="padding:12px 14px;color:var(--text-muted);font-size:12px">No dentists loaded yet — try again in a moment.</div>'
       return
     }
 
-    content.innerHTML = '<div style="padding:12px 14px;color:var(--text-muted);font-size:12px">Scanning…</div>'
-    panel.style.display = 'block'
+    // fetch fresh appointments then compute
+    ;(async function() {
+      try {
+        const now  = new Date()
+        const from = localDateStr(now)
+        const toD  = new Date(now); toD.setDate(now.getDate() + LOOK_AHEAD)
+        const to   = localDateStr(toD)
+        const res  = await apiFetch('/api/appointments?from=' + from + '&to=' + to + '&limit=2000')
+        let appts  = APPTS  // fallback to in-memory
+        if (res && res.ok) {
+          const raw = await res.json()
+          appts = (Array.isArray(raw) ? raw : (raw.data || [])).map(apptFromApi)
+        }
 
-    const now = new Date()
-    let html = ''
+        let html = ''
+        dentists.forEach(d => {
+          const color = d.color || 'var(--primary)'
+          const name  = d.display_name || d.name || '—'
+          const slots = findSlotsForDentist(name, appts, now)
 
-    dentists.forEach(d => {
-      const color  = d.color || 'var(--primary)'
-      const name   = d.display_name || d.name || '—'
-      const slots  = findSlotsForDentist(name, now)
-
-      html += `<div style="padding:8px 14px;border-bottom:1px solid var(--border)">`
-      html += `<div style="font-size:11px;font-weight:800;color:${color};text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">${name}</div>`
-
-      if (!slots.length) {
-        html += `<div style="font-size:11px;color:var(--text-muted);padding:2px 0">No slots in next ${LOOK_AHEAD} days</div>`
-      } else {
-        slots.forEach(s => {
-          html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0">`
-          html += `<span style="color:var(--text-mid)">${s.day}</span>`
-          html += `<span style="font-weight:700;color:var(--text);background:var(--primary-light);border-radius:5px;padding:1px 7px">${s.time}</span>`
+          html += `<div style="padding:8px 14px;border-bottom:1px solid var(--border)">`
+          html += `<div style="font-size:11px;font-weight:800;color:${color};text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">${name}</div>`
+          if (!slots.length) {
+            html += `<div style="font-size:11px;color:var(--text-muted)">No slots in next ${LOOK_AHEAD} days</div>`
+          } else {
+            slots.forEach(s => {
+              html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0">`
+              html += `<span style="font-size:11px;color:var(--text-mid)">${s.day}</span>`
+              html += `<span style="font-size:11px;font-weight:700;color:var(--primary);background:var(--primary-light);border-radius:5px;padding:1px 7px">${s.time}</span>`
+              html += `</div>`
+            })
+          }
           html += `</div>`
         })
+        content.innerHTML = html || '<div style="padding:12px 14px;color:var(--text-muted);font-size:12px">No slots found.</div>'
+      } catch(err) {
+        content.innerHTML = `<div style="padding:12px 14px;color:#D95F5F;font-size:12px">Error: ${err.message}</div>`
       }
-      html += `</div>`
-    })
-
-    content.innerHTML = html || '<div style="padding:12px 14px;color:var(--text-muted);font-size:12px">No slots found.</div>'
+    })()
   }
 })()
 
