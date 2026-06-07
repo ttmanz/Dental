@@ -12604,16 +12604,6 @@ const EOPYY_CATALOG = [
   })
 })()
 
-// Extend DentalSync to fire custom events for WA messages
-;(function() {
-  const origHandle = DentalSync.prototype._handle
-  DentalSync.prototype._handle = function(type, data) {
-    origHandle.call(this, type, data)
-    if (type.startsWith('whatsapp:')) {
-      document.dispatchEvent(new CustomEvent('dentalWsEvent', { detail: { type, data } }))
-    }
-  }
-})()
 
 // Wire surveys tab into the switchOpsTab function
 ;(function() {
@@ -14002,6 +13992,17 @@ class DentalSync {
 }
 
 window._dentalSync = new DentalSync()
+
+// Extend DentalSync to fire custom events for WA messages
+;(function() {
+  const origHandle = DentalSync.prototype._handle
+  DentalSync.prototype._handle = function(type, data) {
+    origHandle.call(this, type, data)
+    if (type.startsWith('whatsapp:')) {
+      document.dispatchEvent(new CustomEvent('dentalWsEvent', { detail: { type, data } }))
+    }
+  }
+})()
 
 
 // ══════════════════════════════════════════════════════════════════════════
