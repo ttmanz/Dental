@@ -6312,10 +6312,11 @@ window.openStaffPanel = function() {
           '<input id="sp-email" placeholder="Email address"   style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
           '<input id="sp-pwd"   placeholder="Temp password (min 8)" type="password" style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
         '</div>' +
-        '<div style="display:flex;gap:8px;align-items:center">' +
+        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
           '<select id="sp-role" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit">' + roleOptions + '</select>' +
           '<button id="sp-add" style="padding:8px 22px;border-radius:8px;border:none;background:#3D9E8F;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Add Member</button>' +
         '</div>' +
+        '<div id="sp-role-preview" style="display:none;background:#fff;border:1px solid #E5E0D8;border-radius:10px;padding:12px 14px;margin-bottom:8px"></div>' +
         '<div id="sp-err" style="color:#D95F5F;font-size:12px;margin-top:6px;display:none"></div>' +
       '</div>' +
     '</div>'
@@ -6327,14 +6328,42 @@ window.openStaffPanel = function() {
   p.querySelector('#sp-close').onclick = function() { p.remove(); window._staffPanelEl = null }
   p.onclick = function(e) { if (e.target === p) { p.remove(); window._staffPanelEl = null } }
 
-  // Permissions toggle
+  // Permissions toggle (full table)
   p.querySelector('#sp-perm-toggle').onclick = function() {
-    var tbl = p.querySelector('#sp-perm-table')
+    var tbl   = p.querySelector('#sp-perm-table')
     var arrow = p.querySelector('#sp-perm-arrow')
-    var open = tbl.style.display === 'block'
+    var open  = tbl.style.display === 'block'
     tbl.style.display = open ? 'none' : 'block'
-    arrow.textContent = open ? '▼ Show' : '▲ Hide'
+    arrow.textContent = open ? '▼ Show all roles' : '▲ Hide'
   }
+
+  // Live permissions preview — updates as owner changes the role dropdown
+  function showRolePreview(role) {
+    var preview = p.querySelector('#sp-role-preview')
+    if (!role) { preview.style.display = 'none'; return }
+    var color = ROLE_COLOR[role] || '#ccc'
+    var can   = PERMS.filter(function(r){ return r[role] > 0 })
+    var cant  = PERMS.filter(function(r){ return r[role] === 0 })
+    preview.style.display = 'block'
+    preview.innerHTML =
+      '<div style="font-size:12px;font-weight:800;color:' + color + ';text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">' +
+        ROLE_LABEL[role] + ' — what this person can access' +
+      '</div>' +
+      '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+        '<div style="flex:1;min-width:140px">' +
+          '<div style="font-size:11px;font-weight:700;color:#3D9E8F;margin-bottom:4px">✓ CAN ACCESS</div>' +
+          can.map(function(r){ return '<div style="font-size:12px;color:#2C2A27;padding:2px 0">' + r.feature + (r[role]===2?' <span style="font-size:10px;color:#E8A87C">(view only)</span>':'') + '</div>' }).join('') +
+        '</div>' +
+        (cant.length ? '<div style="flex:1;min-width:140px">' +
+          '<div style="font-size:11px;font-weight:700;color:#D95F5F;margin-bottom:4px">— NO ACCESS</div>' +
+          cant.map(function(r){ return '<div style="font-size:12px;color:#9C9890;padding:2px 0">' + r.feature + '</div>' }).join('') +
+        '</div>' : '') +
+      '</div>'
+  }
+
+  var roleSelect = p.querySelector('#sp-role')
+  showRolePreview(roleSelect.value)
+  roleSelect.onchange = function() { showRolePreview(this.value) }
 
   // Load staff list
   function loadStaff() {
