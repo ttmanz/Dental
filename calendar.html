@@ -5307,11 +5307,11 @@
       <span>💊</span>
       <span data-en="Rx" data-el="Rx">Rx</span>
     </button>
-    <button class="add-appt-btn" id="ops-nav-btn" style="background:#2C2A27;box-shadow:0 2px 8px rgba(44,42,39,.3)">
+    <button class="add-appt-btn" id="ops-nav-btn" onclick="window.openOpsHub&&window.openOpsHub()" style="background:#2C2A27;box-shadow:0 2px 8px rgba(44,42,39,.3)">
       <span>📊</span>
       <span data-en="Analytics" data-el="Αναλυτικά">Analytics</span>
     </button>
-    <button class="add-appt-btn" id="supplier-nav-btn" style="background:#4BAE8A;box-shadow:0 2px 8px rgba(75,174,138,.3)">
+    <button class="add-appt-btn" id="supplier-nav-btn" onclick="window.openSupplierHub&&window.openSupplierHub()" style="background:#4BAE8A;box-shadow:0 2px 8px rgba(75,174,138,.3)">
       <span>📦</span>
       <span data-en="Suppliers" data-el="Προμηθευτές">Suppliers</span>
     </button>
@@ -5361,7 +5361,7 @@
         <button id="reminders-nav-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 8px;border-radius:8px;background:#8B7CC8;color:#fff;font-size:11px;font-weight:600;border:none;cursor:pointer;">
           <span>🔔</span><span data-en="Reminders" data-el="Υπενθυμίσεις">Reminders</span>
         </button>
-        <button id="referral-nav-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 8px;border-radius:8px;background:#8B7CC8;color:#fff;font-size:11px;font-weight:600;border:none;cursor:pointer;">
+        <button id="referral-nav-btn" onclick="window.openReferralNetwork&&window.openReferralNetwork()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 8px;border-radius:8px;background:#8B7CC8;color:#fff;font-size:11px;font-weight:600;border:none;cursor:pointer;">
           <span>🔗</span><span data-en="Referrals" data-el="Παραπομπές">Referrals</span>
         </button>
       </div>
@@ -6190,6 +6190,50 @@
 window._avatarMenuEl = null
 window._staffPanelEl = null
 
+// ── API sync for Referrals / Suppliers / Specialists ─────────────────────
+// Loads DB data into localStorage so the existing panels work transparently
+window._syncPanelData = async function() {
+  try {
+    var [specRes, refRes, supRes, ordRes] = await Promise.all([
+      apiFetch('/api/specialists'),
+      apiFetch('/api/specialists/referrals'),
+      apiFetch('/api/suppliers'),
+      apiFetch('/api/suppliers/orders')
+    ])
+    if (specRes.ok) {
+      var specs = ((await specRes.json()).data||[]).map(function(s){
+        return { id:s.id, name:s.name, specialty:s.specialty, clinic:s.clinic||'',
+                 phone:s.phone||'', email:s.email||'', notes:s.notes||'' }
+      })
+      localStorage.setItem('dental_specialists', JSON.stringify(specs))
+    }
+    if (refRes.ok) {
+      var refs = ((await refRes.json()).data||[]).map(function(r){
+        return { id:r.id, patientId:r.patient_id||'', patientName:r.patient_name||'',
+                 specialistId:r.specialist_id||'', reason:r.reason||'',
+                 notes:r.notes||'', status:r.status||'pending', date:r.referred_at||'' }
+      })
+      localStorage.setItem('dental_referrals', JSON.stringify(refs))
+    }
+    if (supRes.ok) {
+      var sups = ((await supRes.json()).data||[]).map(function(s){
+        return { id:s.id, name:s.name, category:s.category||'', contact:s.contact||'',
+                 phone:s.phone||'', email:s.email||'',
+                 avgTurnaroundDays:s.avg_turnaround_days||3, notes:s.notes||'' }
+      })
+      localStorage.setItem('dental_suppliers', JSON.stringify(sups))
+    }
+    if (ordRes.ok) {
+      var ords = ((await ordRes.json()).data||[]).map(function(o){
+        return { id:o.id, supplierId:o.supplier_id||'', supplierName:o.supplier_name||'',
+                 items:o.items||[], cost:parseFloat(o.cost||0),
+                 status:o.status||'draft', dateOrdered:o.ordered_at||'', notes:o.notes||'' }
+      })
+      localStorage.setItem('dental_orders', JSON.stringify(ords))
+    }
+  } catch(e) { console.warn('Panel data sync failed:', e) }
+}
+
 // 2FA setup — defined at top so it always works regardless of IIFE errors
 window.open2FASetup = function() {
   var overlay = document.getElementById('mfa-setup-overlay')
@@ -6630,6 +6674,7 @@ function apiFetch(path, options = {}) {
     }
     overlay.classList.add('hidden')
     if (typeof initAppData === 'function') initAppData()
+    if (typeof window._syncPanelData === 'function') window._syncPanelData()
   }
 
   window.doLogout = function() {
@@ -14421,10 +14466,80 @@ window._dentalSync = new DentalSync()
   render()
 })()
 
+// ── Wire panel saves to API (runs after all IIFEs have defined their vars) ──
+;(function patchPanelSaves() {
+  // Patch specialist save → POST/PATCH /api/specialists
+  var _origSaveSpec = typeof saveSpecialists === 'function' ? saveSpecialists : null
+  if (_origSaveSpec) {
+    window.saveSpecialists = function() {
+      _origSaveSpec()
+      // Re-sync from localStorage to find new entries (those without a UUID are new)
+      var specs = JSON.parse(localStorage.getItem('dental_specialists')||'[]')
+      specs.forEach(function(s) {
+        if (!s._synced) {
+          apiFetch('/api/specialists',{method:'POST',body:{name:s.name,specialty:s.specialty,clinic:s.clinic,phone:s.phone,email:s.email,notes:s.notes}})
+            .then(function(r){return r.json()}).then(function(d){
+              if (d.data && d.data.id) { s.id = d.data.id; s._synced = true; localStorage.setItem('dental_specialists',JSON.stringify(specs)) }
+            }).catch(function(){})
+        }
+      })
+    }
+  }
+  // Patch referral save → POST /api/specialists/referrals
+  var _origSaveRef = typeof saveReferrals === 'function' ? saveReferrals : null
+  if (_origSaveRef) {
+    window.saveReferrals = function() {
+      _origSaveRef()
+      var refs = JSON.parse(localStorage.getItem('dental_referrals')||'[]')
+      refs.forEach(function(r) {
+        if (!r._synced) {
+          apiFetch('/api/specialists/referrals',{method:'POST',body:{patient_name:r.patientName,specialist_id:r.specialistId,reason:r.reason,notes:r.notes,status:r.status}})
+            .then(function(res){return res.json()}).then(function(d){
+              if (d.data && d.data.id) { r.id=d.data.id; r._synced=true; localStorage.setItem('dental_referrals',JSON.stringify(refs)) }
+            }).catch(function(){})
+        }
+      })
+    }
+  }
+  // Patch supplier save → POST /api/suppliers
+  var _origSaveSup = typeof saveSuppliers === 'function' ? saveSuppliers : null
+  if (_origSaveSup) {
+    window.saveSuppliers = function() {
+      _origSaveSup()
+      var sups = JSON.parse(localStorage.getItem('dental_suppliers')||'[]')
+      sups.forEach(function(s) {
+        if (!s._synced) {
+          apiFetch('/api/suppliers',{method:'POST',body:{name:s.name,category:s.category,contact:s.contact,phone:s.phone,email:s.email,avg_turnaround_days:s.avgTurnaroundDays,notes:s.notes}})
+            .then(function(r){return r.json()}).then(function(d){
+              if (d.data && d.data.id) { s.id=d.data.id; s._synced=true; localStorage.setItem('dental_suppliers',JSON.stringify(sups)) }
+            }).catch(function(){})
+        }
+      })
+    }
+  }
+  // Patch orders save → POST /api/suppliers/orders
+  var _origSaveOrd = typeof saveOrders === 'function' ? saveOrders : null
+  if (_origSaveOrd) {
+    window.saveOrders = function() {
+      _origSaveOrd()
+      var ords = JSON.parse(localStorage.getItem('dental_orders')||'[]')
+      ords.forEach(function(o) {
+        if (!o._synced) {
+          apiFetch('/api/suppliers/orders',{method:'POST',body:{supplier_id:o.supplierId,items:o.items,cost:o.cost,status:o.status,ordered_at:o.dateOrdered,notes:o.notes}})
+            .then(function(r){return r.json()}).then(function(d){
+              if (d.data && d.data.id) { o.id=d.data.id; o._synced=true; localStorage.setItem('dental_orders',JSON.stringify(ords)) }
+            }).catch(function(){})
+        }
+      })
+    }
+  }
+})()
+
 // ── Auto-login check (runs after all declarations are initialised) ───────
 AUTH.load()
 if (AUTH.isValid()) {
   window.onLoginSuccess()
+  window._syncPanelData()
 }
 </script>
 </body>
