@@ -6368,9 +6368,7 @@ function apiFetch(path, options = {}) {
   document.getElementById('login-password').addEventListener('keydown', e => { if (e.key==='Enter') doLogin() })
   document.getElementById('reg-password').addEventListener('keydown', e => { if (e.key==='Enter') doRegister() })
 
-  document.getElementById('user-avatar').addEventListener('click', () => {
-    if (confirm('Sign out?')) window.doLogout()
-  })
+  // Avatar click handled by the full menu (see initStaffPanel / avatar menu section)
 })()
 
 // ── i18n ────────────────────────────────────────────────────────────────
