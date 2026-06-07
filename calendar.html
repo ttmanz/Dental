@@ -5325,7 +5325,6 @@
     </button>
     <span class="role-chip" id="role-chip" style="display:none"></span>
     <button class="plan-badge-btn trial" id="plan-badge-btn" style="display:none"></button>
-    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode">🌙</button>
     <div class="sync-indicator" id="sync-indicator" data-state="" title="Sync status"></div>
     <div class="avatar" id="user-avatar" title="User" style="cursor:pointer">MP</div>
   </div>
@@ -13700,32 +13699,47 @@ window._dentalSync = new DentalSync()
     if (e.target === setupOverlay) setupOverlay.classList.remove('open')
   })
 
-  // ── Avatar context menu (quick 2FA + theme access) ─────────────────────
+  // ── Avatar context menu ────────────────────────────────────────────────
   const avatar = document.getElementById('user-avatar')
   let menuEl   = null
 
+  function getJwtPayload() {
+    try { return JSON.parse(atob((AUTH.token||'').split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))) }
+    catch { return {} }
+  }
+
   avatar?.addEventListener('click', () => {
     if (menuEl) { menuEl.remove(); menuEl = null; return }
-    const u = AUTH.user || {}
+    const u    = AUTH.user || {}
+    const jwt  = getJwtPayload()
+    // Use JWT as source of truth for role — works even when AUTH.user is stale
+    const role = u.role || jwt.role || ''
+    const email= u.email || jwt.email || ''
+    const name = (u.firstName||'') + (u.lastName ? ' ' + u.lastName : '') || email
+    const canManageStaff = ['owner','admin'].includes(role)
+
     menuEl = document.createElement('div')
-    menuEl.style.cssText = `position:fixed;right:16px;top:${document.querySelector('.topbar')?.offsetHeight+4||68}px;
+    menuEl.style.cssText = `position:fixed;right:16px;top:${(document.querySelector('.topbar')?.offsetHeight||64)+4}px;
       z-index:9999;background:var(--white);border:1px solid var(--border);border-radius:12px;
-      box-shadow:0 8px 32px var(--shadow);min-width:200px;overflow:hidden;font-size:13px`
-    const canManageStaff = ['owner','admin'].includes(u.role)
+      box-shadow:0 8px 32px var(--shadow);min-width:210px;overflow:hidden;font-size:13px`
     menuEl.innerHTML = `
-      <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--text)">${u.firstName||''} ${u.lastName||''}<br><span style="font-size:11px;font-weight:400;color:var(--text-muted)">${u.email||''}</span></div>
-      ${canManageStaff ? `<button id="amenu-staff" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text);display:flex;align-items:center;gap:8px"><span>👥</span> Manage Staff</button>` : ''}
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+        <div style="font-weight:700;color:var(--text)">${name}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${email}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--primary);margin-top:3px;text-transform:capitalize">${role}</div>
+      </div>
+      <button id="amenu-staff" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text);display:flex;align-items:center;gap:8px"><span>👥</span> Manage Staff</button>
       <button id="amenu-2fa" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text);display:flex;align-items:center;gap:8px"><span>🔐</span> Set up 2FA</button>
-      <button id="amenu-theme" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text);display:flex;align-items:center;gap:8px"><span id="amenu-theme-icon">🌙</span> <span id="amenu-theme-lbl">Toggle dark mode</span></button>
       <div style="border-top:1px solid var(--border)">
         <button id="amenu-logout" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;color:#D95F5F;display:flex;align-items:center;gap:8px"><span>🚪</span> Sign out</button>
       </div>`
     document.body.appendChild(menuEl)
     document.getElementById('amenu-staff')?.addEventListener('click', () => { menuEl?.remove(); menuEl=null; window.openStaffPanel?.() })
-    document.getElementById('amenu-2fa')?.addEventListener('click', () => { menuEl?.remove(); menuEl=null; window.open2FASetup() })
-    document.getElementById('amenu-theme')?.addEventListener('click', () => { document.getElementById('theme-toggle-btn')?.click(); menuEl?.remove(); menuEl=null })
+    document.getElementById('amenu-2fa')?.addEventListener('click', () => { menuEl?.remove(); menuEl=null; window.open2FASetup?.() })
     document.getElementById('amenu-logout')?.addEventListener('click', () => { menuEl?.remove(); menuEl=null; if(typeof doLogout==='function') doLogout() })
-    document.addEventListener('click', function rm(e) { if(!menuEl?.contains(e.target) && e.target!==avatar){menuEl?.remove();menuEl=null;document.removeEventListener('click',rm)} }, { capture:true, once:false })
+    document.addEventListener('click', function rm(e) {
+      if (!menuEl?.contains(e.target) && e.target !== avatar) { menuEl?.remove(); menuEl=null; document.removeEventListener('click',rm) }
+    }, { capture:true })
   })
 
   // Patch existing login submit to handle requiresMFA response
