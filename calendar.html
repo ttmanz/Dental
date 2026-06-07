@@ -5303,10 +5303,6 @@
       <span>🔬</span>
       <span data-en="Lab" data-el="Εργαστήριο">Lab</span>
     </button>
-    <button class="add-appt-btn" id="reminders-nav-btn" style="background:#8B7CC8;box-shadow:0 2px 8px rgba(139,124,200,.3)">
-      <span>🔔</span>
-      <span data-en="Reminders" data-el="Υπενθυμίσεις">Reminders</span>
-    </button>
     <button class="add-appt-btn" id="rx-nav-btn" style="background:#D95F5F;box-shadow:0 2px 8px rgba(217,95,95,.3)">
       <span>💊</span>
       <span data-en="Rx" data-el="Rx">Rx</span>
@@ -5314,10 +5310,6 @@
     <button class="add-appt-btn" id="ops-nav-btn" style="background:#2C2A27;box-shadow:0 2px 8px rgba(44,42,39,.3)">
       <span>📊</span>
       <span data-en="Analytics" data-el="Αναλυτικά">Analytics</span>
-    </button>
-    <button class="add-appt-btn" id="referral-nav-btn" style="background:#8B7CC8;box-shadow:0 2px 8px rgba(139,124,200,.3)">
-      <span>🔗</span>
-      <span data-en="Referrals" data-el="Παραπομπές">Referrals</span>
     </button>
     <button class="add-appt-btn" id="supplier-nav-btn" style="background:#4BAE8A;box-shadow:0 2px 8px rgba(75,174,138,.3)">
       <span>📦</span>
@@ -5358,11 +5350,21 @@
   <!-- Sidebar -->
   <aside class="sidebar">
 
-    <!-- Language toggle -->
-    <div style="display:flex;justify-content:center;padding:10px 16px 0">
-      <div class="lang-toggle">
-        <button class="lang-btn active" id="lang-en">EN</button>
-        <button class="lang-btn" id="lang-el">ΕΛ</button>
+    <!-- Language toggle + sidebar quick-nav -->
+    <div style="display:flex;flex-direction:column;gap:8px;padding:10px 12px 0">
+      <div style="display:flex;justify-content:center">
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="lang-en">EN</button>
+          <button class="lang-btn" id="lang-el">ΕΛ</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button id="reminders-nav-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 8px;border-radius:8px;background:#8B7CC8;color:#fff;font-size:11px;font-weight:600;border:none;cursor:pointer;">
+          <span>🔔</span><span data-en="Reminders" data-el="Υπενθυμίσεις">Reminders</span>
+        </button>
+        <button id="referral-nav-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 8px;border-radius:8px;background:#8B7CC8;color:#fff;font-size:11px;font-weight:600;border:none;cursor:pointer;">
+          <span>🔗</span><span data-en="Referrals" data-el="Παραπομπές">Referrals</span>
+        </button>
       </div>
     </div>
 
@@ -5408,6 +5410,29 @@
       <div class="dentist-filter-lock" id="dentist-filter-lock">
         <span>🔒</span>
         <span data-en="Filtered to your schedule" data-el="Φιλτράρισμα στο πρόγραμμά σας">Filtered to your schedule</span>
+      </div>
+    </div>
+
+    <!-- Locum Tenens -->
+    <div>
+      <div class="section-header">
+        <div class="section-title" data-en="LOCUM TENENS" data-el="ΑΝΑΠΛΗΡΩΤΕΣ">LOCUM TENENS</div>
+        <div style="display:flex;gap:4px">
+          <button class="section-remove-btn" id="remove-locum-btn" title="Remove locum">－</button>
+          <button class="section-add-btn" id="add-locum-btn" title="Add visiting doctor">＋</button>
+        </div>
+      </div>
+      <div class="add-inline-form" id="add-locum-form">
+        <input class="add-inline-input" id="locum-name-input" type="text" placeholder="Dr. First Surname" maxlength="40"/>
+        <input class="add-inline-input" id="locum-dates-input" type="text" placeholder="Dates (e.g. 10–14 Jun)" maxlength="40" style="margin-top:4px"/>
+        <div class="add-color-row" id="locum-color-row"></div>
+        <div class="add-inline-actions">
+          <button class="add-inline-btn cancel" id="locum-add-cancel">Cancel</button>
+          <button class="add-inline-btn primary" id="locum-add-confirm">Add</button>
+        </div>
+      </div>
+      <div class="dentist-list" id="locum-list">
+        <!-- Locum rows injected by JS -->
       </div>
     </div>
 
@@ -14066,6 +14091,81 @@ window._dentalSync = new DentalSync()
   })
 })()
 
+
+// ── Locum Tenens ─────────────────────────────────────────────────────────
+;(function initLocum() {
+  const LOCUM_KEY = 'dental_locums'
+  const PALETTE   = ['#E07850','#8B7CC8','#5B9ED6','#4BAE8A','#C8A830','#D95F5F','#3D9E8F']
+  let locums      = JSON.parse(localStorage.getItem(LOCUM_KEY) || '[]')
+  let removeMode  = false
+  let addColor    = PALETTE[0]
+
+  const list      = document.getElementById('locum-list')
+  const form      = document.getElementById('add-locum-form')
+  const nameInput = document.getElementById('locum-name-input')
+  const datesInput= document.getElementById('locum-dates-input')
+  const colorRow  = document.getElementById('locum-color-row')
+  const addBtn    = document.getElementById('add-locum-btn')
+  const removeBtn = document.getElementById('remove-locum-btn')
+  const cancelBtn = document.getElementById('locum-add-cancel')
+  const confirmBtn= document.getElementById('locum-add-confirm')
+
+  function save() { localStorage.setItem(LOCUM_KEY, JSON.stringify(locums)) }
+
+  function buildSwatches() {
+    colorRow.innerHTML = ''
+    PALETTE.forEach(c => {
+      const s = document.createElement('div')
+      s.className = 'color-swatch' + (c === addColor ? ' active' : '')
+      s.style.background = c
+      s.addEventListener('click', () => { addColor = c; buildSwatches() })
+      colorRow.appendChild(s)
+    })
+  }
+
+  function render() {
+    list.querySelectorAll('.dentist-item[data-locum]').forEach(el => el.remove())
+    locums.forEach(l => {
+      const item = document.createElement('div')
+      item.className = 'dentist-item' + (removeMode ? '' : '')
+      item.dataset.locum = l.id
+      item.style.color = l.color
+      item.innerHTML = `
+        <div class="dentist-check"></div>
+        <div class="dentist-dot" style="background:${l.color}"></div>
+        <div style="flex:1">
+          <div class="dentist-name">${l.name}</div>
+          ${l.dates ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px">${l.dates}</div>` : ''}
+        </div>`
+      if (removeMode) {
+        item.style.cursor = 'pointer'
+        item.addEventListener('click', () => {
+          locums = locums.filter(x => x.id !== l.id); save(); render()
+        })
+      }
+      list.appendChild(item)
+    })
+  }
+
+  addBtn.addEventListener('click', () => { form.style.display = 'block'; buildSwatches(); nameInput.focus() })
+  cancelBtn.addEventListener('click', () => { form.style.display = 'none'; nameInput.value = ''; datesInput.value = '' })
+  confirmBtn.addEventListener('click', () => {
+    const name = nameInput.value.trim()
+    if (!name) return
+    locums.push({ id: Date.now().toString(36), name, dates: datesInput.value.trim(), color: addColor })
+    save(); render()
+    form.style.display = 'none'; nameInput.value = ''; datesInput.value = ''
+  })
+  removeBtn.addEventListener('click', () => {
+    removeMode = !removeMode
+    removeBtn.style.background = removeMode ? 'var(--red)' : ''
+    removeBtn.style.color      = removeMode ? '#fff' : ''
+    render()
+  })
+
+  form.style.display = 'none'
+  render()
+})()
 
 // ── Auto-login check (runs after all declarations are initialised) ───────
 AUTH.load()
