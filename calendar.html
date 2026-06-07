@@ -6158,7 +6158,9 @@
 
 <script>
 // ── API config ───────────────────────────────────────────────────────────
-const API_BASE = window.location.origin === 'http://localhost:5175' ? 'http://localhost:3001' : window.location.origin
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000'
+  : 'https://api.dentapro.org'
 
 // ── Auth state ───────────────────────────────────────────────────────────
 const AUTH = {
@@ -6382,30 +6384,45 @@ let PATIENTS = []
 // ── API ↔ frontend data mappers ──────────────────────────────────────────
 function patientFromApi(p) {
   return {
-    id: p.id,
+    id:       p.id,
     fullName: `${p.first_name} ${p.last_name}`,
-    dob:     p.date_of_birth || '',
-    phone:   p.phone         || '',
-    email:   p.email         || '',
-    address: p.address       || '',
-    gender:  p.gender        || '',
-    photo:   p.photo_url     || '',
-    notes:   p.notes         || '',
+    dob:      p.dob || p.date_of_birth || '',
+    phone:    p.mobile || p.phone || '',
+    email:    p.email    || '',
+    address:  p.address  || '',
+    gender:   p.gender   || '',
+    photo:    p.photo_url || '',
+    notes:    p.notes    || '',
+    amka:     p.amka     || '',
+    insurance:p.insurance|| '',
     createdAt: p.created_at,
   }
 }
 
 function apptFromApi(a) {
-  const [h, m] = (a.start_time || '09:00').split(':').map(Number)
+  // Support both legacy flat format and our API's timestamptz format
+  let date, hour, min, dur
+  if (a.starts_at) {
+    const start = new Date(a.starts_at)
+    const end   = new Date(a.ends_at || a.starts_at)
+    date  = start.toISOString().slice(0, 10)
+    hour  = start.getHours()
+    min   = start.getMinutes()
+    dur   = Math.round((end - start) / 60000) || 30
+  } else {
+    const [h, m] = (a.start_time || '09:00').split(':').map(Number)
+    date = a.appointment_date || ''
+    hour = h; min = m
+    dur  = a.duration_minutes || 30
+  }
   return {
     id:      a.id,
     patient: a.patient_name,
-    type:    a.type,
+    type:    a.type || a.title || 'appointment',
     dentist: a.dentist_name,
-    date:    a.appointment_date,
-    hour: h, min: m,
-    dur:     a.duration_minutes || 30,
+    date, hour, min, dur,
     notes:   a.notes || '',
+    color:   a.color || '',
     status:  a.status,
     confirmStatus: a.status === 'confirmed' ? 'confirmed'
                  : a.status === 'cancelled' ? 'declined' : 'pending',
@@ -6426,7 +6443,8 @@ async function fetchDentists() {
   try {
     const res = await apiFetch('/api/dentists')
     if (!res.ok) return
-    const dentists = await res.json()
+    const raw = await res.json()
+    const dentists = Array.isArray(raw) ? raw : (raw.data || [])
     window._DENTISTS = dentists
     Object.keys(DENTIST_MAP).forEach(k => delete DENTIST_MAP[k])
     dentists.forEach(d => { DENTIST_MAP[d.id] = d.display_name })
@@ -6450,7 +6468,8 @@ async function fetchPatients() {
   try {
     const res = await apiFetch('/api/patients?limit=500')
     if (!res.ok) return
-    const patients = await res.json()
+    const raw = await res.json()
+    const patients = Array.isArray(raw) ? raw : (raw.data || [])
     PATIENTS.length = 0
     patients.forEach(p => PATIENTS.push(patientFromApi(p)))
   } catch(e) { console.warn('fetchPatients failed', e) }
@@ -6460,9 +6479,10 @@ async function fetchAppts() {
   try {
     const from = new Date(); from.setMonth(from.getMonth() - 3)
     const to   = new Date(); to.setMonth(to.getMonth() + 6)
-    const res  = await apiFetch(`/api/appointments?from=${toISODate(from)}&to=${toISODate(to)}`)
+    const res  = await apiFetch(`/api/appointments?from=${from.toISOString()}&to=${to.toISOString()}`)
     if (!res.ok) return
-    const appts = await res.json()
+    const raw = await res.json()
+    const appts = Array.isArray(raw) ? raw : (raw.data || [])
     APPTS.length = 0
     appts.forEach(a => APPTS.push(apptFromApi(a)))
   } catch(e) { console.warn('fetchAppts failed', e) }
