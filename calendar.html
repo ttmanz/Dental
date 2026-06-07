@@ -6190,6 +6190,36 @@
 window._avatarMenuEl = null
 window._staffPanelEl = null
 
+// 2FA setup — defined at top so it always works regardless of IIFE errors
+window.open2FASetup = function() {
+  var overlay = document.getElementById('mfa-setup-overlay')
+  if (!overlay) {
+    alert('2FA setup is not available on this page.')
+    return
+  }
+  var errEl = document.getElementById('mfa-setup-err')
+  var qrImg = document.getElementById('mfa-qr-img')
+  var secretEl = document.getElementById('mfa-secret-display')
+  var codeEl = document.getElementById('mfa-confirm-code')
+  if (errEl) errEl.textContent = ''
+  if (codeEl) codeEl.value = ''
+  overlay.classList.add('open')
+
+  // Load TOTP secret from API
+  apiFetch('/api/auth/totp/setup', { method: 'POST' })
+    .then(function(r) { return r.json() })
+    .then(function(data) {
+      if (data.error) { if(errEl) errEl.textContent = data.error; return }
+      if (secretEl) secretEl.textContent = data.secret || ''
+      if (qrImg && data.otpauthUrl) {
+        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(data.otpauthUrl)
+      }
+    })
+    .catch(function() {
+      if (errEl) errEl.textContent = 'Could not contact server. 2FA will be available soon.'
+    })
+}
+
 // Open staff panel — defined here at top so it always exists
 window.openStaffPanel = function() {
   // Remove existing if any
