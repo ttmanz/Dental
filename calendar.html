@@ -6188,6 +6188,121 @@
 <script>
 // ── Avatar menu (defined first so onclick attr works immediately) ─────────
 window._avatarMenuEl = null
+window._staffPanelEl = null
+
+// Open staff panel — defined here at top so it always exists
+window.openStaffPanel = function() {
+  // Remove existing if any
+  if (window._staffPanelEl) { window._staffPanelEl.remove(); window._staffPanelEl = null }
+
+  var p = document.createElement('div')
+  p.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(44,42,39,.5);display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif'
+  p.innerHTML =
+    '<div style="background:#fff;border-radius:20px;width:min(680px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(44,42,39,.18);overflow:hidden;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:22px 28px;border-bottom:1px solid #E5E0D8;flex-shrink:0">' +
+        '<div>' +
+          '<div style="font-size:18px;font-weight:800;color:#2C2A27">👥 Manage Staff</div>' +
+          '<div style="font-size:13px;color:#9C9890;margin-top:2px">Add, edit and manage your team\'s access</div>' +
+        '</div>' +
+        '<button id="sp-close" style="width:32px;height:32px;border-radius:8px;border:1px solid #E5E0D8;background:none;cursor:pointer;font-size:18px;color:#5C5854">×</button>' +
+      '</div>' +
+      '<div id="sp-list" style="flex:1;overflow-y:auto;padding:16px 28px">Loading…</div>' +
+      '<div style="border-top:1px solid #E5E0D8;padding:20px 28px;flex-shrink:0;background:#F7F4EF">' +
+        '<div style="font-size:12px;font-weight:700;color:#9C9890;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Add New Team Member</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">' +
+          '<input id="sp-first" placeholder="First name"  style="padding:9px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
+          '<input id="sp-last"  placeholder="Last name"   style="padding:9px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
+          '<input id="sp-email" placeholder="Email"       style="padding:9px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
+          '<input id="sp-pwd"   placeholder="Temp password" type="password" style="padding:9px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px">' +
+          '<select id="sp-role" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit">' +
+            '<option value="receptionist">Receptionist</option>' +
+            '<option value="dentist">Dentist</option>' +
+            '<option value="admin">Admin</option>' +
+            '<option value="owner">Owner</option>' +
+          '</select>' +
+          '<button id="sp-add" style="padding:9px 22px;border-radius:8px;border:none;background:#3D9E8F;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Add Member</button>' +
+        '</div>' +
+        '<div id="sp-err" style="color:#D95F5F;font-size:12px;margin-top:8px;display:none"></div>' +
+      '</div>' +
+    '</div>'
+
+  document.body.appendChild(p)
+  window._staffPanelEl = p
+
+  // Close handlers
+  p.querySelector('#sp-close').onclick = function() { p.remove(); window._staffPanelEl = null }
+  p.onclick = function(e) { if (e.target === p) { p.remove(); window._staffPanelEl = null } }
+
+  // Load staff list
+  var ROLE_COLOR = { owner:'#3D9E8F', admin:'#5B9ED6', dentist:'#8B7CC8', receptionist:'#E8A87C' }
+  var ROLE_LABEL = { owner:'Owner', admin:'Admin', dentist:'Dentist', receptionist:'Receptionist' }
+
+  function loadStaff() {
+    var list = p.querySelector('#sp-list')
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:#9C9890">Loading…</div>'
+    apiFetch('/api/users').then(function(r) { return r.json() }).then(function(data) {
+      var staff = Array.isArray(data) ? data : (data.data || [])
+      if (!staff.length) { list.innerHTML = '<div style="padding:24px;color:#9C9890;text-align:center">No staff yet. Add your first team member below.</div>'; return }
+      list.innerHTML = staff.map(function(s) {
+        var initials = ((s.first_name||'')[0]||'').toUpperCase() + ((s.last_name||'')[0]||'').toUpperCase()
+        var color = ROLE_COLOR[s.role] || '#ccc'
+        return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F0EDE8">' +
+          '<div style="width:38px;height:38px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">' + initials + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:14px;font-weight:700;color:' + (s.active===false?'#9C9890':'#2C2A27') + '">' + s.first_name + ' ' + s.last_name + '</div>' +
+            '<div style="font-size:12px;color:#9C9890">' + s.email + '</div>' +
+          '</div>' +
+          '<span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:' + color + '22;color:' + color + '">' + (ROLE_LABEL[s.role]||s.role) + '</span>' +
+          '<select data-uid="' + s.id + '" style="padding:5px 8px;border-radius:6px;border:1px solid #E5E0D8;font-size:12px;font-family:inherit">' +
+            '<option value="receptionist"' + (s.role==='receptionist'?' selected':'') + '>Receptionist</option>' +
+            '<option value="dentist"' + (s.role==='dentist'?' selected':'') + '>Dentist</option>' +
+            '<option value="admin"' + (s.role==='admin'?' selected':'') + '>Admin</option>' +
+            '<option value="owner"' + (s.role==='owner'?' selected':'') + '>Owner</option>' +
+          '</select>' +
+          '<button data-uid="' + s.id + '" data-active="' + (s.active!==false) + '" style="padding:5px 12px;border-radius:6px;border:1px solid #E5E0D8;font-size:12px;cursor:pointer;background:#fff;font-family:inherit;color:' + (s.active===false?'#3D9E8F':'#D95F5F') + '">' + (s.active===false?'Activate':'Deactivate') + '</button>' +
+        '</div>'
+      }).join('')
+      // Role change
+      list.querySelectorAll('select[data-uid]').forEach(function(sel) {
+        sel.onchange = function() { apiFetch('/api/users/'+sel.dataset.uid, {method:'PATCH',body:{role:sel.value}}).then(loadStaff) }
+      })
+      // Toggle active
+      list.querySelectorAll('button[data-uid]').forEach(function(btn) {
+        btn.onclick = function() { apiFetch('/api/users/'+btn.dataset.uid, {method:'PATCH',body:{active:btn.dataset.active==='true'?false:true}}).then(loadStaff) }
+      })
+    }).catch(function() {
+      p.querySelector('#sp-list').innerHTML = '<div style="padding:24px;color:#D95F5F">Could not load staff — check connection.</div>'
+    })
+  }
+  loadStaff()
+
+  // Add member
+  p.querySelector('#sp-add').onclick = function() {
+    var first = p.querySelector('#sp-first').value.trim()
+    var last  = p.querySelector('#sp-last').value.trim()
+    var email = p.querySelector('#sp-email').value.trim()
+    var pwd   = p.querySelector('#sp-pwd').value
+    var role  = p.querySelector('#sp-role').value
+    var err   = p.querySelector('#sp-err')
+    err.style.display = 'none'
+    if (!first||!last||!email||!pwd) { err.textContent='All fields required'; err.style.display='block'; return }
+    if (pwd.length<8) { err.textContent='Password min 8 characters'; err.style.display='block'; return }
+    var btn = p.querySelector('#sp-add'); btn.disabled=true; btn.textContent='Adding…'
+    apiFetch('/api/users',{method:'POST',body:{first_name:first,last_name:last,email:email,password:pwd,role:role}})
+      .then(function(r){return r.json()})
+      .then(function(data){
+        if (data.success===false||data.error) { err.textContent=data.error||'Failed'; err.style.display='block'; return }
+        p.querySelector('#sp-first').value=''; p.querySelector('#sp-last').value=''
+        p.querySelector('#sp-email').value=''; p.querySelector('#sp-pwd').value=''
+        loadStaff()
+      })
+      .catch(function(){ err.textContent='Network error'; err.style.display='block' })
+      .finally(function(){ btn.disabled=false; btn.textContent='Add Member' })
+  }
+}
+
 window._avatarClick  = function(avatarEl) {
   if (window._avatarMenuEl) {
     window._avatarMenuEl.remove()
@@ -14109,153 +14224,6 @@ window._dentalSync = new DentalSync()
 })()
 
 
-// ── Staff Management Panel ───────────────────────────────────────────────
-;(function initStaffPanel() {
-
-  // ── Inject HTML ──────────────────────────────────────────────────────────
-  const panel = document.createElement('div')
-  panel.id = 'staff-panel'
-  panel.style.cssText = `
-    position:fixed;inset:0;z-index:9000;background:rgba(44,42,39,.45);
-    display:none;align-items:center;justify-content:center;
-    backdrop-filter:blur(4px);`
-  panel.innerHTML = `
-    <div style="background:var(--white);border-radius:20px;width:min(680px,96vw);max-height:90vh;
-      display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(44,42,39,.18);overflow:hidden;">
-
-      <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;
-        padding:22px 28px;border-bottom:1px solid var(--border);flex-shrink:0">
-        <div>
-          <div style="font-size:18px;font-weight:800;color:var(--text)">👥 Manage Staff</div>
-          <div style="font-size:13px;color:var(--text-muted);margin-top:2px">Add, edit and manage your team's access</div>
-        </div>
-        <button id="staff-close-btn" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
-          background:none;cursor:pointer;font-size:18px;color:var(--text-mid)">×</button>
-      </div>
-
-      <!-- Staff list -->
-      <div id="staff-list-wrap" style="flex:1;overflow-y:auto;padding:16px 28px"></div>
-
-      <!-- Add form -->
-      <div style="border-top:1px solid var(--border);padding:20px 28px;flex-shrink:0;background:var(--cream)">
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;
-          letter-spacing:.06em;margin-bottom:12px">Add New Team Member</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          <input id="sf-first" placeholder="First name" style="padding:9px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:inherit;background:var(--white)"/>
-          <input id="sf-last"  placeholder="Last name"  style="padding:9px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:inherit;background:var(--white)"/>
-          <input id="sf-email" placeholder="Email address" type="email" style="padding:9px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:inherit;background:var(--white)"/>
-          <input id="sf-pwd"   placeholder="Temporary password" type="password" style="padding:9px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:inherit;background:var(--white)"/>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <select id="sf-role" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:inherit;background:var(--white)">
-            <option value="receptionist">Receptionist</option>
-            <option value="dentist">Dentist</option>
-            <option value="admin">Admin</option>
-            <option value="owner">Owner</option>
-          </select>
-          <button id="sf-add-btn" style="padding:9px 22px;border-radius:8px;border:none;background:var(--primary);
-            color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
-            Add Member
-          </button>
-        </div>
-        <div id="sf-err" style="color:#D95F5F;font-size:12px;margin-top:8px;display:none"></div>
-      </div>
-    </div>`
-  document.body.appendChild(panel)
-
-  // ── Role badge colours ───────────────────────────────────────────────────
-  const ROLE_COLOR = { owner:'#3D9E8F', admin:'#5B9ED6', dentist:'#8B7CC8', receptionist:'#E8A87C' }
-  const ROLE_LABEL = { owner:'Owner', admin:'Admin', dentist:'Dentist', receptionist:'Receptionist' }
-
-  // ── Render staff list ────────────────────────────────────────────────────
-  function renderList(staff) {
-    const wrap = document.getElementById('staff-list-wrap')
-    if (!staff.length) { wrap.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted)">No staff added yet.</div>'; return }
-    wrap.innerHTML = staff.map(s => `
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-        <div style="width:38px;height:38px;border-radius:50%;background:${ROLE_COLOR[s.role]||'#ccc'};
-          display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">
-          ${((s.first_name||'')[0]||'').toUpperCase()}${((s.last_name||'')[0]||'').toUpperCase()}
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:${s.active===false?'var(--text-muted)':'var(--text)'}">${s.first_name} ${s.last_name}</div>
-          <div style="font-size:12px;color:var(--text-muted)">${s.email}</div>
-        </div>
-        <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
-          background:${ROLE_COLOR[s.role]}22;color:${ROLE_COLOR[s.role]}">${ROLE_LABEL[s.role]||s.role}</span>
-        <select data-uid="${s.id}" class="sf-role-select" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-size:12px;font-family:inherit;background:var(--white)">
-          <option value="receptionist" ${s.role==='receptionist'?'selected':''}>Receptionist</option>
-          <option value="dentist"      ${s.role==='dentist'?'selected':''}>Dentist</option>
-          <option value="admin"        ${s.role==='admin'?'selected':''}>Admin</option>
-          <option value="owner"        ${s.role==='owner'?'selected':''}>Owner</option>
-        </select>
-        <button data-uid="${s.id}" data-active="${s.active!==false}" class="sf-toggle-btn" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--white);font-family:inherit;color:${s.active===false?'var(--primary)':'#D95F5F'}">
-          ${s.active===false ? 'Activate' : 'Deactivate'}
-        </button>
-      </div>`).join('')
-
-    // Role change
-    wrap.querySelectorAll('.sf-role-select').forEach(sel => {
-      sel.addEventListener('change', async () => {
-        await apiFetch(`/api/users/${sel.dataset.uid}`, { method:'PATCH', body:{ role: sel.value } })
-        loadStaff()
-      })
-    })
-    // Toggle active
-    wrap.querySelectorAll('.sf-toggle-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const active = btn.dataset.active === 'true'
-        await apiFetch(`/api/users/${btn.dataset.uid}`, { method:'PATCH', body:{ active: !active } })
-        loadStaff()
-      })
-    })
-  }
-
-  // ── Load staff from API ──────────────────────────────────────────────────
-  async function loadStaff() {
-    const wrap = document.getElementById('staff-list-wrap')
-    wrap.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted)">Loading…</div>'
-    try {
-      const res  = await apiFetch('/api/users')
-      const data = await res.json()
-      renderList(Array.isArray(data) ? data : (data.data || []))
-    } catch { wrap.innerHTML = '<div style="padding:20px;color:#D95F5F">Could not load staff.</div>' }
-  }
-
-  // ── Add staff ────────────────────────────────────────────────────────────
-  document.getElementById('sf-add-btn').addEventListener('click', async () => {
-    const first = document.getElementById('sf-first').value.trim()
-    const last  = document.getElementById('sf-last').value.trim()
-    const email = document.getElementById('sf-email').value.trim()
-    const pwd   = document.getElementById('sf-pwd').value
-    const role  = document.getElementById('sf-role').value
-    const err   = document.getElementById('sf-err')
-    err.style.display = 'none'
-    if (!first || !last || !email || !pwd) { err.textContent = 'All fields are required.'; err.style.display = 'block'; return }
-    if (pwd.length < 8) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; return }
-    const btn = document.getElementById('sf-add-btn')
-    btn.disabled = true; btn.textContent = 'Adding…'
-    try {
-      const res  = await apiFetch('/api/users', { method:'POST', body:{ first_name:first, last_name:last, email, password:pwd, role } })
-      const data = await res.json()
-      if (!res.ok) { err.textContent = data.error || 'Could not add staff member.'; err.style.display = 'block'; return }
-      // Clear form
-      ;['sf-first','sf-last','sf-email','sf-pwd'].forEach(id => document.getElementById(id).value = '')
-      loadStaff()
-    } catch { err.textContent = 'Network error.'; err.style.display = 'block' }
-    finally { btn.disabled = false; btn.textContent = 'Add Member' }
-  })
-
-  // ── Open / close ─────────────────────────────────────────────────────────
-  window.openStaffPanel = function() {
-    panel.style.display = 'flex'
-    loadStaff()
-  }
-  document.getElementById('staff-close-btn').addEventListener('click', () => { panel.style.display = 'none' })
-  panel.addEventListener('click', e => { if (e.target === panel) panel.style.display = 'none' })
-
-})()
 
 // ── Locum Tenens ─────────────────────────────────────────────────────────
 ;(function initLocum() {
@@ -14330,68 +14298,6 @@ window._dentalSync = new DentalSync()
 
   form.style.display = 'none'
   render()
-})()
-
-// ── Avatar menu (top-level so no IIFE error can kill it) ─────────────────
-;(function initAvatarMenu() {
-  const avatar = document.getElementById('user-avatar')
-  if (!avatar) return
-  let menuEl = null
-
-  avatar.addEventListener('click', function(e) {
-    e.stopPropagation()
-    if (menuEl) { menuEl.remove(); menuEl = null; return }
-
-    // Get user info from stored object or decode JWT
-    const u = AUTH.user || {}
-    let jwt = {}
-    try { jwt = JSON.parse(atob((AUTH.token||'').split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))) } catch {}
-    const role  = u.role  || jwt.role  || ''
-    const email = u.email || jwt.email || ''
-    const name  = [u.firstName||'', u.lastName||''].filter(Boolean).join(' ') || email || 'User'
-
-    menuEl = document.createElement('div')
-    menuEl.style.cssText = [
-      'position:fixed', 'right:16px',
-      'top:' + ((document.querySelector('header')?.offsetHeight || 64) + 4) + 'px',
-      'z-index:99999', 'background:#fff', 'border:1px solid #E5E0D8',
-      'border-radius:12px', 'box-shadow:0 8px 32px rgba(44,42,39,.14)',
-      'min-width:210px', 'overflow:hidden', 'font-size:13px', 'font-family:Inter,sans-serif'
-    ].join(';')
-
-    menuEl.innerHTML =
-      '<div style="padding:12px 16px;border-bottom:1px solid #E5E0D8">' +
-        '<div style="font-weight:700;color:#2C2A27">' + name + '</div>' +
-        '<div style="font-size:11px;color:#9C9890;margin-top:2px">' + email + '</div>' +
-        '<div style="font-size:11px;font-weight:700;color:#3D9E8F;margin-top:3px;text-transform:capitalize">' + role + '</div>' +
-      '</div>' +
-      '<button data-action="staff"  style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;color:#2C2A27;display:flex;align-items:center;gap:8px;font-family:inherit">👥 Manage Staff</button>' +
-      '<button data-action="2fa"    style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;color:#2C2A27;display:flex;align-items:center;gap:8px;font-family:inherit">🔐 Set up 2FA</button>' +
-      '<div style="border-top:1px solid #E5E0D8">' +
-        '<button data-action="logout" style="width:100%;text-align:left;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;color:#D95F5F;display:flex;align-items:center;gap:8px;font-family:inherit">🚪 Sign out</button>' +
-      '</div>'
-
-    menuEl.addEventListener('click', function(ev) {
-      const action = ev.target.closest('[data-action]')?.dataset.action
-      menuEl.remove(); menuEl = null
-      if (action === 'staff')  window.openStaffPanel?.()
-      if (action === '2fa')    window.open2FASetup?.()
-      if (action === 'logout') { if (typeof doLogout === 'function') doLogout() }
-    })
-
-    document.body.appendChild(menuEl)
-
-    setTimeout(() => {
-      function outsideClick(ev) {
-        if (!menuEl) { document.removeEventListener('click', outsideClick, true); return }
-        if (!menuEl.contains(ev.target) && ev.target !== avatar) {
-          menuEl.remove(); menuEl = null
-          document.removeEventListener('click', outsideClick, true)
-        }
-      }
-      document.addEventListener('click', outsideClick, true)
-    }, 0)
-  })
 })()
 
 // ── Auto-login check (runs after all declarations are initialised) ───────
