@@ -1,6 +1,6 @@
 // Dental Assistant Pro — Service Worker
 // Strategy: cache-first for app shell; network-first for API calls.
-const CACHE  = 'dental-pro-v1'
+const CACHE  = 'dental-pro-v3'
 const SHELL  = ['/', '/calendar.html', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap']
 const API_RX = /\/api\//
 
