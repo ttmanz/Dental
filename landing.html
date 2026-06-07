@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Dental Assistant Pro — The complete practice management system for modern dental clinics. Calendar, AI charting, billing, EOPYY codes, WhatsApp reminders and more."/>
-  <title>Dental Assistant Pro — Practice Management for Greek Dentists</title>
+  <meta name="description" content="DentaPro — The complete practice management system for modern dental clinics. Calendar, AI charting, billing, EOPYY codes, WhatsApp reminders and more."/>
+  <title>DentaPro — Practice Management for Greek Dentists | dentapro.org</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -49,72 +49,67 @@
     .nav-cta:hover { background: var(--primary-d); }
 
     /* ── HERO ──────────────────────────────────────────────────────────── */
-    .hero {
-      display: grid; grid-template-columns: 1fr 1fr; align-items: center;
-      gap: 60px; padding: 100px 80px 80px; max-width: 1280px; margin: 0 auto;
+    .hero-section {
+      position: relative; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; overflow: hidden;
     }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: url('hero-bg.png') center center / cover no-repeat;
+    }
+    .hero-bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg,
+        rgba(10,36,50,.55) 0%,
+        rgba(10,36,50,.3) 40%,
+        rgba(10,36,50,.65) 100%);
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      max-width: 760px; padding: 0 32px;
+      animation: heroFade .9s ease both;
+    }
+    @keyframes heroFade { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
     .hero-badge {
       display: inline-flex; align-items: center; gap: 7px;
-      background: var(--primary-l); color: var(--primary);
-      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
-      letter-spacing: .04em; text-transform: uppercase; margin-bottom: 20px;
+      background: rgba(255,255,255,.15); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.25);
+      color: #fff;
+      padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase; margin-bottom: 24px;
     }
-    .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
-    .hero h1 {
-      font-size: 52px; font-weight: 900; line-height: 1.08; letter-spacing: -.03em;
-      color: var(--text); margin-bottom: 20px;
+    .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #4BE8D0; flex-shrink:0; }
+    .hero-section h1 {
+      font-size: 60px; font-weight: 900; line-height: 1.06; letter-spacing: -.03em;
+      color: #fff; margin-bottom: 22px;
     }
-    .hero h1 span { color: var(--primary); }
-    .hero-sub { font-size: 18px; color: var(--mid); line-height: 1.6; margin-bottom: 36px; max-width: 460px; }
-    .hero-actions { display: flex; align-items: center; gap: 14px; }
+    .hero-section h1 span { color: #4BE8D0; }
+    .hero-sub { font-size: 19px; color: rgba(255,255,255,.82); line-height: 1.6; margin-bottom: 40px; }
+    .hero-actions { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
     .btn-primary {
-      padding: 14px 28px; border-radius: 11px; border: none;
+      padding: 15px 30px; border-radius: 11px; border: none;
       background: var(--primary); color: #fff; font-size: 16px; font-weight: 700;
       cursor: pointer; font-family: inherit; transition: all .2s;
       display: inline-flex; align-items: center; gap: 8px;
     }
-    .btn-primary:hover { background: var(--primary-d); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(61,158,143,.3); }
+    .btn-primary:hover { background: var(--primary-d); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(61,158,143,.45); }
     .btn-ghost {
-      padding: 14px 24px; border-radius: 11px; border: 1.5px solid var(--border);
-      background: var(--white); color: var(--text); font-size: 15px; font-weight: 600;
-      cursor: pointer; font-family: inherit; transition: all .15s;
+      padding: 15px 26px; border-radius: 11px; border: 1.5px solid rgba(255,255,255,.4);
+      background: rgba(255,255,255,.1); backdrop-filter: blur(8px);
+      color: #fff; font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all .2s;
     }
-    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
-    .hero-note { font-size: 12px; color: var(--muted); margin-top: 14px; }
-
-    /* Hero app preview */
-    .hero-visual {
-      background: linear-gradient(145deg,#E8F4F2 0%,#F7F4EF 100%);
-      border-radius: 20px; padding: 24px; box-shadow: 0 24px 80px rgba(61,158,143,.15);
-      position: relative; overflow: hidden;
+    .btn-ghost:hover { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.7); }
+    .hero-note { font-size: 13px; color: rgba(255,255,255,.55); margin-top: 18px; }
+    .hero-scroll {
+      position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+      z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      color: rgba(255,255,255,.45); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      animation: bounce 2.2s ease-in-out infinite;
     }
-    .hero-visual::before {
-      content: ''; position: absolute; top: -40px; right: -40px;
-      width: 200px; height: 200px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(61,158,143,.12) 0%, transparent 70%);
-    }
-    .app-preview-bar {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
-    }
-    .app-preview-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .app-preview-title { font-size: 12px; font-weight: 700; color: var(--mid); margin-left: 4px; }
-    .preview-calendar {
-      background: var(--white); border-radius: 12px; overflow: hidden;
-      box-shadow: 0 4px 20px rgba(44,42,39,.08);
-    }
-    .preview-cal-header {
-      display: grid; grid-template-columns: repeat(7,1fr); background: var(--primary);
-    }
-    .preview-cal-day { padding: 8px 4px; text-align: center; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.8); }
-    .preview-cal-body { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; padding: 8px; background: var(--cream); }
-    .preview-cell { height: 44px; border-radius: 6px; background: var(--white); position: relative; overflow: hidden; }
-    .preview-appt { height: 14px; border-radius: 3px; margin: 3px 3px 0; }
-    .preview-stats {
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 14px;
-    }
-    .preview-stat { background: var(--white); border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 2px 8px rgba(44,42,39,.06); }
-    .preview-stat-val { font-size: 20px; font-weight: 800; color: var(--primary); }
-    .preview-stat-lbl { font-size: 10px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+    .hero-scroll svg { width: 18px; height: 18px; }
+    @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
 
     /* ── SOCIAL PROOF BAR ──────────────────────────────────────────────── */
     .proof-bar {
@@ -251,8 +246,7 @@
 
     /* ── RESPONSIVE ────────────────────────────────────────────────────── */
     @media (max-width: 1024px) {
-      .hero { grid-template-columns: 1fr; gap: 48px; padding: 64px 40px; }
-      .hero h1 { font-size: 40px; }
+      .hero-section h1 { font-size: 44px; }
       section { padding: 64px 40px; }
       .features-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr 1fr; }
       .eopyy-section, .cta-banner { margin: 0 40px; padding: 48px; }
@@ -264,7 +258,8 @@
       .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
     }
     @media (max-width: 640px) {
-      .hero h1 { font-size: 30px; }
+      .hero-section h1 { font-size: 32px; }
+      .hero-sub { font-size: 16px; }
       .features-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr; }
       .eopyy-section, .cta-banner { margin: 0 16px; padding: 32px 24px; }
       section { padding: 48px 24px; }
@@ -282,7 +277,7 @@
 <nav>
   <div class="nav-logo">
     <div class="nav-logo-icon">🦷</div>
-    <span data-en="Dental Assistant Pro" data-el="Dental Assistant Pro">Dental Assistant Pro</span>
+    <span data-en="DentaPro" data-el="DentaPro">DentaPro</span>
   </div>
   <div class="nav-links">
     <a href="#features" data-en="Features" data-el="Χαρακτηριστικά">Features</a>
@@ -301,62 +296,33 @@
 </nav>
 
 <!-- ── HERO ─────────────────────────────────────────────────────────────── -->
-<div style="max-width:1280px;margin:0 auto">
-  <div class="hero">
-    <div>
-      <div class="hero-badge">
-        <div class="hero-badge-dot"></div>
-        <span data-en="Built for Greek dental practices" data-el="Για ελληνικά οδοντιατρεία">Built for Greek dental practices</span>
-      </div>
-      <h1 data-en="The practice management system your patients <span>deserve</span>" data-el="Το σύστημα διαχείρισης που αξίζουν οι <span>ασθενείς σας</span>">
-        The practice management system your patients <span>deserve</span>
-      </h1>
-      <p class="hero-sub" data-en="Calendar, AI charting, billing, EOPYY codes, WhatsApp reminders, and more — in one beautiful app. Start in minutes, not months." data-el="Ημερολόγιο, AI καταγραφή, τιμολόγηση, κωδικοί ΕΟΠΥΥ, υπενθυμίσεις WhatsApp — σε μία εφαρμογή. Ξεκινήστε σε λεπτά.">
-        Calendar, AI charting, billing, EOPYY codes, WhatsApp reminders, and more — in one beautiful app. Start in minutes, not months.
-      </p>
-      <div class="hero-actions">
-        <a href="#pricing" class="btn-primary">
-          <span>🦷</span>
-          <span data-en="Start 14-day free trial" data-el="14 ημέρες δωρεάν">Start 14-day free trial</span>
-        </a>
-        <a href="/app" class="btn-ghost" data-en="View demo →" data-el="Δείτε demo →">View demo →</a>
-      </div>
-      <p class="hero-note" data-en="No credit card required · Cancel anytime · GDPR compliant" data-el="Χωρίς κάρτα · Ακύρωση οποτεδήποτε · GDPR">
-        No credit card required · Cancel anytime · GDPR compliant
-      </p>
+<div class="hero-section">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      <span data-en="Built for Greek dental practices" data-el="Για ελληνικά οδοντιατρεία">Built for Greek dental practices</span>
     </div>
-
-    <!-- App preview mockup -->
-    <div class="hero-visual">
-      <div class="app-preview-bar">
-        <div class="app-preview-dot" style="background:#FF6058"></div>
-        <div class="app-preview-dot" style="background:#FFBD2E"></div>
-        <div class="app-preview-dot" style="background:#28C840"></div>
-        <div class="app-preview-title">Dental Assistant Pro — Week View</div>
-      </div>
-      <div class="preview-calendar">
-        <div class="preview-cal-header">
-          <div class="preview-cal-day">MON</div><div class="preview-cal-day">TUE</div>
-          <div class="preview-cal-day">WED</div><div class="preview-cal-day">THU</div>
-          <div class="preview-cal-day">FRI</div><div class="preview-cal-day">SAT</div>
-          <div class="preview-cal-day">SUN</div>
-        </div>
-        <div class="preview-cal-body">
-          <div class="preview-cell"><div class="preview-appt" style="background:#4BAE8A;width:90%"></div><div class="preview-appt" style="background:#8B7CC8;width:70%"></div></div>
-          <div class="preview-cell"><div class="preview-appt" style="background:#E07850;width:85%"></div></div>
-          <div class="preview-cell"><div class="preview-appt" style="background:#3D9E8F;width:95%"></div><div class="preview-appt" style="background:#4BAE8A;width:60%"></div></div>
-          <div class="preview-cell"><div class="preview-appt" style="background:#D95F5F;width:80%"></div><div class="preview-appt" style="background:#E07850;width:75%"></div></div>
-          <div class="preview-cell"><div class="preview-appt" style="background:#3D9E8F;width:90%"></div></div>
-          <div class="preview-cell" style="background:#F7F4EF;opacity:.5"></div>
-          <div class="preview-cell" style="background:#F7F4EF;opacity:.5"></div>
-        </div>
-      </div>
-      <div class="preview-stats">
-        <div class="preview-stat"><div class="preview-stat-val">24</div><div class="preview-stat-lbl">This week</div></div>
-        <div class="preview-stat"><div class="preview-stat-val">€3,840</div><div class="preview-stat-lbl">Revenue</div></div>
-        <div class="preview-stat"><div class="preview-stat-val">98%</div><div class="preview-stat-lbl">Satisfaction</div></div>
-      </div>
+    <h1 data-en="The practice management system your patients <span>deserve</span>" data-el="Το σύστημα διαχείρισης που αξίζουν οι <span>ασθενείς σας</span>">
+      The practice management system your patients <span>deserve</span>
+    </h1>
+    <p class="hero-sub" data-en="Calendar, AI charting, billing, EOPYY codes, WhatsApp reminders, and more — in one beautiful app. Start in minutes, not months." data-el="Ημερολόγιο, AI καταγραφή, τιμολόγηση, κωδικοί ΕΟΠΥΥ, υπενθυμίσεις WhatsApp — σε μία εφαρμογή. Ξεκινήστε σε λεπτά.">
+      Calendar, AI charting, billing, EOPYY codes, WhatsApp reminders, and more — in one beautiful app. Start in minutes, not months.
+    </p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn-primary">
+        <span>🦷</span>
+        <span data-en="Start 14-day free trial" data-el="14 ημέρες δωρεάν">Start 14-day free trial</span>
+      </a>
+      <a href="/app" class="btn-ghost" data-en="View demo →" data-el="Δείτε demo →">View demo →</a>
     </div>
+    <p class="hero-note" data-en="No credit card required · Cancel anytime · GDPR compliant" data-el="Χωρίς κάρτα · Ακύρωση οποτεδήποτε · GDPR">
+      No credit card required · Cancel anytime · GDPR compliant
+    </p>
+  </div>
+  <div class="hero-scroll">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    Scroll
   </div>
 </div>
 
@@ -652,8 +618,8 @@
 <!-- ── CTA ───────────────────────────────────────────────────────────────── -->
 <div class="cta-banner">
   <h2 data-en="Ready to modernise your practice?" data-el="Έτοιμοι να εκσυγχρονίσετε το ιατρείο σας;">Ready to modernise your practice?</h2>
-  <p data-en="Join 500+ dental practices already using Dental Assistant Pro. 14-day free trial, no card required." data-el="Ελάτε στα 500+ οδοντιατρεία που χρησιμοποιούν ήδη το Dental Assistant Pro. 14 ημέρες δωρεάν, χωρίς κάρτα.">
-    Join 500+ dental practices already using Dental Assistant Pro. 14-day free trial, no card required.
+  <p data-en="Join 500+ dental practices already using DentaPro. 14-day free trial, no card required." data-el="Ελάτε στα 500+ οδοντιατρεία που χρησιμοποιούν ήδη το Dental Assistant Pro. 14 ημέρες δωρεάν, χωρίς κάρτα.">
+    Join 500+ dental practices already using DentaPro. 14-day free trial, no card required.
   </p>
   <a href="/app" class="btn-white">
     <span>🦷</span>
@@ -670,10 +636,10 @@
     <div>
       <div class="footer-brand">
         <div class="footer-brand-icon">🦷</div>
-        Dental Assistant Pro
+        DentaPro
       </div>
       <p class="footer-desc" data-en="The complete practice management system for modern Greek dental clinics. Built with ❤️ for dentists." data-el="Το πλήρες σύστημα διαχείρισης ιατρείου για σύγχρονα ελληνικά οδοντιατρεία.">
-        The complete practice management system for modern Greek dental clinics. Built with ❤️ for dentists.
+        The complete practice management system for modern Greek dental clinics. dentapro.org
       </p>
     </div>
     <div class="footer-col">
@@ -693,12 +659,12 @@
     <div class="footer-col">
       <h4 data-en="Support" data-el="Υποστήριξη">Support</h4>
       <a href="#faq" data-en="FAQ" data-el="FAQ">FAQ</a>
-      <a href="mailto:support@dentalassistantpro.gr" data-en="Email support" data-el="Email υποστήριξη">Email support</a>
+      <a href="mailto:support@dentapro.org" data-en="Email support" data-el="Email υποστήριξη">Email support</a>
       <a href="/superadmin" data-en="Admin portal" data-el="Πύλη διαχειριστή">Admin portal</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <span data-en="© 2026 Dental Assistant Pro. All rights reserved." data-el="© 2026 Dental Assistant Pro. Όλα τα δικαιώματα κατοχυρωμένα.">© 2026 Dental Assistant Pro. All rights reserved.</span>
+    <span data-en="© 2026 DentaPro · dentapro.org · All rights reserved." data-el="© 2026 Dental Assistant Pro. Όλα τα δικαιώματα κατοχυρωμένα.">© 2026 DentaPro · dentapro.org · All rights reserved.</span>
     <div class="footer-bottom-links">
       <a href="#" data-en="Privacy" data-el="Απόρρητο">Privacy</a>
       <a href="#" data-en="Terms" data-el="Όροι">Terms</a>
