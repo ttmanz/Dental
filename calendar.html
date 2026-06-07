@@ -6193,17 +6193,19 @@ window._staffPanelEl = null
 // 2FA setup — defined at top so it always works regardless of IIFE errors
 window.open2FASetup = function() {
   var overlay = document.getElementById('mfa-setup-overlay')
-  if (!overlay) {
-    alert('2FA setup is not available on this page.')
-    return
-  }
-  var errEl = document.getElementById('mfa-setup-err')
-  var qrImg = document.getElementById('mfa-qr-img')
+  if (!overlay) { alert('2FA setup is not available on this page.'); return }
+  var errEl    = document.getElementById('mfa-setup-err')
+  var qrImg    = document.getElementById('mfa-qr-img')
   var secretEl = document.getElementById('mfa-secret-display')
-  var codeEl = document.getElementById('mfa-confirm-code')
+  var codeEl   = document.getElementById('mfa-confirm-code')
   if (errEl) errEl.textContent = ''
   if (codeEl) codeEl.value = ''
   overlay.classList.add('open')
+
+  // Close on ✕ button or clicking the backdrop
+  var closeBtn = document.getElementById('mfa-setup-close-btn')
+  if (closeBtn) closeBtn.onclick = function() { overlay.classList.remove('open') }
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.classList.remove('open') }
 
   // Load TOTP secret from API
   apiFetch('/api/auth/totp/setup', { method: 'POST' })
