@@ -13812,110 +13812,90 @@ window.auditLog = (function() {
 // ══════════════════════════════════════════════════════════════════════════
 // NEXT AVAILABLE SLOTS
 // ══════════════════════════════════════════════════════════════════════════
-;(function() {
-  const SLOT_MINS  = 30
-  const DAY_START  = 8    // 08:00
-  const DAY_END    = 19   // last slot starts 18:30
-  const SLOTS_PER  = 3
-  const LOOK_AHEAD = 60
-
-  function localDateStr(d) {
-    return d.getFullYear() + '-' +
-      String(d.getMonth()+1).padStart(2,'0') + '-' +
-      String(d.getDate()).padStart(2,'0')
-  }
-
-  function fmtSlot(date, h, m) {
-    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
-    return {
-      day:  days[date.getDay()] + ' ' + String(date.getDate()).padStart(2,'0') + '/' + String(date.getMonth()+1).padStart(2,'0'),
-      time: String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0')
-    }
-  }
-
-  function findSlotsForDentist(dentistName, appts, fromDate) {
-    const slots = []
-    const base  = new Date(fromDate); base.setHours(0,0,0,0)
-
-    for (let di = 0; di < LOOK_AHEAD && slots.length < SLOTS_PER; di++) {
-      const d  = new Date(base); d.setDate(base.getDate() + di)
-      const ds = localDateStr(d)
-      const dayAppts = appts.filter(a =>
-        a.dentist === dentistName && a.date === ds && a.status !== 'cancelled'
-      )
-      for (let h = DAY_START; h < DAY_END && slots.length < SLOTS_PER; h++) {
-        for (let m = 0; m < 60 && slots.length < SLOTS_PER; m += SLOT_MINS) {
-          if (di === 0 && h * 60 + m <= fromDate.getHours() * 60 + fromDate.getMinutes()) continue
-          const sS = h * 60 + m, sE = sS + SLOT_MINS
-          const busy = dayAppts.some(a => {
-            const aS = a.hour * 60 + (a.min||0), aE = aS + (a.dur||30)
-            return aS < sE && aE > sS
-          })
-          if (!busy) slots.push(fmtSlot(d, h, m))
-        }
-      }
-    }
-    return slots
-  }
-
-  window.openNextAvailable = function() {
+window.openNextAvailable = function() {
+  try {
     const panel   = document.getElementById('next-ava-panel')
     const content = document.getElementById('next-ava-content')
-    if (!panel) return
+    if (!panel || !content) return
 
-    // toggle
     if (panel.style.display === 'block') { panel.style.display = 'none'; return }
-
     panel.style.display = 'block'
-    content.innerHTML   = '<div style="padding:12px 14px;color:var(--text-muted);font-size:12px">Scanning…</div>'
 
-    const dentists = window._DENTISTS || []
+    const SLOT_MINS  = 30
+    const DAY_START  = 8
+    const DAY_END    = 19
+    const SLOTS_PER  = 3
+    const LOOK_AHEAD = 60
+    const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+
+    function pad(n) { return String(n).padStart(2,'0') }
+
+    function localDateStr(d) {
+      return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
+    }
+
+    var dentists = window._DENTISTS || []
+    var appts    = APPTS || []
+    var now      = new Date()
+    var nowMins  = now.getHours() * 60 + now.getMinutes()
+
     if (!dentists.length) {
-      content.innerHTML = '<div style="padding:12px 14px;color:var(--text-muted);font-size:12px">No dentists loaded yet — try again in a moment.</div>'
+      content.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#999">No dentists loaded — reload the page and try again.</div>'
       return
     }
 
-    // fetch fresh appointments then compute
-    ;(async function() {
-      try {
-        const now  = new Date()
-        const from = localDateStr(now)
-        const toD  = new Date(now); toD.setDate(now.getDate() + LOOK_AHEAD)
-        const to   = localDateStr(toD)
-        const res  = await apiFetch('/api/appointments?from=' + from + '&to=' + to + '&limit=2000')
-        let appts  = APPTS  // fallback to in-memory
-        if (res && res.ok) {
-          const raw = await res.json()
-          appts = (Array.isArray(raw) ? raw : (raw.data || [])).map(apptFromApi)
-        }
+    var html = ''
+    dentists.forEach(function(d) {
+      var name  = d.display_name || d.name || '—'
+      var color = d.color || '#3D9E8F'
+      var slots = []
 
-        let html = ''
-        dentists.forEach(d => {
-          const color = d.color || 'var(--primary)'
-          const name  = d.display_name || d.name || '—'
-          const slots = findSlotsForDentist(name, appts, now)
+      for (var di = 0; di < LOOK_AHEAD && slots.length < SLOTS_PER; di++) {
+        var day = new Date(now); day.setHours(0,0,0,0); day.setDate(day.getDate() + di)
+        var ds  = localDateStr(day)
 
-          html += `<div style="padding:8px 14px;border-bottom:1px solid var(--border)">`
-          html += `<div style="font-size:11px;font-weight:800;color:${color};text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">${name}</div>`
-          if (!slots.length) {
-            html += `<div style="font-size:11px;color:var(--text-muted)">No slots in next ${LOOK_AHEAD} days</div>`
-          } else {
-            slots.forEach(s => {
-              html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0">`
-              html += `<span style="font-size:11px;color:var(--text-mid)">${s.day}</span>`
-              html += `<span style="font-size:11px;font-weight:700;color:var(--primary);background:var(--primary-light);border-radius:5px;padding:1px 7px">${s.time}</span>`
-              html += `</div>`
-            })
-          }
-          html += `</div>`
+        var dayAppts = appts.filter(function(a) {
+          return a.dentist === name && a.date === ds && a.status !== 'cancelled'
         })
-        content.innerHTML = html || '<div style="padding:12px 14px;color:var(--text-muted);font-size:12px">No slots found.</div>'
-      } catch(err) {
-        content.innerHTML = `<div style="padding:12px 14px;color:#D95F5F;font-size:12px">Error: ${err.message}</div>`
+
+        for (var h = DAY_START; h < DAY_END && slots.length < SLOTS_PER; h++) {
+          for (var m = 0; m < 60 && slots.length < SLOTS_PER; m += SLOT_MINS) {
+            if (di === 0 && (h * 60 + m) <= nowMins) continue
+            var sS   = h * 60 + m
+            var sE   = sS + SLOT_MINS
+            var busy = dayAppts.some(function(a) {
+              var aS = a.hour * 60 + (a.min || 0)
+              var aE = aS + (a.dur || 30)
+              return aS < sE && aE > sS
+            })
+            if (!busy) {
+              slots.push(DAY_NAMES[day.getDay()] + ' ' + pad(day.getDate()) + '/' + pad(day.getMonth()+1) + ' — ' + pad(h) + ':' + pad(m))
+            }
+          }
+        }
       }
-    })()
+
+      html += '<div style="padding:8px 14px;border-bottom:1px solid #E5E0D8">'
+      html += '<div style="font-size:11px;font-weight:800;color:' + color + ';text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">' + name + '</div>'
+      if (!slots.length) {
+        html += '<div style="font-size:11px;color:#9C9890">No free slots in next ' + LOOK_AHEAD + ' days</div>'
+      } else {
+        slots.forEach(function(s) {
+          html += '<div style="font-size:12px;font-weight:600;color:#2C2A27;padding:2px 0">' + s + '</div>'
+        })
+      }
+      html += '</div>'
+    })
+
+    content.innerHTML = html || '<div style="padding:12px 14px;font-size:12px;color:#999">No results.</div>'
+
+  } catch(e) {
+    var c = document.getElementById('next-ava-content')
+    var p = document.getElementById('next-ava-panel')
+    if (p) p.style.display = 'block'
+    if (c) c.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:red">Error: ' + e.message + '</div>'
   }
-})()
+}
 
 
 // ══════════════════════════════════════════════════════════════════════════
