@@ -26,7 +26,7 @@ router.post('/forgot-password', async (req, res) => {
       `INSERT INTO password_reset_tokens (user_id, token_hash) VALUES ($1, $2)`, [rows[0].id, tokenHash])
 
     const appUrl   = process.env.APP_URL || 'http://localhost:3001'
-    const resetUrl = `${appUrl}/?reset=${rawToken}`
+    const resetUrl = `${appUrl}/app?reset=${rawToken}`
     await sendPasswordReset({ to: rows[0].email, name: rows[0].first_name, resetUrl, practiceName: rows[0].practice_name })
   } catch (err) { console.error('[forgot-password]', err) }
 })

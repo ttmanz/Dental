@@ -70,7 +70,9 @@ router.get('/me', requirePatient, async (req, res) => {
   try {
     const { rows: [p] } = await queryRaw(
       `SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.date_of_birth,
-              p.address, p.photo_url, pr.name AS practice_name, pr.locale
+              p.address, p.photo_url,
+              pr.name AS practice_name, pr.locale, pr.phone AS practice_phone,
+              pr.email AS practice_email, pr.address AS practice_address
        FROM patients p JOIN practices pr ON pr.id=p.practice_id
        WHERE p.id=$1`, [puid(req)])
     if (!p) return res.status(404).json({ error: 'Not found' })
@@ -160,6 +162,63 @@ router.get('/intake', requirePatient, async (req, res) => {
        LEFT JOIN intake_submissions s ON s.patient_id=p.id AND s.practice_id=p.practice_id
        WHERE p.id=$1`, [puid(req)])
     res.json(rows[0] || null)
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+})
+
+// ── GET /api/portal/prescriptions ────────────────────────────────────────
+router.get('/prescriptions', requirePatient, async (req, res) => {
+  try {
+    const { rows } = await query(ppid(req), `
+      SELECT rx.id, rx.rx_number, rx.prescription_date, rx.valid_until,
+             rx.diagnosis, rx.medications, rx.status, rx.doctor_notes,
+             u.first_name || ' ' || u.last_name AS doctor_name,
+             u.license_number AS doctor_license
+      FROM prescriptions rx
+      JOIN users u ON u.id = rx.prescribed_by
+      WHERE rx.patient_id = $1 AND rx.status != 'cancelled'
+      ORDER BY rx.prescription_date DESC, rx.created_at DESC
+      LIMIT 20`,
+      [puid(req)])
+    res.json(rows)
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+})
+
+// ── GET /api/portal/reminders ─────────────────────────────────────────────
+router.get('/reminders', requirePatient, async (req, res) => {
+  try {
+    const { rows } = await queryRaw(`
+      SELECT r.id, r.channel, r.status, r.scheduled_at, r.message,
+             a.appointment_date, a.start_time, a.type AS appointment_type,
+             d.display_name AS dentist_name
+      FROM reminders r
+      JOIN appointments a ON a.id = r.appointment_id
+      JOIN dentists     d ON d.id = a.dentist_id
+      WHERE r.patient_id = $1
+        AND r.scheduled_at >= NOW() - INTERVAL '7 days'
+      ORDER BY r.scheduled_at DESC
+      LIMIT 10`,
+      [puid(req)])
+    res.json(rows)
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+})
+
+// ── POST /api/portal/request-appointment ─────────────────────────────────
+router.post('/request-appointment', requirePatient, async (req, res) => {
+  const { preferredDate, preferredTime, type, notes } = req.body
+  if (!preferredDate) return res.status(400).json({ error: 'preferredDate required' })
+  const lines = [
+    '📅 Appointment Request',
+    `Preferred date: ${preferredDate}`,
+    preferredTime ? `Preferred time: ${preferredTime}` : null,
+    type         ? `Type: ${type}`                     : null,
+    notes        ? `Notes: ${notes}`                   : null,
+  ].filter(Boolean)
+  try {
+    await query(ppid(req), `
+      INSERT INTO patient_messages (practice_id, patient_id, body)
+      VALUES ($1, $2, $3)`,
+      [ppid(req), puid(req), lines.join('\n')])
+    res.status(201).json({ ok: true })
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 

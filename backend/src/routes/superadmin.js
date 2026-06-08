@@ -38,10 +38,27 @@ router.post('/init', async (req, res) => {
 // ── Superadmin login — returns SA-scoped JWT ──────────────────────────────
 router.post('/login', async (req, res) => {
   const { email, password } = req.body
+  const username = (email || '').trim()
+
+  // Env-var credentials — checked first, no DB required
+  if (process.env.SA_USERNAME && process.env.SA_PASSWORD) {
+    if (username === process.env.SA_USERNAME && password === process.env.SA_PASSWORD) {
+      const token = jwt.sign(
+        { userId: 'sa-env', isSuperAdmin: true, email: username },
+        process.env.JWT_SECRET,
+        { expiresIn: '8h' }
+      )
+      return res.json({ token, email: username })
+    }
+    // If env credentials are set but didn't match, reject immediately
+    return res.status(401).json({ error: 'Invalid credentials' })
+  }
+
+  // Fallback: DB-based superadmin (used if SA_USERNAME/SA_PASSWORD not set in env)
   try {
     const { rows } = await queryRaw(
       'SELECT * FROM users WHERE email = $1 AND is_superadmin = TRUE AND is_active = TRUE',
-      [email.toLowerCase().trim()]
+      [username.toLowerCase()]
     )
     const u = rows[0]
     if (!u || !(await bcrypt.compare(password, u.password_hash))) {

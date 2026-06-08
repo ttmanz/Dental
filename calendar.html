@@ -4679,6 +4679,27 @@
                 <div class="ops-stat-row"><span class="ops-stat-key">Lab Orders In Progress</span><span class="ops-stat-val" id="dash-g-lab">—</span></div>
                 <div class="ops-stat-row"><span class="ops-stat-key">Overdue Invoices</span><span class="ops-stat-val" id="dash-g-overdue" style="color:var(--amber)">—</span></div>
               </div>
+
+              <!-- Patient Portal link + QR code -->
+              <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+                <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px">🔗 Patient Portal Link</div>
+                <div style="background:var(--cream);border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:11px;color:var(--text-mid);font-family:monospace;word-break:break-all;margin-bottom:8px;line-height:1.5" id="dash-portal-url">—</div>
+                <div style="display:flex;gap:8px;margin-bottom:12px">
+                  <button id="dash-copy-portal-btn" style="flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--primary);background:var(--white);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s">📋 Copy Link</button>
+                  <button id="dash-open-portal-btn" style="flex:1;padding:8px 0;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s">↗ Open Portal</button>
+                </div>
+                <!-- QR code -->
+                <div style="display:flex;align-items:center;gap:14px">
+                  <div id="dash-qr-canvas" style="flex-shrink:0;width:88px;height:88px;background:var(--cream);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+                    <span style="font-size:11px;color:var(--text-muted)">QR</span>
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">Reception QR Code</div>
+                    <div style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-bottom:8px">Print and display at reception — patients scan to open their portal directly.</div>
+                    <button id="dash-print-qr-btn" style="padding:8px 16px;border-radius:8px;border:none;background:#2C2A27;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s">🖨️ Print QR Card</button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="ops-panel">
               <div class="ops-panel-title" data-en="Recent Activity" data-el="Πρόσφατη Δραστηριότητα">Recent Activity</div>
@@ -12796,7 +12817,101 @@ window.auditLog = (function() {
 
     // ── Recent activity (from audit log) ──────────────────────────────────
     renderDashActivity()
+
+    // ── Patient portal link + QR ─────────────────────────────────────────
+    const portalUrl = `${window.location.origin}/portal?practice=${AUTH.user?.practiceId}`
+    const urlEl     = document.getElementById('dash-portal-url')
+    if (urlEl) urlEl.textContent = portalUrl
+    renderPortalQR(portalUrl)
   }
+
+  // Copy / open patient portal link
+  document.getElementById('dash-copy-portal-btn').addEventListener('click', () => {
+    const url = document.getElementById('dash-portal-url').textContent
+    if (!url || url === '—') return
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById('dash-copy-portal-btn')
+      btn.textContent = '✓ Copied!'
+      btn.style.background = 'var(--primary)'; btn.style.color = '#fff'
+      setTimeout(() => { btn.textContent = '📋 Copy Link'; btn.style.background = ''; btn.style.color = 'var(--primary)' }, 2000)
+    }).catch(() => showToast('Could not copy — please copy manually.'))
+  })
+  document.getElementById('dash-open-portal-btn').addEventListener('click', () => {
+    const url = document.getElementById('dash-portal-url').textContent
+    if (url && url !== '—') window.open(url, '_blank', 'noopener')
+  })
+
+  // QR code — generated after loadDashboard sets dash-portal-url
+  function renderPortalQR(url) {
+    const container = document.getElementById('dash-qr-canvas')
+    if (!container || !url || url === '—') return
+    container.innerHTML = ''
+    if (typeof QRCode !== 'undefined') {
+      new QRCode(container, { text: url, width: 88, height: 88, correctLevel: QRCode.CorrectLevel.M })
+      container.querySelector('img')?.setAttribute('style', 'width:88px;height:88px;border-radius:6px')
+    }
+  }
+
+  // Print QR card
+  document.getElementById('dash-print-qr-btn').addEventListener('click', () => {
+    const url          = document.getElementById('dash-portal-url').textContent
+    const practiceName = AUTH.user?.practiceName || document.querySelector('#topbar-practice, .topbar-practice')?.textContent || 'Our Dental Clinic'
+    if (!url || url === '—') { showToast('Portal URL not loaded yet.'); return }
+
+    // Get QR image data from the rendered canvas/img
+    let qrSrc = ''
+    const qrImg = document.querySelector('#dash-qr-canvas img')
+    const qrCvs = document.querySelector('#dash-qr-canvas canvas')
+    if (qrImg) qrSrc = qrImg.src
+    else if (qrCvs) qrSrc = qrCvs.toDataURL()
+
+    const win = window.open('', '_blank', 'width=600,height=750')
+    win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>Patient Portal QR — ${practiceName}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .card { width: 360px; border: 2px solid #3D9E8F; border-radius: 20px; overflow: hidden; text-align: center; }
+  .card-top { background: linear-gradient(135deg, #3D9E8F, #2D8B7A); padding: 28px 24px 20px; color: #fff; }
+  .clinic-name { font-size: 18px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 4px; }
+  .tagline { font-size: 12px; opacity: .8; }
+  .qr-area { padding: 28px 24px; }
+  .qr-wrap { display: inline-block; padding: 14px; border: 2px solid #E5E0D8; border-radius: 14px; margin-bottom: 16px; }
+  .qr-wrap img, .qr-wrap canvas { display: block; width: 200px; height: 200px; }
+  .instruction { font-size: 16px; font-weight: 700; color: #2C2A27; margin-bottom: 6px; }
+  .sub { font-size: 12px; color: #9C9890; margin-bottom: 18px; line-height: 1.5; }
+  .url-box { background: #F7F4EF; border-radius: 8px; padding: 8px 14px; font-size: 10px; color: #5C5854; font-family: monospace; word-break: break-all; margin-bottom: 20px; }
+  .footer { background: #F7F4EF; padding: 12px; font-size: 10px; color: #9C9890; border-top: 1px solid #E5E0D8; }
+  @media print {
+    body { margin: 0; }
+    .card { border: 2px solid #3D9E8F; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="card-top">
+    <div class="clinic-name">🦷 ${practiceName}</div>
+    <div class="tagline">Patient Portal</div>
+  </div>
+  <div class="qr-area">
+    <div class="qr-wrap">
+      ${qrSrc ? `<img src="${qrSrc}" alt="QR Code"/>` : `<div style="width:200px;height:200px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9C9890">QR unavailable</div>`}
+    </div>
+    <div class="instruction">Scan to access your portal</div>
+    <div class="sub">View appointments, prescriptions,<br>invoices and more — from your phone.</div>
+    <div class="url-box">${url}</div>
+  </div>
+  <div class="footer">Powered by Dental Assistant Pro</div>
+</div>
+<script>window.onload = () => window.print()<\/script>
+</body>
+</html>`)
+    win.document.close()
+  })
 
   function renderRevenueChart(months, values) {
     const el  = document.getElementById('dash-revenue-chart')
@@ -14643,5 +14758,6 @@ if (AUTH.isValid()) {
   window._syncPanelData()
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </body>
 </html>

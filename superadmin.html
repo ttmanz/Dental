@@ -15,10 +15,8 @@
     }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* ── Login screen ─────────────────────────────────────────────────── */
-    #login-screen {
-      display: flex; align-items: center; justify-content: center; min-height: 100vh;
-    }
+    /* ── Login ──────────────────────────────────────────────────────────── */
+    #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     .login-box {
       width: 360px; background: var(--surface); border: 1px solid var(--border);
       border-radius: 16px; padding: 36px 32px; box-shadow: 0 24px 64px rgba(0,0,0,.5);
@@ -27,11 +25,11 @@
     .login-box p  { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
     .lf { margin-bottom: 14px; }
     .lf label { display: block; font-size: 11px; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-    .lf input {
+    .lf input, .lf select {
       width: 100%; height: 40px; border: 1.5px solid var(--border); border-radius: 8px;
       padding: 0 12px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); outline: none;
     }
-    .lf input:focus { border-color: var(--primary); }
+    .lf input:focus, .lf select:focus { border-color: var(--primary); }
     .login-btn {
       width: 100%; padding: 11px; border: none; border-radius: 9px;
       background: var(--primary); color: #fff; font-size: 15px; font-weight: 700;
@@ -39,11 +37,11 @@
     }
     .login-err { color: var(--red); font-size: 13px; min-height: 18px; margin-top: 10px; text-align: center; }
 
-    /* ── Main app ─────────────────────────────────────────────────────── */
+    /* ── App shell ──────────────────────────────────────────────────────── */
     #app { display: none; flex-direction: column; min-height: 100vh; }
     .topbar {
       height: 56px; background: var(--surface); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 16px; padding: 0 24px; flex-shrink: 0;
+      display: flex; align-items: center; gap: 16px; padding: 0 24px; flex-shrink: 0; position: sticky; top: 0; z-index: 50;
     }
     .topbar-logo { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
     .topbar-badge { padding: 2px 8px; border-radius: 6px; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; }
@@ -51,26 +49,24 @@
     .signout-btn { padding: 6px 14px; border-radius: 7px; border: 1px solid var(--border); background: none; color: var(--mid); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
     .signout-btn:hover { background: var(--border); }
 
-    /* ── Stats bar ────────────────────────────────────────────────────── */
+    /* ── Stats bar ──────────────────────────────────────────────────────── */
     .stats-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .stat-chip {
-      flex: 1; padding: 16px 20px; text-align: center; border-right: 1px solid var(--border);
-    }
+    .stat-chip { flex: 1; padding: 16px 20px; text-align: center; border-right: 1px solid var(--border); }
     .stat-chip:last-child { border-right: none; }
     .stat-chip-val { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
     .stat-chip-lbl { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
     .green { color: var(--green); } .amber { color: var(--amber); } .red { color: var(--red); } .blue { color: var(--blue); }
 
-    /* ── Main layout ──────────────────────────────────────────────────── */
-    .main { display: flex; flex: 1; overflow: hidden; }
+    /* ── Main layout ────────────────────────────────────────────────────── */
+    .main { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 112px); }
     .sidebar { width: 200px; border-right: 1px solid var(--border); padding: 16px 12px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
     .nav-item { padding: 9px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--mid); display: flex; align-items: center; gap: 8px; transition: all .15s; }
     .nav-item:hover  { background: var(--surface); color: var(--text); }
     .nav-item.active { background: var(--primary); color: #fff; }
-    .content { flex: 1; overflow-y: auto; padding: 24px; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; transition: margin-right .25s; }
 
-    /* ── Toolbar ──────────────────────────────────────────────────────── */
-    .toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+    /* ── Toolbar ────────────────────────────────────────────────────────── */
+    .toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
     .toolbar h2 { font-size: 18px; font-weight: 800; flex: 1; }
     .search-input {
       height: 36px; border: 1.5px solid var(--border); border-radius: 8px;
@@ -88,11 +84,13 @@
     .btn.ghost   { background: none; border: 1.5px solid var(--border); color: var(--mid); }
     .btn.ghost:hover { background: var(--surface); color: var(--text); }
 
-    /* ── Tenant table ─────────────────────────────────────────────────── */
+    /* ── Table ──────────────────────────────────────────────────────────── */
     .tenant-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .tenant-table th { text-align: left; padding: 9px 12px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; border-bottom: 2px solid var(--border); position: sticky; top: 0; background: var(--bg); }
     .tenant-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    .tenant-table tr:hover td { background: var(--surface); }
+    .tenant-table tbody tr { cursor: pointer; transition: background .1s; }
+    .tenant-table tbody tr:hover td { background: var(--surface); }
+    .tenant-table tbody tr.selected td { background: #1a2e2b; }
     .plan-badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .plan-badge.trial      { background: #1a3a2a; color: var(--green); }
     .plan-badge.solo       { background: #1a2a3a; color: var(--blue); }
@@ -107,23 +105,66 @@
     .status-dot.inactive  { background: var(--muted); }
     .action-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--mid); font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; margin-left: 4px; }
     .action-btn:hover { background: var(--surface); color: var(--text); }
-    .action-btn.red:hover { background: #3a1a1a; border-color: var(--red); color: var(--red); }
+    .action-btn.red:hover   { background: #3a1a1a; border-color: var(--red);   color: var(--red); }
     .action-btn.green:hover { background: #1a3a2a; border-color: var(--green); color: var(--green); }
 
-    /* ── Audit log ────────────────────────────────────────────────────── */
+    /* ── Detail drawer ──────────────────────────────────────────────────── */
+    .drawer {
+      width: 0; border-left: 1px solid transparent; overflow: hidden;
+      flex-shrink: 0; transition: width .25s, border-color .25s;
+      display: flex; flex-direction: column; background: var(--surface);
+    }
+    .drawer.open { width: 340px; border-color: var(--border); overflow-y: auto; }
+    .drawer-inner { padding: 20px; min-width: 340px; }
+    .drawer-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; }
+    .drawer-title { font-size: 16px; font-weight: 800; flex: 1; }
+    .drawer-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; padding: 2px 6px; }
+    .drawer-close:hover { color: var(--text); }
+    .drawer-section { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 18px 0 8px; }
+    .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+    .drawer-field label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 3px; }
+    .drawer-field .val { font-size: 13px; font-weight: 600; color: var(--text); }
+    .drawer-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+    .drawer-btn {
+      width: 100%; padding: 10px; border-radius: 9px; border: 1.5px solid var(--border);
+      background: none; color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit; text-align: left; transition: all .15s;
+    }
+    .drawer-btn:hover { background: var(--bg); }
+    .drawer-btn.teal  { border-color: var(--primary); color: var(--primary); }
+    .drawer-btn.teal:hover  { background: #0d2622; }
+    .drawer-btn.danger { border-color: var(--red); color: var(--red); }
+    .drawer-btn.danger:hover { background: #2a1010; }
+    .drawer-btn.safe   { border-color: var(--green); color: var(--green); }
+    .drawer-btn.safe:hover   { background: #0d2018; }
+    .user-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .user-row:last-child { border-bottom: none; }
+    .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .user-name { font-weight: 600; color: var(--text); }
+    .user-email { color: var(--muted); font-size: 11px; }
+    .user-role { padding: 1px 7px; border-radius: 6px; background: var(--bg); font-size: 10px; font-weight: 700; color: var(--mid); margin-left: auto; flex-shrink: 0; }
+
+    /* ── Plan modal ─────────────────────────────────────────────────────── */
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      display: flex; align-items: center; justify-content: center; z-index: 200;
+    }
+    .modal-box {
+      width: 400px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px 28px 24px;
+    }
+    .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .modal-sub   { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-actions .btn { flex: 1; padding: 10px; text-align: center; }
+
+    /* ── Audit log ──────────────────────────────────────────────────────── */
     .audit-row { display: grid; grid-template-columns: 160px 140px auto 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
-    .audit-ts   { color: var(--muted); font-variant-numeric: tabular-nums; }
-    .audit-actor{ font-weight: 600; color: var(--text); }
+    .audit-ts     { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .audit-actor  { font-weight: 600; color: var(--text); }
     .audit-action { color: var(--amber); }
 
-    /* ── Panel detail ─────────────────────────────────────────────────── */
-    .detail-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-    .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .detail-field label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 4px; }
-    .detail-field .val  { font-size: 14px; font-weight: 600; color: var(--text); }
-    .section-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 20px 0 10px; }
-
-    /* ── Toast ────────────────────────────────────────────────────────── */
+    /* ── Toast ──────────────────────────────────────────────────────────── */
     #toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 9999; }
     #toast.show { opacity: 1; }
   </style>
@@ -132,19 +173,50 @@
 
 <div id="toast"></div>
 
-<!-- ── Login ─────────────────────────────────────────────────────────────── -->
+<!-- ── Plan change modal ────────────────────────────────────────────────── -->
+<div class="modal-bg" id="plan-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">Change Plan</div>
+    <div class="modal-sub" id="plan-modal-sub">Update subscription plan and billing status</div>
+    <div class="lf">
+      <label>Plan</label>
+      <select id="plan-modal-plan">
+        <option value="trial">Trial</option>
+        <option value="solo">Solo</option>
+        <option value="clinic">Clinic</option>
+        <option value="group">Group</option>
+        <option value="enterprise">Enterprise</option>
+      </select>
+    </div>
+    <div class="lf">
+      <label>Billing Status</label>
+      <select id="plan-modal-status">
+        <option value="trialing">Trialing</option>
+        <option value="active">Active</option>
+        <option value="past_due">Past Due</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="plan-modal-cancel">Cancel</button>
+      <button class="btn primary" id="plan-modal-save">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Login ────────────────────────────────────────────────────────────── -->
 <div id="login-screen">
   <div class="login-box">
     <h1>🦷 Platform Admin</h1>
     <p>Dental Assistant Pro — Superadmin Portal</p>
-    <div class="lf"><label>Email</label><input type="email" id="sa-email" placeholder="superadmin@dental.gr" /></div>
-    <div class="lf"><label>Password</label><input type="password" id="sa-password" /></div>
+    <div class="lf"><label>Username</label><input type="text" id="sa-email" placeholder="TTmanz07" autocomplete="username"/></div>
+    <div class="lf"><label>Password</label><input type="password" id="sa-password"/></div>
     <button class="login-btn" id="sa-login-btn">Sign In</button>
     <div class="login-err" id="sa-err"></div>
   </div>
 </div>
 
-<!-- ── App ───────────────────────────────────────────────────────────────── -->
+<!-- ── App ──────────────────────────────────────────────────────────────── -->
 <div id="app">
   <div class="topbar">
     <div class="topbar-logo">🦷 Dental Pro <span class="topbar-badge">SUPERADMIN</span></div>
@@ -154,7 +226,6 @@
     </div>
   </div>
 
-  <!-- Stats bar -->
   <div class="stats-bar" id="stats-bar">
     <div class="stat-chip"><div class="stat-chip-val" id="s-total">—</div><div class="stat-chip-lbl">Total Practices</div></div>
     <div class="stat-chip"><div class="stat-chip-val green" id="s-active">—</div><div class="stat-chip-lbl">Active</div></div>
@@ -171,12 +242,18 @@
       <div class="nav-item" data-view="audit">📋 Audit Log</div>
     </div>
     <div class="content" id="content"></div>
+    <!-- Detail drawer -->
+    <div class="drawer" id="detail-drawer">
+      <div class="drawer-inner" id="drawer-inner"></div>
+    </div>
   </div>
 </div>
 
 <script>
-const API = ''  // same origin
+const API = ''
 let SA_TOKEN = localStorage.getItem('sa_token') || null
+let _selectedPracticeId = null
+let _planModalPracticeId = null
 
 function saFetch(path, opts = {}) {
   return fetch(API + path, {
@@ -226,9 +303,10 @@ document.getElementById('sa-signout').addEventListener('click', () => {
 })
 
 if (SA_TOKEN) {
-  // Try to restore session
-  const email = JSON.parse(atob(SA_TOKEN.split('.')[1])).email
-  showApp(email)
+  try {
+    const email = JSON.parse(atob(SA_TOKEN.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).email
+    showApp(email)
+  } catch { localStorage.removeItem('sa_token') }
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────
@@ -236,6 +314,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'))
     item.classList.add('active')
+    closeDrawer()
     showView(item.dataset.view)
   })
 })
@@ -247,15 +326,17 @@ function showView(view) {
 
 // ── Stats ─────────────────────────────────────────────────────────────────
 async function loadStats() {
-  const res  = await saFetch('/api/superadmin/stats')
-  const s    = await res.json()
-  document.getElementById('s-total').textContent    = s.total_practices
-  document.getElementById('s-active').textContent   = s.active
-  document.getElementById('s-trialing').textContent = s.trialing
-  document.getElementById('s-past-due').textContent = s.past_due
-  document.getElementById('s-cancelled').textContent= s.cancelled
-  document.getElementById('s-new').textContent      = s.new_30d
-  document.getElementById('s-users').textContent    = s.total_users
+  try {
+    const res = await saFetch('/api/superadmin/stats')
+    const s   = await res.json()
+    document.getElementById('s-total').textContent     = s.total_practices
+    document.getElementById('s-active').textContent    = s.active
+    document.getElementById('s-trialing').textContent  = s.trialing
+    document.getElementById('s-past-due').textContent  = s.past_due
+    document.getElementById('s-cancelled').textContent = s.cancelled
+    document.getElementById('s-new').textContent       = s.new_30d
+    document.getElementById('s-users').textContent     = s.total_users
+  } catch {}
 }
 
 // ── Practices ─────────────────────────────────────────────────────────────
@@ -267,7 +348,7 @@ async function loadPractices() {
   content.innerHTML = `
     <div class="toolbar">
       <h2>Practices</h2>
-      <input class="search-input" id="p-search" placeholder="Search name…" value="${_q}" />
+      <input class="search-input" id="p-search" placeholder="Search name…" value="${_q}"/>
       <select class="filter-sel" id="p-plan">
         <option value="">All plans</option>
         <option value="trial"${_planFilter==='trial'?' selected':''}>Trial</option>
@@ -286,16 +367,19 @@ async function loadPractices() {
     </div>
     <div id="p-table-wrap"><div style="color:var(--muted);padding:20px">Loading…</div></div>`
 
-  document.getElementById('p-search').addEventListener('input', e => { _q = e.target.value })
-  document.getElementById('p-plan').addEventListener('change', e => { _planFilter = e.target.value })
-  document.getElementById('p-status').addEventListener('change', e => { _statusFilter = e.target.value })
+  document.getElementById('p-search').addEventListener('input', e  => { _q = e.target.value })
+  document.getElementById('p-plan').addEventListener('change',   e  => { _planFilter = e.target.value })
+  document.getElementById('p-status').addEventListener('change', e  => { _statusFilter = e.target.value })
   document.getElementById('p-refresh-btn').addEventListener('click', renderTable)
+  // Search on Enter
+  document.getElementById('p-search').addEventListener('keydown', e => { if (e.key === 'Enter') renderTable() })
   renderTable()
 }
 
 async function renderTable() {
   const wrap = document.getElementById('p-table-wrap')
   if (!wrap) return
+  wrap.innerHTML = '<div style="color:var(--muted);padding:20px">Loading…</div>'
   const params = new URLSearchParams({ limit: 200 })
   if (_q)            params.set('q', _q)
   if (_planFilter)   params.set('plan', _planFilter)
@@ -311,81 +395,181 @@ async function renderTable() {
       </tr></thead>
       <tbody>
         ${_practices.map(p => `
-          <tr data-pid="${p.id}">
+          <tr data-pid="${p.id}" class="${_selectedPracticeId===p.id?'selected':''}">
             <td style="font-weight:700">${p.name}</td>
             <td><span class="plan-badge ${p.plan}">${p.plan}</span></td>
             <td>
               <span class="status-dot ${p.is_active ? p.plan_status : 'inactive'}"></span>
               ${p.is_active ? p.plan_status : 'deactivated'}
-              ${p.plan_status==='trialing' && p.trial_ends_at ? '<br><small style="color:var(--muted)">ends '+new Date(p.trial_ends_at).toLocaleDateString()+'</small>' : ''}
+              ${p.plan_status==='trialing'&&p.trial_ends_at?'<br><small style="color:var(--muted)">ends '+new Date(p.trial_ends_at).toLocaleDateString()+'</small>':''}
             </td>
             <td style="text-align:center">${p.user_count}</td>
             <td style="text-align:center">${p.appointment_count}</td>
             <td style="color:var(--muted)">${new Date(p.created_at).toLocaleDateString()}</td>
             <td style="color:var(--muted)">${p.last_login_at ? new Date(p.last_login_at).toLocaleDateString() : '—'}</td>
-            <td>
+            <td onclick="event.stopPropagation()">
               <button class="action-btn" onclick="impersonate('${p.id}','${p.name.replace(/'/g,'')}')">👤 Login</button>
-              <button class="action-btn" onclick="changePlan('${p.id}')">✏️ Plan</button>
+              <button class="action-btn" onclick="openPlanModal('${p.id}','${p.name.replace(/'/g,'')}','${p.plan}','${p.plan_status}')">✏️ Plan</button>
               ${p.is_active
-                ? `<button class="action-btn red" onclick="toggleActive('${p.id}',false)">🚫 Deactivate</button>`
-                : `<button class="action-btn green" onclick="toggleActive('${p.id}',true)">✅ Activate</button>`}
+                ? `<button class="action-btn red"   onclick="toggleActive('${p.id}',false,'${p.name.replace(/'/g,'')}')">🚫 Disable</button>`
+                : `<button class="action-btn green"  onclick="toggleActive('${p.id}',true,'${p.name.replace(/'/g,'')}')" >✅ Enable</button>`}
             </td>
           </tr>`).join('')}
       </tbody>
     </table>`
+
+  // Row click → detail drawer
+  wrap.querySelectorAll('tbody tr').forEach(row => {
+    row.addEventListener('click', () => openDrawer(row.dataset.pid))
+  })
 }
 
+// ── Impersonate ───────────────────────────────────────────────────────────
 async function impersonate(practiceId, name) {
-  if (!confirm(`Sign in as admin of "${name}"? You'll get a 2-hour session.`)) return
+  if (!confirm(`Sign in as admin of "${name}"?\nYou will get a 2-hour session in a new tab.`)) return
   const res  = await saFetch(`/api/superadmin/impersonate/${practiceId}`, { method: 'POST' })
   const data = await res.json()
   if (!res.ok) { toast('Error: ' + data.error); return }
-  // Open app in new tab with impersonation token
-  const url = `/?_impersonate=${encodeURIComponent(JSON.stringify({ token: data.token, user: data.user }))}`
-  window.open(url, '_blank')
-  toast(`Opened ${name} as ${data.user.email}`)
+  // Open at /app (calendar.html), not / (landing page)
+  const url = `/app?_impersonate=${encodeURIComponent(JSON.stringify({ token: data.token, user: data.user }))}`
+  window.open(url, '_blank', 'noopener')
+  toast(`Opened "${name}" as ${data.user.email}`)
 }
 
-async function changePlan(practiceId) {
-  const plan = prompt('New plan: trial | solo | clinic | group | enterprise')
-  if (!plan || !['trial','solo','clinic','group','enterprise'].includes(plan)) return
-  const status = prompt('New status: trialing | active | past_due | cancelled', 'active')
-  if (!status) return
-  const res = await saFetch(`/api/superadmin/practices/${practiceId}`, { method: 'PATCH', body: { plan, plan_status: status } })
-  if (res.ok) { toast('Plan updated ✓'); loadStats(); renderTable() }
-  else toast('Error updating plan')
+// ── Plan modal ────────────────────────────────────────────────────────────
+function openPlanModal(practiceId, name, currentPlan, currentStatus) {
+  _planModalPracticeId = practiceId
+  document.getElementById('plan-modal-sub').textContent = name
+  document.getElementById('plan-modal-plan').value   = currentPlan   || 'trial'
+  document.getElementById('plan-modal-status').value = currentStatus || 'trialing'
+  document.getElementById('plan-modal').style.display = 'flex'
 }
 
-async function toggleActive(practiceId, activate) {
-  const action = activate ? 'Activate' : 'Deactivate'
-  if (!confirm(`${action} this practice?`)) return
-  const res = await saFetch(`/api/superadmin/practices/${practiceId}`, { method: 'PATCH', body: { is_active: activate } })
-  if (res.ok) { toast(`Practice ${activate ? 'activated' : 'deactivated'} ✓`); loadStats(); renderTable() }
-  else toast('Error')
+document.getElementById('plan-modal-cancel').addEventListener('click', () => {
+  document.getElementById('plan-modal').style.display = 'none'
+})
+document.getElementById('plan-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('plan-modal'))
+    document.getElementById('plan-modal').style.display = 'none'
+})
+document.getElementById('plan-modal-save').addEventListener('click', async () => {
+  const plan   = document.getElementById('plan-modal-plan').value
+  const status = document.getElementById('plan-modal-status').value
+  const btn    = document.getElementById('plan-modal-save')
+  btn.disabled = true; btn.textContent = 'Saving…'
+  const res = await saFetch(`/api/superadmin/practices/${_planModalPracticeId}`, {
+    method: 'PATCH', body: { plan, plan_status: status }
+  })
+  btn.disabled = false; btn.textContent = 'Save Changes'
+  if (res.ok) {
+    document.getElementById('plan-modal').style.display = 'none'
+    toast('Plan updated ✓')
+    loadStats(); renderTable()
+    if (_selectedPracticeId === _planModalPracticeId) openDrawer(_planModalPracticeId)
+  } else {
+    toast('Error updating plan')
+  }
+})
+
+// ── Toggle active ─────────────────────────────────────────────────────────
+async function toggleActive(practiceId, activate, name) {
+  const action = activate ? 'Enable' : 'Disable'
+  if (!confirm(`${action} practice "${name}"?`)) return
+  const res = await saFetch(`/api/superadmin/practices/${practiceId}`, {
+    method: 'PATCH', body: { is_active: activate }
+  })
+  if (res.ok) {
+    toast(`Practice ${activate ? 'enabled' : 'disabled'} ✓`)
+    loadStats(); renderTable()
+    if (_selectedPracticeId === practiceId) openDrawer(practiceId)
+  } else toast('Error')
+}
+
+// ── Detail drawer ─────────────────────────────────────────────────────────
+function closeDrawer() {
+  document.getElementById('detail-drawer').classList.remove('open')
+  _selectedPracticeId = null
+  document.querySelectorAll('.tenant-table tbody tr').forEach(r => r.classList.remove('selected'))
+}
+
+async function openDrawer(practiceId) {
+  _selectedPracticeId = practiceId
+  document.querySelectorAll('.tenant-table tbody tr').forEach(r => {
+    r.classList.toggle('selected', r.dataset.pid === practiceId)
+  })
+  const drawer = document.getElementById('detail-drawer')
+  const inner  = document.getElementById('drawer-inner')
+  drawer.classList.add('open')
+  inner.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0">Loading…</div>'
+
+  const res  = await saFetch(`/api/superadmin/practices/${practiceId}`)
+  const p    = await res.json()
+  if (!res.ok) { inner.innerHTML = `<div style="color:var(--red)">${p.error}</div>`; return }
+
+  const users = Array.isArray(p.users) ? p.users.filter(Boolean) : []
+  inner.innerHTML = `
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-title">${p.name}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">${p.country} · ${p.locale}</div>
+      </div>
+      <button class="drawer-close" id="drawer-close-btn">✕</button>
+    </div>
+
+    <div class="drawer-grid">
+      <div class="drawer-field"><label>Plan</label><div class="val"><span class="plan-badge ${p.plan}">${p.plan}</span></div></div>
+      <div class="drawer-field"><label>Status</label><div class="val"><span class="status-dot ${p.is_active?p.plan_status:'inactive'}"></span>${p.is_active?p.plan_status:'deactivated'}</div></div>
+      <div class="drawer-field"><label>Created</label><div class="val">${new Date(p.created_at).toLocaleDateString()}</div></div>
+      <div class="drawer-field"><label>Trial ends</label><div class="val">${p.trial_ends_at?new Date(p.trial_ends_at).toLocaleDateString():'—'}</div></div>
+      <div class="drawer-field"><label>Max dentists</label><div class="val">${p.max_dentists||'—'}</div></div>
+      <div class="drawer-field"><label>Max patients</label><div class="val">${p.max_patients||'—'}</div></div>
+    </div>
+    ${p.stripe_customer_id ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:monospace">Stripe: ${p.stripe_customer_id}</div>` : ''}
+
+    <div class="drawer-section">Users (${users.length})</div>
+    ${users.length ? users.map(u => `
+      <div class="user-row">
+        <div class="user-avatar">${(u.firstName||u.email||'?')[0].toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div class="user-name">${u.firstName||''} ${u.lastName||''}</div>
+          <div class="user-email">${u.email}</div>
+          ${u.lastLogin?`<div style="font-size:10px;color:var(--muted)">Last login: ${new Date(u.lastLogin).toLocaleDateString()}</div>`:''}
+        </div>
+        <div class="user-role">${u.role}</div>
+      </div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted)">No users found.</div>'}
+
+    <div class="drawer-section">Actions</div>
+    <div class="drawer-actions">
+      <button class="drawer-btn teal" onclick="impersonate('${p.id}','${p.name.replace(/'/g,'')}')">👤 Login as this practice</button>
+      <button class="drawer-btn" onclick="openPlanModal('${p.id}','${p.name.replace(/'/g,'')}','${p.plan}','${p.plan_status}')">✏️ Change plan / status</button>
+      ${p.is_active
+        ? `<button class="drawer-btn danger" onclick="toggleActive('${p.id}',false,'${p.name.replace(/'/g,'')}')">🚫 Disable practice</button>`
+        : `<button class="drawer-btn safe"   onclick="toggleActive('${p.id}',true,'${p.name.replace(/'/g,'')}')">✅ Enable practice</button>`}
+    </div>`
+
+  document.getElementById('drawer-close-btn').addEventListener('click', closeDrawer)
 }
 
 // ── Audit log ─────────────────────────────────────────────────────────────
 async function loadAudit() {
   const content = document.getElementById('content')
-  content.innerHTML = '<div class="toolbar"><h2>Platform Audit Log</h2></div><div id="audit-wrap"><div style="color:var(--muted);padding:20px">Loading…</div></div>'
-  const res  = await saFetch('/api/superadmin/audit')
-  const rows = await res.json()
-  const wrap = document.getElementById('audit-wrap')
-  if (!rows.length) { wrap.innerHTML = '<div style="color:var(--muted);padding:20px">No audit entries yet.</div>'; return }
-  wrap.innerHTML = rows.map(r => `
-    <div class="audit-row">
-      <span class="audit-ts">${new Date(r.created_at).toLocaleString()}</span>
-      <span class="audit-actor">${r.actor_email}</span>
-      <span class="audit-action">${r.action}</span>
-      <span style="color:var(--mid)">${r.target_type||''} ${r.target_id ? r.target_id.slice(0,8)+'…' : ''}  ${r.detail ? JSON.stringify(r.detail).slice(0,80) : ''}</span>
-    </div>`).join('')
-}
+  content.innerHTML = '<div class="toolbar"><h2>Platform Audit Log</h2><button class="btn ghost" id="audit-refresh">↻ Refresh</button></div><div id="audit-wrap"><div style="color:var(--muted);padding:20px">Loading…</div></div>'
+  document.getElementById('audit-refresh').addEventListener('click', loadAudit)
 
-// ── Handle impersonation token on app load ────────────────────────────────
-const urlParams = new URLSearchParams(location.search)
-const impersonate_data = urlParams.get('_impersonate')
-if (impersonate_data && location.pathname !== '/superadmin') {
-  // This runs in the main app — handled by calendar.html JS
+  try {
+    const res  = await saFetch('/api/superadmin/audit')
+    const rows = await res.json()
+    const wrap = document.getElementById('audit-wrap')
+    if (!rows.length) { wrap.innerHTML = '<div style="color:var(--muted);padding:20px">No audit entries yet.</div>'; return }
+    wrap.innerHTML = rows.map(r => `
+      <div class="audit-row">
+        <span class="audit-ts">${new Date(r.created_at).toLocaleString()}</span>
+        <span class="audit-actor">${r.actor_email}</span>
+        <span class="audit-action">${r.action}</span>
+        <span style="color:var(--mid)">${r.target_type||''} ${r.target_id ? r.target_id.slice(0,8)+'…' : ''} ${r.detail ? JSON.stringify(r.detail).slice(0,80) : ''}</span>
+      </div>`).join('')
+  } catch { document.getElementById('audit-wrap').innerHTML = '<div style="color:var(--red);padding:20px">Failed to load audit log.</div>' }
 }
 </script>
 </body>

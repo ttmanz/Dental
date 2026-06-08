@@ -2,9 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Patient Portal — Dental Assistant Pro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/patient-portal-manifest.json"/>
+  <meta name="theme-color" content="#3D9E8F"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="My Portal"/>
+  <link rel="apple-touch-icon" href="icon.png"/>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; font-family: 'Inter', sans-serif; }
@@ -151,6 +161,119 @@
     .msg-sent-notice { font-size: 13px; color: #065F46; margin-top: 8px; display: none; }
     .msg-sent-notice.show { display: block; }
 
+    /* ── Account accordion ── */
+    .account-header {
+      display: flex; align-items: center; cursor: pointer; user-select: none;
+      margin: -20px -22px; padding: 20px 22px; border-radius: 16px;
+      transition: background .15s;
+    }
+    .account-header:hover { background: var(--cream); }
+    .account-header-title { display: flex; align-items: center; gap: 8px; flex: 1;
+      font-size: 13px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .08em; }
+    .account-header-title span { font-size: 16px; }
+    .account-badge {
+      background: #FEF3C7; color: #92400E; border-radius: 8px;
+      padding: 3px 10px; font-size: 12px; font-weight: 700;
+    }
+    .account-chevron {
+      font-size: 11px; color: var(--text-muted); margin-left: 10px;
+      transition: transform .2s;
+    }
+    .account-chevron.open { transform: rotate(180deg); }
+    .account-body { margin-top: 16px; }
+    .account-balance-summary {
+      background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
+      border: 1px solid #FCD34D; border-radius: 10px;
+      padding: 12px 16px; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .account-balance-label { font-size: 11px; font-weight: 700; color: #92400E;
+      text-transform: uppercase; letter-spacing: .05em; flex: 1; }
+    .account-balance-amount { font-size: 20px; font-weight: 800; color: #B45309; }
+
+    /* ── Last visit ── */
+    .lastvisit-row { display: flex; align-items: center; gap: 14px; }
+    .lastvisit-badge {
+      flex-shrink: 0; width: 56px; height: 56px; border-radius: 12px;
+      background: var(--primary-light); display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .lastvisit-badge-day  { font-size: 20px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .lastvisit-badge-mon  { font-size: 9px; font-weight: 700; color: var(--primary); text-transform: uppercase; }
+    .lastvisit-detail { flex: 1; }
+    .lastvisit-type   { font-size: 14px; font-weight: 700; color: var(--text); }
+    .lastvisit-meta   { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+    /* ── Prescription rows ── */
+    .rx-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .rx-row:last-child { border-bottom: none; }
+    .rx-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .rx-number { font-size: 12px; font-weight: 700; color: var(--primary); }
+    .rx-date   { font-size: 11px; color: var(--text-muted); flex: 1; }
+    .rx-status { padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .rx-status.active    { background: #D1FAE5; color: #065F46; }
+    .rx-status.dispensed { background: var(--primary-light); color: var(--primary); }
+    .rx-status.expired   { background: var(--border); color: var(--text-muted); }
+    .rx-meds { display: flex; flex-direction: column; gap: 3px; }
+    .rx-med  { font-size: 13px; color: var(--text); font-weight: 500; }
+    .rx-med-detail { font-size: 11px; color: var(--text-muted); }
+    .rx-doctor { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Appointment request form ── */
+    .req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 500px) { .req-grid { grid-template-columns: 1fr; } }
+    .req-field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-mid); margin-bottom: 5px; }
+    .req-field input, .req-field select, .req-field textarea {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 9px;
+      padding: 9px 12px; font-size: 13px; font-family: inherit; color: var(--text);
+      background: var(--cream); outline: none; transition: border-color .15s;
+    }
+    .req-field input:focus, .req-field select:focus, .req-field textarea:focus {
+      border-color: var(--primary); background: var(--white);
+    }
+    .req-field.full { grid-column: 1 / -1; }
+    .req-submit {
+      margin-top: 14px; padding: 11px 28px; border-radius: 10px; border: none;
+      background: var(--primary); color: #fff; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: background .15s;
+    }
+    .req-submit:hover:not(:disabled) { background: #2D8B7A; }
+    .req-submit:disabled { opacity: .6; cursor: default; }
+    .req-success { font-size: 13px; color: #065F46; margin-top: 10px; display: none; }
+    .req-success.show { display: block; }
+
+    /* ── WhatsApp card ── */
+    .wa-card {
+      background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+      border: 1.5px solid #86EFAC; border-radius: 14px;
+      padding: 18px 20px; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .wa-icon { font-size: 32px; flex-shrink: 0; }
+    .wa-text { flex: 1; }
+    .wa-title { font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 3px; }
+    .wa-sub   { font-size: 12px; color: #166534; opacity: .8; }
+    .wa-btn {
+      padding: 10px 20px; border-radius: 10px; border: none;
+      background: #25D366; color: #fff; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block;
+      flex-shrink: 0; transition: background .15s;
+    }
+    .wa-btn:hover { background: #1DA851; }
+
+    /* ── Reminder rows ── */
+    .rem-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .rem-row:last-child { border-bottom: none; }
+    .rem-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .rem-info { flex: 1; }
+    .rem-msg  { font-size: 13px; color: var(--text); font-weight: 500; line-height: 1.4; }
+    .rem-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .rem-status { padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; flex-shrink: 0; }
+    .rem-status.sent    { background: #D1FAE5; color: #065F46; }
+    .rem-status.pending { background: #FEF3C7; color: #92400E; }
+    .rem-status.failed  { background: #FEE2E2; color: #991B1B; }
+
     /* ── Empty state ── */
     .portal-empty { text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted); }
 
@@ -222,10 +345,17 @@
   <div class="portal-welcome" id="portal-welcome">Hello!</div>
   <div class="portal-welcome-sub" id="portal-sub">Here are your dental records</div>
 
+
   <!-- Health Intake Form (shown prominently when incomplete) -->
   <div class="portal-card" id="intake-card" style="border:2px solid var(--primary);display:none">
     <div class="portal-card-title"><span>🏥</span> <span id="lbl-intake">Your Health Form</span></div>
     <div id="intake-status-area"></div>
+  </div>
+
+  <!-- Last visit -->
+  <div class="portal-card" id="lastvisit-card" style="display:none">
+    <div class="portal-card-title"><span>🪥</span> <span id="lbl-lastvisit">Last Visit</span></div>
+    <div id="portal-lastvisit"></div>
   </div>
 
   <!-- Upcoming appointments -->
@@ -234,16 +364,72 @@
     <div id="portal-appts"><div class="portal-empty">Loading…</div></div>
   </div>
 
+  <!-- Request appointment -->
+  <div class="portal-card">
+    <div class="portal-card-title"><span>➕</span> <span id="lbl-req">Request an Appointment</span></div>
+    <div class="req-grid">
+      <div class="req-field">
+        <label id="lbl-req-date">Preferred Date</label>
+        <input type="date" id="req-date"/>
+      </div>
+      <div class="req-field">
+        <label id="lbl-req-time">Preferred Time</label>
+        <input type="time" id="req-time"/>
+      </div>
+      <div class="req-field">
+        <label id="lbl-req-type">Visit Type</label>
+        <select id="req-type">
+          <option value="check_up">Check-up / Examination</option>
+          <option value="cleaning">Cleaning / Scale &amp; Polish</option>
+          <option value="filling">Filling / Restoration</option>
+          <option value="extraction">Extraction</option>
+          <option value="root_canal">Root Canal</option>
+          <option value="whitening">Whitening</option>
+          <option value="emergency">Emergency</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="req-field full">
+        <label id="lbl-req-notes">Notes (optional)</label>
+        <textarea id="req-notes" rows="2" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <button class="req-submit" id="req-submit-btn">Request Appointment</button>
+    <div class="req-success" id="req-success">✓ Request sent! The clinic will confirm your appointment.</div>
+  </div>
+
+  <!-- Prescriptions -->
+  <div class="portal-card">
+    <div class="portal-card-title"><span>💊</span> <span id="lbl-rx">Prescriptions</span></div>
+    <div id="portal-rx"><div class="portal-empty">Loading…</div></div>
+  </div>
+
   <!-- Treatment plans -->
   <div class="portal-card">
     <div class="portal-card-title"><span>📋</span> <span id="lbl-plans">Treatment Plans</span></div>
     <div id="portal-plans"><div class="portal-empty">Loading…</div></div>
   </div>
 
-  <!-- Invoices -->
-  <div class="portal-card">
-    <div class="portal-card-title"><span>🧾</span> <span id="lbl-invoices">Invoices</span></div>
-    <div id="portal-invoices"><div class="portal-empty">Loading…</div></div>
+  <!-- Account (collapsed, expands to show invoices + balance) -->
+  <div class="portal-card" id="account-card">
+    <div class="account-header" id="account-toggle">
+      <div class="account-header-title"><span>💳</span> <span id="lbl-account">Account</span></div>
+      <span class="account-badge" id="account-badge" style="display:none"></span>
+      <span class="account-chevron" id="account-chevron">▼</span>
+    </div>
+    <div class="account-body" id="account-body" style="display:none">
+      <div class="account-balance-summary" id="account-balance-summary" style="display:none">
+        <div class="account-balance-label" id="lbl-balance">Outstanding Balance</div>
+        <div class="account-balance-amount" id="balance-amount">€0.00</div>
+      </div>
+      <div id="portal-invoices"><div class="portal-empty">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- Reminders -->
+  <div class="portal-card" id="reminders-card" style="display:none">
+    <div class="portal-card-title"><span>🔔</span> <span id="lbl-reminders">Reminders</span></div>
+    <div id="portal-reminders"></div>
   </div>
 
   <!-- Consent forms -->
@@ -252,9 +438,19 @@
     <div id="portal-consents"><div class="portal-empty">Loading…</div></div>
   </div>
 
+  <!-- WhatsApp -->
+  <div class="wa-card" id="wa-card" style="display:none">
+    <div class="wa-icon">💬</div>
+    <div class="wa-text">
+      <div class="wa-title" id="wa-title">Chat with the clinic on WhatsApp</div>
+      <div class="wa-sub"  id="wa-sub">Get quick answers, ask questions, or send photos.</div>
+    </div>
+    <a class="wa-btn" id="wa-btn" href="#" target="_blank" rel="noopener">Open WhatsApp</a>
+  </div>
+
   <!-- Message clinic -->
   <div class="portal-card">
-    <div class="portal-card-title"><span>💬</span> <span id="lbl-msg">Message Your Clinic</span></div>
+    <div class="portal-card-title"><span>✉️</span> <span id="lbl-msg">Message Your Clinic</span></div>
     <textarea class="msg-textarea" id="msg-body" rows="3"></textarea>
     <button class="msg-send-btn" id="msg-send-btn">Send Message</button>
     <div class="msg-sent-notice" id="msg-sent">✓ Message sent! Your clinic will be in touch.</div>
@@ -272,10 +468,11 @@ const API = (()=>{
     : window.location.origin
 })()
 
-let _lang       = 'en'
-let _token      = null
-let _patient    = null
-let _practiceId = null
+let _lang         = 'en'
+let _token        = null
+let _patient      = null
+let _practiceId   = null
+let _practiceInfo = null
 
 // Read practice ID from URL query: ?practice=UUID
 ;(() => {
@@ -299,6 +496,17 @@ const L = {
     send:'Send Message', signout:'Sign out', balance:'Balance due',
     paid:'Paid', issued:'Issued', partial:'Part paid', overdue:'Overdue',
     signed:'Signed', unsigned:'Pending',
+    // new
+    lastvisit:'Last Visit', rx:'Prescriptions', noRx:'No prescriptions on file.',
+    req:'Request an Appointment', reqDate:'Preferred Date', reqTime:'Preferred Time',
+    reqType:'Visit Type', reqNotes:'Notes (optional)', reqSend:'Request Appointment',
+    reqSent:'✓ Request sent! The clinic will confirm your appointment.',
+    reminders:'Reminders',
+    waTitle:'Chat with the clinic on WhatsApp', waSub:'Get quick answers or send photos.',
+    waBtn:'Open WhatsApp',
+    account:'Account', outstandingBalance:'Outstanding Balance',
+    rxActive:'Active', rxDispensed:'Dispensed', rxExpired:'Expired',
+    prescribed:'Prescribed by', validUntil:'Valid until',
   },
   el: {
     loginTitle:'Πύλη Ασθενή', loginSub:'Συνδεθείτε για να δείτε τα αρχεία σας',
@@ -313,6 +521,17 @@ const L = {
     send:'Αποστολή Μηνύματος', signout:'Αποσύνδεση', balance:'Υπόλοιπο',
     paid:'Εξοφλημένο', issued:'Εκδοθέν', partial:'Μερική πληρωμή', overdue:'Ληξιπρόθεσμο',
     signed:'Υπογεγραμμένο', unsigned:'Εκκρεμεί',
+    // new
+    lastvisit:'Τελευταία Επίσκεψη', rx:'Συνταγές', noRx:'Δεν υπάρχουν συνταγές.',
+    req:'Αίτηση Ραντεβού', reqDate:'Επιθυμητή Ημερομηνία', reqTime:'Επιθυμητή Ώρα',
+    reqType:'Τύπος Επίσκεψης', reqNotes:'Σημειώσεις (προαιρετικό)', reqSend:'Αποστολή Αίτησης',
+    reqSent:'✓ Η αίτηση στάλθηκε! Το ιατρείο θα επιβεβαιώσει το ραντεβού σας.',
+    reminders:'Υπενθυμίσεις',
+    waTitle:'Επικοινωνήστε με το ιατρείο στο WhatsApp', waSub:'Γρήγορες απαντήσεις ή αποστολή φωτογραφιών.',
+    waBtn:'Άνοιγμα WhatsApp',
+    account:'Λογαριασμός', outstandingBalance:'Εκκρεμές Υπόλοιπο',
+    rxActive:'Ενεργή', rxDispensed:'Εκτελεσθείσα', rxExpired:'Ληγμένη',
+    prescribed:'Συνταγογράφος', validUntil:'Ισχύει έως',
   }
 }
 
@@ -326,11 +545,24 @@ function applyLang() {
   document.getElementById('login-hint').textContent  = t('loginHint')
   document.getElementById('lbl-appts').textContent   = t('appts')
   document.getElementById('lbl-plans').textContent   = t('plans')
-  document.getElementById('lbl-invoices').textContent = t('invoices')
+  document.getElementById('lbl-account').textContent  = t('account')
   document.getElementById('lbl-consents').textContent = t('consents')
   document.getElementById('lbl-msg').textContent     = t('msg')
   document.getElementById('msg-send-btn').textContent = t('send')
   document.getElementById('logout-btn').textContent  = t('signout')
+  document.getElementById('lbl-lastvisit').textContent = t('lastvisit')
+  document.getElementById('lbl-rx').textContent      = t('rx')
+  document.getElementById('lbl-req').textContent     = t('req')
+  document.getElementById('lbl-req-date').textContent = t('reqDate')
+  document.getElementById('lbl-req-time').textContent = t('reqTime')
+  document.getElementById('lbl-req-type').textContent = t('reqType')
+  document.getElementById('lbl-req-notes').textContent = t('reqNotes')
+  document.getElementById('req-submit-btn').textContent = t('reqSend')
+  document.getElementById('lbl-reminders').textContent = t('reminders')
+  document.getElementById('lbl-balance').textContent   = t('outstandingBalance')
+  document.getElementById('wa-title').textContent    = t('waTitle')
+  document.getElementById('wa-sub').textContent      = t('waSub')
+  document.getElementById('wa-btn').textContent      = t('waBtn')
   document.getElementById('plang-en').classList.toggle('active', _lang==='en')
   document.getElementById('plang-el').classList.toggle('active', _lang==='el')
   if (_patient) {
@@ -429,9 +661,22 @@ async function showPortal() {
   document.getElementById('portal-lang-toggle').style.display = ''
   document.getElementById('topbar-user').textContent    = `${_patient.firstName} ${_patient.lastName}`
   document.getElementById('topbar-practice').textContent = _patient.practiceName || 'Dental Practice'
-  // Set lang from practice locale
   if (_patient.locale) _lang = _patient.locale
   applyLang()
+  // Fetch full practice info (includes phone) then wire WhatsApp
+  try {
+    const r = await portalFetch('/api/portal/me')
+    if (r.ok) {
+      const me = await r.json()
+      _practiceInfo = me
+      const raw = (me.practice_phone || '').replace(/\D/g, '')
+      if (raw) {
+        const msg = encodeURIComponent(`Hello, I am ${_patient.firstName} ${_patient.lastName}. I am contacting you via the patient portal.`)
+        document.getElementById('wa-btn').href = `https://wa.me/${raw}?text=${msg}`
+        document.getElementById('wa-card').style.display = ''
+      }
+    }
+  } catch {}
   await loadPortalData()
   document.getElementById('loading-page').style.display = 'none'
   document.getElementById('portal-page').style.display  = 'block'
@@ -441,7 +686,11 @@ async function showPortal() {
 
 // ── Load portal data ──────────────────────────────────────────────────────
 async function loadPortalData() {
-  await Promise.all([ loadIntake(), loadAppts(), loadPlans(), loadInvoices(), loadConsents() ])
+  await Promise.all([
+    loadIntake(), loadAppts(), loadPlans(),
+    loadInvoices(), loadConsents(),
+    loadPrescriptions(), loadReminders(),
+  ])
 }
 
 // ── Intake form ───────────────────────────────────────────────────────────
@@ -558,14 +807,35 @@ async function loadAppts() {
     if (!res.ok) return
     const appts = await res.json()
     const el = document.getElementById('portal-appts')
-    if (!appts.length) { el.innerHTML = `<div class="portal-empty">${t('noAppts')}</div>`; return }
+    // Separate past completed from upcoming
+    const today = new Date().toISOString().slice(0,10)
+    const completed = appts.filter(a => a.appointment_date < today && a.status === 'completed')
+    const upcoming  = appts.filter(a => a.appointment_date >= today || a.status !== 'completed')
+    // Last visit card
+    if (completed.length) {
+      const lv = completed[0]
+      const d  = new Date(lv.appointment_date+'T00:00:00')
+      const [h, m] = (lv.start_time||'00:00').split(':')
+      document.getElementById('portal-lastvisit').innerHTML = `
+        <div class="lastvisit-row">
+          <div class="lastvisit-badge">
+            <div class="lastvisit-badge-day">${d.getDate()}</div>
+            <div class="lastvisit-badge-mon">${d.toLocaleString(_lang==='el'?'el-GR':'en-GB',{month:'short'}).toUpperCase()}</div>
+          </div>
+          <div class="lastvisit-detail">
+            <div class="lastvisit-type">${lv.type?.replace(/_/g,' ')}</div>
+            <div class="lastvisit-meta">${h}:${m} · ${lv.dentist_name} · ${d.getFullYear()}</div>
+          </div>
+        </div>`
+      document.getElementById('lastvisit-card').style.display = ''
+    }
+    if (!upcoming.length) { el.innerHTML = `<div class="portal-empty">${t('noAppts')}</div>`; return }
     el.innerHTML = ''
-    appts.forEach(a => {
+    upcoming.forEach(a => {
       const d = new Date(a.appointment_date+'T00:00:00')
       const [h, m] = (a.start_time||'00:00').split(':')
       const row = document.createElement('div')
       row.className = 'appt-row'
-      const isFuture = new Date(a.appointment_date) >= new Date(new Date().toISOString().slice(0,10))
       row.innerHTML = `
         <div class="appt-date-badge">
           <div class="appt-date-day">${d.getDate()}</div>
@@ -612,12 +882,14 @@ async function loadInvoices() {
     const invs = await res.json()
     const el = document.getElementById('portal-invoices')
     if (!invs.length) { el.innerHTML = `<div class="portal-empty">${t('noInvoices')}</div>`; return }
+    let totalOwed = 0
     el.innerHTML = ''
     invs.forEach(inv => {
       const total   = parseFloat(inv.subtotal||0)
       const insure  = parseFloat(inv.insurance_amount||0)
       const paid    = parseFloat(inv.amount_paid||0)
       const balance = Math.max(0, total - insure - paid)
+      totalOwed += balance
       const row = document.createElement('div')
       row.className = 'inv-row'
       row.innerHTML = `
@@ -628,6 +900,14 @@ async function loadInvoices() {
         <span class="inv-status ${inv.status}">${t(inv.status)||inv.status}</span>`
       el.appendChild(row)
     })
+    // Drive account badge + balance summary inside accordion
+    if (totalOwed > 0.01) {
+      document.getElementById('balance-amount').textContent = `€${totalOwed.toFixed(2)}`
+      document.getElementById('account-balance-summary').style.display = ''
+      const badge = document.getElementById('account-badge')
+      badge.textContent = `€${totalOwed.toFixed(2)} due`
+      badge.style.display = ''
+    }
   } catch {}
 }
 
@@ -651,6 +931,15 @@ async function loadConsents() {
   } catch {}
 }
 
+// ── Account accordion ────────────────────────────────────────────────────
+document.getElementById('account-toggle').addEventListener('click', () => {
+  const body    = document.getElementById('account-body')
+  const chevron = document.getElementById('account-chevron')
+  const open    = body.style.display !== 'none'
+  body.style.display    = open ? 'none' : ''
+  chevron.classList.toggle('open', !open)
+})
+
 // ── Message form ──────────────────────────────────────────────────────────
 document.getElementById('msg-send-btn').addEventListener('click', async () => {
   const body = document.getElementById('msg-body').value.trim()
@@ -667,10 +956,105 @@ document.getElementById('msg-send-btn').addEventListener('click', async () => {
   } catch {}
 })
 
+// ── Prescriptions ────────────────────────────────────────────────────────
+async function loadPrescriptions() {
+  try {
+    const res = await portalFetch('/api/portal/prescriptions')
+    if (!res.ok) return
+    const rxList = await res.json()
+    const el = document.getElementById('portal-rx')
+    if (!rxList.length) { el.innerHTML = `<div class="portal-empty">${t('noRx')}</div>`; return }
+    const loc = _lang === 'el' ? 'el-GR' : 'en-GB'
+    el.innerHTML = ''
+    rxList.forEach(rx => {
+      const meds = Array.isArray(rx.medications) ? rx.medications : (rx.medications ? JSON.parse(rx.medications) : [])
+      const row = document.createElement('div')
+      row.className = 'rx-row'
+      const statusKey = { active:'rxActive', dispensed:'rxDispensed', expired:'rxExpired' }[rx.status] || 'rx'
+      row.innerHTML = `
+        <div class="rx-header">
+          <div class="rx-number">${rx.rx_number}</div>
+          <div class="rx-date">${new Date(rx.prescription_date).toLocaleDateString(loc)}</div>
+          <span class="rx-status ${rx.status}">${t(statusKey)}</span>
+        </div>
+        ${rx.diagnosis ? `<div style="font-size:12px;color:var(--text-mid);margin-bottom:6px">${rx.diagnosis}</div>` : ''}
+        <div class="rx-meds">
+          ${meds.map(med => `
+            <div>
+              <div class="rx-med">💊 ${med.name}${med.strength ? ' ' + med.strength : ''}${med.form ? ' · ' + med.form : ''}</div>
+              ${med.posology ? `<div class="rx-med-detail">${med.posology}${med.qty ? ' · Qty: ' + med.qty : ''}</div>` : ''}
+            </div>`).join('')}
+        </div>
+        <div class="rx-doctor">${t('prescribed')}: ${rx.doctor_name}${rx.valid_until ? ' · ' + t('validUntil') + ' ' + new Date(rx.valid_until).toLocaleDateString(loc) : ''}</div>`
+      el.appendChild(row)
+    })
+  } catch {}
+}
+
+// ── Reminders ────────────────────────────────────────────────────────────
+async function loadReminders() {
+  try {
+    const res = await portalFetch('/api/portal/reminders')
+    if (!res.ok) return
+    const rems = await res.json()
+    if (!rems.length) return
+    const loc = _lang === 'el' ? 'el-GR' : 'en-GB'
+    const el  = document.getElementById('portal-reminders')
+    el.innerHTML = ''
+    rems.forEach(r => {
+      const channelIcon = { whatsapp:'💬', email:'📧', sms:'📱' }[r.channel] || '🔔'
+      const row = document.createElement('div')
+      row.className = 'rem-row'
+      row.innerHTML = `
+        <div class="rem-icon">${channelIcon}</div>
+        <div class="rem-info">
+          <div class="rem-msg">${r.message}</div>
+          <div class="rem-meta">${new Date(r.scheduled_at).toLocaleString(loc, {dateStyle:'medium', timeStyle:'short'})}</div>
+        </div>
+        <span class="rem-status ${r.status}">${r.status}</span>`
+      el.appendChild(row)
+    })
+    document.getElementById('reminders-card').style.display = ''
+  } catch {}
+}
+
+// ── Appointment request ───────────────────────────────────────────────────
+document.getElementById('req-submit-btn').addEventListener('click', async () => {
+  const preferredDate = document.getElementById('req-date').value
+  const preferredTime = document.getElementById('req-time').value
+  const type          = document.getElementById('req-type').value
+  const notes         = document.getElementById('req-notes').value.trim()
+  if (!preferredDate) {
+    document.getElementById('req-date').focus(); return
+  }
+  const btn = document.getElementById('req-submit-btn')
+  btn.disabled = true; btn.textContent = '…'
+  try {
+    const res = await portalFetch('/api/portal/request-appointment', {
+      method: 'POST', body: { preferredDate, preferredTime, type, notes }
+    })
+    if (res.ok) {
+      document.getElementById('req-date').value  = ''
+      document.getElementById('req-time').value  = ''
+      document.getElementById('req-notes').value = ''
+      const ok = document.getElementById('req-success')
+      ok.textContent = t('reqSent')
+      ok.classList.add('show')
+      setTimeout(() => ok.classList.remove('show'), 5000)
+    }
+  } catch {}
+  btn.disabled = false; btn.textContent = t('reqSend')
+})
+
 // ── Init ──────────────────────────────────────────────────────────────────
 applyLang()
 if (loadSession()) showPortal()
 else showLogin()
+
+// ── Service Worker ────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {})
+}
 </script>
 </body>
 </html>
