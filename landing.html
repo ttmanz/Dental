@@ -689,23 +689,23 @@
     <div>
       <div class="section-label" data-en="Get in touch" data-el="Επικοινωνήστε μαζί μας">Get in touch</div>
       <h2 class="contact-info-title" data-en="We'd love to hear from you" data-el="Θέλουμε να σας ακούσουμε">We'd love to<br>hear from you</h2>
-      <p class="contact-info-sub" data-en="Have a question about DentaPro? Interested in a personalised demo for your practice? Our team responds within one business day." data-el="Έχετε ερώτηση για το DentaPro; Ενδιαφέρεστε για ένα εξατομικευμένο demo; Η ομάδα μας απαντά εντός μίας εργάσιμης ημέρας.">
-        Have a question about DentaPro? Interested in a personalised demo for your practice? Our team responds within one business day.
+      <p class="contact-info-sub" data-en="Have a question about DentaPro? Interested in a personalised demo for your practice? Message us on WhatsApp — we typically reply within a few hours." data-el="Έχετε ερώτηση για το DentaPro; Ενδιαφέρεστε για demo; Στείλτε μας μήνυμα στο WhatsApp — απαντάμε συνήθως μέσα σε λίγες ώρες.">
+        Have a question about DentaPro? Interested in a personalised demo for your practice? Message us on WhatsApp — we typically reply within a few hours.
       </p>
 
       <div class="contact-detail">
-        <div class="contact-detail-icon">✉️</div>
+        <div class="contact-detail-icon">💬</div>
         <div class="contact-detail-text">
-          <strong data-en="Email us" data-el="Email">Email us</strong>
-          <a href="mailto:dentaasst@gmail.com">dentaasst@gmail.com</a>
+          <strong data-en="WhatsApp" data-el="WhatsApp">WhatsApp</strong>
+          <a href="https://wa.me/35799636224" target="_blank" rel="noopener">+357 99 636 224</a>
         </div>
       </div>
 
       <div class="contact-detail">
-        <div class="contact-detail-icon">🕐</div>
+        <div class="contact-detail-icon">✉️</div>
         <div class="contact-detail-text">
-          <strong data-en="Response time" data-el="Χρόνος απόκρισης">Response time</strong>
-          <span data-en="Within 1 business day" data-el="Εντός 1 εργάσιμης ημέρας">Within 1 business day</span>
+          <strong data-en="Email" data-el="Email">Email</strong>
+          <a href="mailto:dentaasst@gmail.com">dentaasst@gmail.com</a>
         </div>
       </div>
 
@@ -718,38 +718,23 @@
       </div>
     </div>
 
-    <!-- Right: form -->
-    <div class="contact-card">
-      <h3 data-en="Send us a message" data-el="Στείλτε μας μήνυμα">Send us a message</h3>
-
-      <div id="contact-form-wrap">
-        <div class="cfield-row">
-          <div class="cfield">
-            <label data-en="Your name" data-el="Όνομά σας">Your name</label>
-            <input type="text" id="cf-name" placeholder="Dr. Παπαδόπουλος" autocomplete="name"/>
-          </div>
-          <div class="cfield">
-            <label data-en="Email address" data-el="Email">Email address</label>
-            <input type="email" id="cf-email" placeholder="you@example.com" autocomplete="email"/>
-          </div>
-        </div>
-        <div class="cfield">
-          <label data-en="Subject" data-el="Θέμα">Subject</label>
-          <input type="text" id="cf-subject" placeholder="Question about pricing, demo request, etc."/>
-        </div>
-        <div class="cfield">
-          <label data-en="Message" data-el="Μήνυμα">Message</label>
-          <textarea id="cf-message" placeholder="Tell us about your practice and how we can help…"></textarea>
-        </div>
-        <div id="cf-error" style="color:#D95F5F;font-size:13px;margin-bottom:12px;display:none"></div>
-        <button class="contact-submit" id="cf-submit" onclick="submitContact()" data-en="Send message →" data-el="Αποστολή →">Send message →</button>
+    <!-- Right: WhatsApp CTA card -->
+    <div class="contact-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:56px 40px;gap:24px">
+      <div style="width:80px;height:80px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 8px 32px rgba(37,211,102,.3)">💬</div>
+      <div>
+        <h3 style="font-size:22px;font-weight:900;margin-bottom:8px" data-en="Chat with us on WhatsApp" data-el="Επικοινωνήστε μαζί μας στο WhatsApp">Chat with us on WhatsApp</h3>
+        <p style="color:var(--mid);font-size:15px;line-height:1.6;max-width:300px;margin:0 auto" data-en="Tap below to open a chat — ask us anything about DentaPro, request a live demo, or get help with setup." data-el="Πατήστε παρακάτω για να ανοίξετε μια συνομιλία — ρωτήστε μας οτιδήποτε για το DentaPro.">
+          Tap below to open a chat — ask us anything about DentaPro, request a live demo, or get help with setup.
+        </p>
       </div>
-
-      <div class="contact-success" id="contact-success">
-        <div class="cs-icon">✅</div>
-        <h4 data-en="Message sent!" data-el="Το μήνυμα στάλθηκε!">Message sent!</h4>
-        <p data-en="Thank you — we'll get back to you within one business day." data-el="Ευχαριστούμε — θα σας απαντήσουμε εντός μίας εργάσιμης ημέρας.">Thank you — we'll get back to you within one business day.</p>
-      </div>
+      <a href="https://wa.me/35799636224?text=Hi%2C%20I%27m%20interested%20in%20DentaPro%20for%20my%20dental%20practice." target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:10px;background:#25D366;color:#fff;font-size:17px;font-weight:800;padding:16px 36px;border-radius:14px;text-decoration:none;transition:all .2s;box-shadow:0 4px 16px rgba(37,211,102,.3)"
+         onmouseover="this.style.background='#1ebe5d';this.style.transform='translateY(-2px)'"
+         onmouseout="this.style.background='#25D366';this.style.transform='translateY(0)'">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.124 1.527 5.855L.055 23.17a.75.75 0 00.916.916l5.316-1.472A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.907 0-3.696-.525-5.228-1.438l-.373-.219-3.874 1.073 1.073-3.874-.219-.373A9.952 9.952 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+        <span data-en="Open WhatsApp" data-el="Άνοιγμα WhatsApp">Open WhatsApp</span>
+      </a>
+      <p style="font-size:13px;color:var(--muted)" data-en="+357 99 636 224" data-el="+357 99 636 224">+357 99 636 224</p>
     </div>
 
   </div>
@@ -851,47 +836,6 @@
       if (c.plan_group_price)  document.getElementById('price-group').textContent  = '€' + c.plan_group_price
     })
     .catch(() => {}) // silently keep hardcoded defaults if API unreachable
-
-  // ── Contact form submission ──────────────────────────────────────────────
-  async function submitContact() {
-    const name    = document.getElementById('cf-name').value.trim()
-    const email   = document.getElementById('cf-email').value.trim()
-    const subject = document.getElementById('cf-subject').value.trim()
-    const message = document.getElementById('cf-message').value.trim()
-    const errEl   = document.getElementById('cf-error')
-    const btn     = document.getElementById('cf-submit')
-
-    errEl.style.display = 'none'
-    if (!name || !email || !message) {
-      errEl.textContent = currentLang === 'el'
-        ? 'Παρακαλώ συμπληρώστε όνομα, email και μήνυμα.'
-        : 'Please fill in your name, email and message.'
-      errEl.style.display = 'block'
-      return
-    }
-
-    btn.disabled = true
-    btn.textContent = currentLang === 'el' ? 'Αποστολή…' : 'Sending…'
-
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, subject, message })
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed')
-      document.getElementById('contact-form-wrap').style.display = 'none'
-      document.getElementById('contact-success').style.display = 'block'
-    } catch (err) {
-      errEl.textContent = err.message || (currentLang === 'el'
-        ? 'Αποτυχία αποστολής. Στείλτε email στο dentaasst@gmail.com'
-        : 'Failed to send. Please email dentaasst@gmail.com directly.')
-      errEl.style.display = 'block'
-      btn.disabled = false
-      btn.textContent = currentLang === 'el' ? 'Αποστολή →' : 'Send message →'
-    }
-  }
 
   // ── Demo launch ──────────────────────────────────────────────────────────
   async function launchDemo(e) {
