@@ -4176,6 +4176,14 @@
                 <label data-en="Insurance Covers (€)" data-el="Καλύπτει (€)">Insurance Covers (€)</label>
                 <input type="number" id="bill-insurance-amount" min="0" step="5" value="0" />
               </div>
+              <div class="bill-meta-field" style="border-top:1px dashed var(--border);padding-top:10px;margin-top:4px">
+                <label data-en="Discount / Write-off (€)" data-el="Έκπτωση / Διαγραφή (€)" style="color:#B45309">Discount / Write-off (€)</label>
+                <input type="number" id="bill-discount-amount" min="0" step="5" value="0" style="border-color:#D97706" />
+              </div>
+              <div class="bill-meta-field">
+                <label data-en="Discount Reason" data-el="Αιτία έκπτωσης" style="color:#B45309">Discount Reason</label>
+                <input type="text" id="bill-discount-reason" placeholder="e.g. Family, Hardship, Loyalty…" style="border-color:#D97706" />
+              </div>
             </div>
           </div>
 
@@ -11252,6 +11260,8 @@ General rules (non-session):
     document.getElementById('bill-due-date').value  = (inv.due_date    || '').slice(0,10)
     document.getElementById('bill-insurance').value = inv.insurance_provider || ''
     document.getElementById('bill-insurance-amount').value = inv.insurance_amount || 0
+    document.getElementById('bill-discount-amount').value = inv.discount_amount || 0
+    document.getElementById('bill-discount-reason').value = inv.discount_reason || ''
 
     const isDraft = inv.status === 'draft'
     document.getElementById('bill-issue-btn').style.display = isDraft ? '' : 'none'
@@ -11350,13 +11360,15 @@ General rules (non-session):
         s + i.quantity * i.unit_price * (1 - i.discount_pct/100), 0)
     }
     const insurance = parseFloat(document.getElementById('bill-insurance-amount').value) || 0
+    const discount  = parseFloat(document.getElementById('bill-discount-amount').value)  || 0
     const paid      = (_billCurrent?.payments||[]).reduce((s, p) => s + parseFloat(p.amount), 0)
-    const patientOwes = Math.max(0, subtotal - insurance)
+    const patientOwes = Math.max(0, subtotal - insurance - discount)
     const balance     = Math.max(0, patientOwes - paid)
 
     totalsEl.innerHTML = `
       <div class="bill-total-row"><span>Subtotal</span><span>€${fmtAmt(subtotal)}</span></div>
       ${insurance ? `<div class="bill-total-row"><span>Insurance / EOPYY</span><span>− €${fmtAmt(insurance)}</span></div>` : ''}
+      ${discount  ? `<div class="bill-total-row" style="color:#B45309"><span>Discount / Write-off</span><span>− €${fmtAmt(discount)}</span></div>` : ''}
       <div class="bill-total-row main"><span>Patient Total</span><span>€${fmtAmt(patientOwes)}</span></div>
       <div class="bill-total-row"><span>Paid</span><span style="color:#065F46">€${fmtAmt(paid)}</span></div>
       <div class="bill-total-row balance ${balance < 0.01 ? 'clear' : ''}">
@@ -11366,6 +11378,7 @@ General rules (non-session):
   }
 
   document.getElementById('bill-insurance-amount').addEventListener('input', () => renderTotals())
+  document.getElementById('bill-discount-amount').addEventListener('input', () => renderTotals())
 
   // ── Payments ──────────────────────────────────────────────────────────────
   function renderPayments() {
@@ -11421,12 +11434,19 @@ General rules (non-session):
   document.getElementById('bill-save-meta-btn').addEventListener('click', async () => {
     if (!_billCurrent) return
     try {
+      const discountAmt    = parseFloat(document.getElementById('bill-discount-amount').value) || 0
+      const discountReason = document.getElementById('bill-discount-reason').value.trim() || null
       await apiFetch(`/api/invoices/${_billCurrent.id}`, { method:'PATCH', body:{
         invoiceDate:      document.getElementById('bill-inv-date').value || null,
         dueDate:          document.getElementById('bill-due-date').value || null,
         insuranceProvider:document.getElementById('bill-insurance').value.trim() || null,
         insuranceAmount:  parseFloat(document.getElementById('bill-insurance-amount').value) || 0,
+        discountAmount:   discountAmt,
+        discountReason:   discountReason,
       }})
+      // update local cache so renderTotals stays in sync
+      _billCurrent.discount_amount = discountAmt
+      _billCurrent.discount_reason = discountReason
       showToast(lang==='el'?'Αποθηκεύτηκε ✓':'Saved ✓')
     } catch { showToast('Could not save.') }
   })

@@ -114,10 +114,12 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/invoices/:id
 router.patch('/:id', async (req, res) => {
-  const allowed = ['status','invoice_date','due_date','insurance_provider','insurance_amount','notes','issued_at']
+  const allowed = ['status','invoice_date','due_date','insurance_provider','insurance_amount',
+                   'notes','issued_at','discount_amount','discount_reason']
   const map = { invoiceDate:'invoice_date', dueDate:'due_date',
                 insuranceProvider:'insurance_provider', insuranceAmount:'insurance_amount',
-                issuedAt:'issued_at' }
+                issuedAt:'issued_at', discountAmount:'discount_amount',
+                discountReason:'discount_reason' }
   const sets = []; const vals = []
   for (const [k, v] of Object.entries(req.body)) {
     const col = map[k] || k
@@ -218,7 +220,7 @@ router.post('/:id/payments', async (req, res) => {
   if (!amount || amount <= 0) return res.status(400).json({ error: 'amount must be positive' })
   try {
     const { rows: [inv] } = await query(pid(req),
-      `SELECT i.patient_id,
+      `SELECT i.patient_id, i.insurance_amount, i.discount_amount,
               COALESCE(SUM(ii.quantity*ii.unit_price*(1-ii.discount_pct/100)*(1+ii.tax_rate/100)),0) AS total,
               COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id=i.id),0) AS paid_so_far
        FROM invoices i LEFT JOIN invoice_items ii ON ii.invoice_id=i.id
@@ -232,11 +234,12 @@ router.post('/:id/payments', async (req, res) => {
        method||'cash', reference||null, notes||null,
        paidAt || new Date().toISOString(), req.user.userId])
 
-    // Auto-update invoice status
-    const newPaid = parseFloat(inv.paid_so_far) + parseFloat(amount)
-    const total   = parseFloat(inv.total)
-    const newStatus = newPaid >= total ? 'paid'
-                    : newPaid > 0     ? 'partial'
+    // Auto-update invoice status (patient owes = subtotal − insurance − discount)
+    const newPaid    = parseFloat(inv.paid_so_far) + parseFloat(amount)
+    const patientOwes = Math.max(0,
+      parseFloat(inv.total) - parseFloat(inv.insurance_amount||0) - parseFloat(inv.discount_amount||0))
+    const newStatus = newPaid >= patientOwes - 0.01 ? 'paid'
+                    : newPaid > 0                   ? 'partial'
                     : null
     if (newStatus) {
       await query(pid(req),
