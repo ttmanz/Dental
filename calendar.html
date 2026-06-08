@@ -6772,7 +6772,24 @@ function applyLang() {
 
 // ── Appointment data ─────────────────────────────────────────────────────
 // Each appointment: { id, patient, patientEl, type, dentist, day (0=Mon), hour, min, duration (mins), notes, status }
+
+// Built-in types — map original DB enum values so old appointments still display
+const DEFAULT_TYPES = {
+  cleaning:     { color: '#4CAF50', en: 'Cleaning',     el: 'Καθαρισμός' },
+  consultation: { color: '#2196F3', en: 'Consultation', el: 'Συμβουλευτική' },
+  treatment:    { color: '#FF9800', en: 'Treatment',     el: 'Θεραπεία' },
+  orthodontic:  { color: '#9C27B0', en: 'Orthodontic',  el: 'Ορθοδοντική' },
+  emergency:    { color: '#F44336', en: 'Emergency',     el: 'Επείγον' },
+  whitening:    { color: '#FFEB3B', en: 'Whitening',     el: 'Λεύκανση' },
+  followup:     { color: '#00BCD4', en: 'Follow-up',     el: 'Επανέλεγχος' },
+}
+
 const TYPE_LABELS = { en: {}, el: {} }
+Object.entries(DEFAULT_TYPES).forEach(([key, t]) => {
+  TYPE_LABELS.en[key] = t.en
+  TYPE_LABELS.el[key] = t.el
+})
+
 const STATUS_LABELS = {
   en: { confirmed:'Confirmed', pending:'Pending', cancelled:'Cancelled' },
   el: { confirmed:'Επιβεβαιωμένο', pending:'Εκκρεμεί', cancelled:'Ακυρωμένο' },
@@ -6928,7 +6945,40 @@ function renderDentistSidebar(dentists) {
   updateDentistCounts()
 }
 
+// ── Appointment-type helpers ──────────────────────────────────────────────
+function _registerType(id, name, color) {
+  TYPE_COLORS[id] = color
+  TYPE_LABELS.en[id] = name
+  TYPE_LABELS.el[id] = name  // practice staff translate if needed
+  // Inject CSS so week/day appt blocks use the right colour
+  if (!document.querySelector(`style[data-type="${id}"]`)) {
+    const s = document.createElement('style')
+    s.dataset.type = id
+    s.textContent = `.appt.${CSS.escape(id)} { background: linear-gradient(135deg, ${color}, ${color}cc); }`
+    document.head.appendChild(s)
+  }
+  // Add to sidebar legend if not already there
+  const list = document.getElementById('legend-list')
+  if (list && !list.querySelector(`[data-type-id="${id}"]`)) {
+    const item = document.createElement('div')
+    item.className = 'legend-item'
+    item.dataset.typeId = id
+    item.innerHTML = `<div class="legend-dot" style="background:${color}"></div><div class="legend-label">${name}</div>`
+    list.appendChild(item)
+  }
+}
+
+async function fetchAppointmentTypes() {
+  try {
+    const res = await apiFetch('/api/appointment-types')
+    if (!res.ok) return
+    const types = await res.json()
+    types.forEach(t => _registerType(t.id, t.name, t.color))
+  } catch { /* non-fatal */ }
+}
+
 async function initAppData() {
+  await fetchAppointmentTypes()
   await fetchDentists()
   await fetchPatients()
   await fetchAppts()
@@ -7177,7 +7227,8 @@ function showMonthPanel() {
 }
 
 // ── Shared month grid renderer ────────────────────────────────────────────
-const TYPE_COLORS = {}   // populated via + button
+const TYPE_COLORS = {}   // populated from API + built-in defaults
+Object.entries(DEFAULT_TYPES).forEach(([key, t]) => { TYPE_COLORS[key] = t.color })
 function buildMonthGrid(container, year, month, compact) {
   const firstDay  = new Date(year, month, 1)
   const daysInMo  = new Date(year, month + 1, 0).getDate()
@@ -7822,35 +7873,33 @@ document.getElementById('type-add-cancel').addEventListener('click', () => {
   document.getElementById('type-name-input').value = ''
   document.getElementById('add-type-form').classList.remove('open')
 })
-document.getElementById('type-add-confirm').addEventListener('click', () => {
+document.getElementById('type-add-confirm').addEventListener('click', async () => {
   const name = document.getElementById('type-name-input').value.trim()
   if (!name) { document.getElementById('type-name-input').focus(); return }
 
-  // Derive a CSS-safe key
-  const key = name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g,'_').replace(/^_|_$/g,'')
-               + '_' + Date.now().toString(36)
+  const btn = document.getElementById('type-add-confirm')
+  btn.disabled = true
+  try {
+    const res = await apiFetch('/api/appointment-types', {
+      method: 'POST',
+      body: { name, color: _newTypeColor }
+    })
+    const data = await res.json()
+    if (!data.id) { showToast('Could not save type — try again.'); return }
 
-  // Register in data maps
-  TYPE_COLORS[key] = _newTypeColor
-  TYPE_LABELS.en[key] = name
-  TYPE_LABELS.el[key] = name  // staff can translate later
+    // Register using the stable DB UUID as the key
+    _registerType(data.id, data.name, data.color)
 
-  // Inject CSS class for week/day appointment blocks
-  const styleEl = document.createElement('style')
-  styleEl.textContent = `.appt.${CSS.escape(key)} { background: linear-gradient(135deg, ${_newTypeColor}, ${_newTypeColor}cc); }`
-  document.head.appendChild(styleEl)
-
-  // Add legend item
-  const item = document.createElement('div')
-  item.className = 'legend-item'
-  item.innerHTML = `<div class="legend-dot" style="background:${_newTypeColor}"></div><div class="legend-label">${name}</div>`
-  document.getElementById('legend-list').appendChild(item)
-
-  document.getElementById('type-name-input').value = ''
-  document.getElementById('add-type-form').classList.remove('open')
-  // Rotate colour suggestion
-  _newTypeColor = PALETTE[(Object.keys(TYPE_COLORS).length) % PALETTE.length]
-  buildSwatches('type-color-row', _newTypeColor, c => { _newTypeColor = c })
+    document.getElementById('type-name-input').value = ''
+    document.getElementById('add-type-form').classList.remove('open')
+    // Rotate colour suggestion
+    _newTypeColor = PALETTE[(Object.keys(TYPE_COLORS).length) % PALETTE.length]
+    buildSwatches('type-color-row', _newTypeColor, c => { _newTypeColor = c })
+  } catch {
+    showToast('Could not save type — check connection.')
+  } finally {
+    btn.disabled = false
+  }
 })
 
 // ── New Appointment form ──────────────────────────────────────────────────

@@ -26,8 +26,9 @@ authRouter._totpEnqueue  = totpModule.enqueueMFA
 authRouter._totpVerify   = totpModule.verifyTOTP
 app.use('/api/auth', authRouter)
 
-app.use('/api/patients',     require('./routes/patients'))
-app.use('/api/appointments', require('./routes/appointments'))
+app.use('/api/patients',          require('./routes/patients'))
+app.use('/api/appointments',      require('./routes/appointments'))
+app.use('/api/appointment-types', require('./routes/appointment-types'))
 app.use('/api/dentists',     require('./routes/dentists'))
 app.use('/api/treatment',        require('./routes/treatment'))
 app.use('/api/treatment-plans',  require('./routes/treatment-plans'))
