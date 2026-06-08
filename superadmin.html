@@ -239,6 +239,7 @@
   <div class="main">
     <div class="sidebar">
       <div class="nav-item active" data-view="practices">🏥 Practices</div>
+      <div class="nav-item" data-view="content">✏️ Content</div>
       <div class="nav-item" data-view="audit">📋 Audit Log</div>
     </div>
     <div class="content" id="content"></div>
@@ -321,6 +322,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
 
 function showView(view) {
   if (view === 'practices') loadPractices()
+  if (view === 'content')   loadContent()
   if (view === 'audit')     loadAudit()
 }
 
@@ -549,6 +551,48 @@ async function openDrawer(practiceId) {
     </div>`
 
   document.getElementById('drawer-close-btn').addEventListener('click', closeDrawer)
+}
+
+// ── Content / Pricing editor ──────────────────────────────────────────────
+async function loadContent() {
+  const el = document.getElementById('content')
+  el.innerHTML = `<div class="toolbar"><h2>✏️ Landing Page Content</h2><p style="font-size:13px;color:var(--muted);margin-top:4px">Changes go live on the landing page immediately.</p></div><div id="content-wrap"><div style="color:var(--muted);padding:20px">Loading…</div></div>`
+  try {
+    const rows = await saFetch('/api/superadmin/content').then(r => r.json())
+    const byCategory = {}
+    rows.forEach(r => { (byCategory[r.category] = byCategory[r.category]||[]).push(r) })
+    const catLabels = { pricing:'💰 Pricing', content:'📝 Page Content', general:'⚙️ General' }
+    let html = '<div style="max-width:680px;padding:0 0 40px">'
+    for (const [cat, items] of Object.entries(byCategory)) {
+      html += `<div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">${catLabels[cat]||cat}</div>`
+      items.forEach(item => {
+        html += `<div style="margin-bottom:12px;display:grid;grid-template-columns:220px 1fr auto;align-items:center;gap:10px">
+          <label style="font-size:13px;color:var(--text-muted)">${item.label}</label>
+          <input class="content-input" data-key="${item.key}" value="${item.value.replace(/"/g,'&quot;')}"
+            style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none"/>
+          <button class="btn ghost content-save" data-key="${item.key}" style="font-size:12px;padding:6px 14px">Save</button>
+        </div>`
+      })
+      html += '</div>'
+    }
+    html += '</div>'
+    document.getElementById('content-wrap').innerHTML = html
+    document.querySelectorAll('.content-save').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const key   = btn.dataset.key
+        const input = document.querySelector(`.content-input[data-key="${key}"]`)
+        const value = input.value.trim()
+        btn.textContent = '…'
+        try {
+          await saFetch(`/api/superadmin/content/${key}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ value }) })
+          btn.textContent = '✓'
+          btn.style.color = '#3D9E8F'
+          setTimeout(() => { btn.textContent = 'Save'; btn.style.color = '' }, 1500)
+        } catch { btn.textContent = 'Error'; btn.style.color = 'var(--red)' }
+      })
+    })
+  } catch { document.getElementById('content-wrap').innerHTML = '<div style="color:var(--red);padding:20px">Failed to load content settings.</div>' }
 }
 
 // ── Audit log ─────────────────────────────────────────────────────────────

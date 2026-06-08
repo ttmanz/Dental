@@ -50,6 +50,17 @@ app.use('/api/superadmin', require('./routes/superadmin'))
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
 
+// ── Public site content (pricing, headline) — used by landing page ────────
+app.get('/api/content', async (_, res) => {
+  try {
+    const { queryRaw } = require('./db')
+    const { rows } = await queryRaw(`SELECT key, value FROM site_settings ORDER BY category, sort_order`)
+    const content = {}
+    rows.forEach(r => { content[r.key] = r.value })
+    res.json(content)
+  } catch { res.json({}) }  // graceful fallback — landing page uses hardcoded defaults
+})
+
 // Serve patient portal + app
 const ROOT = path.resolve(__dirname, '../../')
 app.get('/portal',     (_, res) => res.sendFile(path.join(ROOT, 'patient-portal.html')))

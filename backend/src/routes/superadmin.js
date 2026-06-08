@@ -197,4 +197,31 @@ router.get('/audit', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Server error' }) }
 })
 
+// ── Site content / pricing editor ─────────────────────────────────────────
+router.get('/content', async (req, res) => {
+  try {
+    const { rows } = await queryRaw(
+      `SELECT key, value, label, category, sort_order FROM site_settings ORDER BY category, sort_order`)
+    res.json(rows)
+  } catch (err) { res.status(500).json({ error: 'Server error' }) }
+})
+
+router.patch('/content/:key', async (req, res) => {
+  const { value } = req.body
+  if (value === undefined) return res.status(400).json({ error: 'value required' })
+  try {
+    const { rows } = await queryRaw(
+      `INSERT INTO site_settings (key, value, label, category)
+       VALUES ($1, $2, $1, 'general')
+       ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()
+       RETURNING *`,
+      [req.params.key, String(value)])
+    await queryRaw(
+      `INSERT INTO platform_audit (actor_email, action, target_type, detail)
+       VALUES ($1, 'update_content', 'site_setting', $2)`,
+      [req.admin.email, JSON.stringify({ key: req.params.key, value })])
+    res.json(rows[0])
+  } catch (err) { res.status(500).json({ error: 'Server error' }) }
+})
+
 module.exports = router
