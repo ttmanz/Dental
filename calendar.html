@@ -6789,18 +6789,32 @@ let PATIENTS = []
 // ── API ↔ frontend data mappers ──────────────────────────────────────────
 function patientFromApi(p) {
   return {
-    id:       p.id,
-    fullName: `${p.first_name} ${p.last_name}`,
-    dob:      p.dob || p.date_of_birth || '',
-    phone:    p.mobile || p.phone || '',
-    email:    p.email    || '',
-    address:  p.address  || '',
-    gender:   p.gender   || '',
-    photo:    p.photo_url || '',
-    notes:    p.notes    || '',
-    amka:     p.amka     || '',
-    insurance:p.insurance|| '',
-    createdAt: p.created_at,
+    id:           p.id,
+    fullName:     `${p.first_name} ${p.last_name}`,
+    firstName:    p.first_name || '',
+    lastName:     p.last_name  || '',
+    dob:          p.dob || p.date_of_birth || '',
+    phone:        p.mobile || p.phone || '',
+    email:        p.email    || '',
+    address:      p.address  || '',
+    gender:       p.gender   || '',
+    photo:        p.photo_url || '',
+    notes:        p.notes    || '',
+    amka:         p.amka     || '',
+    // Medical history
+    insurance:    p.insurance || '',
+    allergies:    p.allergies || '',
+    medications:  p.medications || '',
+    conditions:   p.conditions || '',
+    emergName:    p.emergency_name  || p.emergName  || '',
+    emergPhone:   p.emergency_phone || p.emergPhone || '',
+    smoker:       p.smoker    || '',
+    pregnant:     p.pregnant != null ? String(p.pregnant) : '',
+    anxiety:      p.anxiety   || '',
+    lastVisit:    p.last_visit || p.lastVisit || '',
+    chiefComplaint: p.chief_complaint || p.chiefComplaint || '',
+    prevWork:     p.prev_dental_work || p.prevWork || '',
+    createdAt:    p.created_at,
   }
 }
 
@@ -8814,20 +8828,16 @@ function showToast(msg, duration = 2800) {
   }, duration)
 }
 
-// ── Patient Chart ─────────────────────────────────────────────────────────
-function openPatientChart(patientNameOrId) {
-  const patient = (typeof patientNameOrId === 'number')
-    ? PATIENTS.find(p => p.id === patientNameOrId)
-    : findPatientByName(patientNameOrId)
+// ── Patient Chart render helper ────────────────────────────────────────────
+function _renderPatientChart(patient, fallbackName) {
+  const val  = v => (v && String(v).trim()) ? String(v).trim() : '—'
+  const name = patient ? (patient.fullName || '—') : (fallbackName || '—')
 
-  const overlay = document.getElementById('pc-overlay')
-
-  // Populate hero
-  const name = patient ? (patient.fullName || '—') : (patientNameOrId || '—')
-  document.getElementById('pc-name').textContent = name
-  document.getElementById('pc-dob').textContent  = patient?.dob || '—'
-  document.getElementById('pc-phone').textContent= patient?.phone || '—'
-  document.getElementById('pc-email').textContent= patient?.email || '—'
+  // Hero
+  document.getElementById('pc-name').textContent  = name
+  document.getElementById('pc-dob').textContent   = val(patient?.dob)
+  document.getElementById('pc-phone').textContent = val(patient?.phone)
+  document.getElementById('pc-email').textContent = val(patient?.email)
 
   // Avatar
   const avatarEl   = document.getElementById('pc-avatar')
@@ -8844,7 +8854,6 @@ function openPatientChart(patientNameOrId) {
   }
 
   // Personal details
-  const val = (v) => v || '—'
   document.getElementById('pc-address').textContent    = val(patient?.address)
   document.getElementById('pc-gender').textContent     = val(patient?.gender)
   document.getElementById('pc-insurance').textContent  = val(patient?.insurance)
@@ -8867,43 +8876,59 @@ function openPatientChart(patientNameOrId) {
   // Appointment history
   const histEl = document.getElementById('pc-appt-history')
   const patientAppts = APPTS.filter(a => a.patient && a.patient.trim().toLowerCase() === name.trim().toLowerCase())
-    .sort((a,b) => {
-      const da = apptRealDate(a), db = apptRealDate(b)
-      return db - da
-    })
+    .sort((a, b) => apptRealDate(b) - apptRealDate(a))
 
-  if (patientAppts.length === 0) {
-    histEl.innerHTML = `<div class="pc-empty">${lang === 'el' ? 'Δεν υπάρχουν ραντεβού.' : 'No appointments on record.'}</div>`
+  if (!patientAppts.length) {
+    histEl.innerHTML = `<div class="pc-empty">${lang==='el'?'Δεν υπάρχουν ραντεβού.':'No appointments on record.'}</div>`
   } else {
     const months = lang === 'en' ? MONTHS_SHORT_EN : MONTHS_SHORT_EL
     const rows = patientAppts.map(a => {
-      const d   = apptRealDate(a)
+      const d       = apptRealDate(a)
       const dateStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
       const color   = TYPE_COLORS[a.type] || '#888'
       const typeLbl = TYPE_LABELS[lang][a.type] || a.type
       const timeStr = `${a.hour}:${String(a.min).padStart(2,'0')} – ${endTime(a)}`
       return `<tr>
-        <td>${dateStr}</td>
-        <td>${timeStr}</td>
+        <td>${dateStr}</td><td>${timeStr}</td>
         <td><span class="pc-appt-dot" style="background:${color}"></span>${typeLbl}</td>
         <td>${a.dentist || '—'}</td>
-        <td><span class="status-badge ${a.status || 'confirmed'}" style="font-size:11px;padding:2px 8px">
+        <td><span class="status-badge ${a.status||'confirmed'}" style="font-size:11px;padding:2px 8px">
           <span class="status-dot"></span>${STATUS_LABELS[lang][a.status] || a.status}
-        </span></td>
-      </tr>`
+        </span></td></tr>`
     }).join('')
-    histEl.innerHTML = `<table class="pc-appt-table">
-      <thead><tr>
-        <th>${lang==='el'?'Ημ/νια':'Date'}</th>
-        <th>${lang==='el'?'Ώρα':'Time'}</th>
-        <th>${lang==='el'?'Τύπος':'Type'}</th>
-        <th>${lang==='el'?'Οδοντίατρος':'Dentist'}</th>
-        <th>${lang==='el'?'Κατάσταση':'Status'}</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`
+    histEl.innerHTML = `<table class="pc-appt-table"><thead><tr>
+      <th>${lang==='el'?'Ημ/νια':'Date'}</th><th>${lang==='el'?'Ώρα':'Time'}</th>
+      <th>${lang==='el'?'Τύπος':'Type'}</th><th>${lang==='el'?'Οδοντίατρος':'Dentist'}</th>
+      <th>${lang==='el'?'Κατάσταση':'Status'}</th>
+    </tr></thead><tbody>${rows}</tbody></table>`
+  }
+}
+
+// ── Patient Chart ─────────────────────────────────────────────────────────
+function openPatientChart(patientNameOrId) {
+  const patient = (typeof patientNameOrId === 'number' || (typeof patientNameOrId === 'string' && patientNameOrId.includes('-')))
+    ? PATIENTS.find(p => p.id === patientNameOrId)
+    : findPatientByName(patientNameOrId)
+
+  const overlay = document.getElementById('pc-overlay')
+
+  // If we have a patient ID, refresh with full data from API
+  const patientId = patient?.id || (typeof patientNameOrId === 'string' && patientNameOrId.includes('-') ? patientNameOrId : null)
+  if (patientId && AUTH.token) {
+    apiFetch(`/api/patients/${patientId}`).then(r => r.json()).then(fresh => {
+      if (fresh?.id) {
+        const mapped = patientFromApi(fresh)
+        // Update PATIENTS array entry
+        const idx = PATIENTS.findIndex(p => p.id === mapped.id)
+        if (idx >= 0) Object.assign(PATIENTS[idx], mapped)
+        // Re-render chart with fresh data
+        _renderPatientChart(mapped)
+      }
+    }).catch(() => {})
   }
 
+  // Initial render from cached PATIENTS data (may be partial)
+  _renderPatientChart(patient, patientNameOrId)
   _pcCurrentPatientId = patient?.id || null
   overlay.classList.add('open')
   document.getElementById('modal-overlay').classList.remove('open')
