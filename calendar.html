@@ -8224,12 +8224,15 @@ document.getElementById('pm-save').addEventListener('click', () => {
   const body = {
     firstName, lastName,
     phone:       patientData.phone       || null,
+    mobile:      patientData.phone       || null,   // real server uses mobile column
     email:       patientData.email       || null,
     address:     patientData.address     || null,
     dateOfBirth: patientData.dob         || null,
     gender:      patientData.gender      || null,
-    notes:       patientData.allergies ? `Allergies: ${patientData.allergies}` : (patientData.notes || null),
-    photoUrl:    _pfCurrentPhoto         || null,
+    amka:        patientData.amka        || null,
+    notes:       patientData.notes       || null,
+    allergies:   patientData.allergies   || null,
+    insurance:   patientData.insurance   || null,
   }
 
   const existing = findPatientByName(patientData.fullName)
@@ -8238,8 +8241,9 @@ document.getElementById('pm-save').addEventListener('click', () => {
 
   apiFetch(url, { method, body })
     .then(res => res.json())
-    .then(data => {
-      if (data.id) {
+    .then(res => {
+      const data = res?.data || res   // handle both { success, data:{} } and plain {}
+      if (data?.id) {
         const mapped = patientFromApi(data)
         if (existing) {
           Object.assign(existing, mapped)
@@ -8362,20 +8366,24 @@ document.getElementById('voice-next').addEventListener('click', () => {
       firstName:   nameParts[0] || '',
       lastName:    nameParts.slice(1).join(' ') || '',
       phone:       patientData.phone    || null,
+      mobile:      patientData.phone    || null,
       email:       patientData.email    || null,
       address:     patientData.address  || null,
       dateOfBirth: patientData.dob      || null,
       gender:      patientData.gender   || null,
-      notes:       patientData.allergies ? `Allergies: ${patientData.allergies}` : (patientData.notes || null),
-      photoUrl:    _pfCurrentPhoto      || null,
+      amka:        patientData.amka     || null,
+      notes:       patientData.notes    || null,
+      allergies:   patientData.allergies || null,
+      insurance:   patientData.insurance || null,
     }
     const existing = findPatientByName(patientData.fullName)
     const url    = existing ? `/api/patients/${existing.id}` : '/api/patients'
     const method = existing ? 'PATCH' : 'POST'
     apiFetch(url, { method, body })
       .then(r => r.json())
-      .then(data => {
-        if (data.id) {
+      .then(res => {
+        const data = res?.data || res
+        if (data?.id) {
           const mapped = patientFromApi(data)
           if (existing) Object.assign(existing, mapped)
           else PATIENTS.push(mapped)
@@ -9008,7 +9016,8 @@ function openPatientChart(patientNameOrId) {
   // If we have a patient ID, refresh with full data from API
   const patientId = patient?.id || (typeof patientNameOrId === 'string' && patientNameOrId.includes('-') ? patientNameOrId : null)
   if (patientId && AUTH.token) {
-    apiFetch(`/api/patients/${patientId}`).then(r => r.json()).then(fresh => {
+    apiFetch(`/api/patients/${patientId}`).then(r => r.json()).then(res => {
+      const fresh = res?.data || res   // handle both { success, data:{} } and plain {}
       if (fresh?.id) {
         const mapped = patientFromApi(fresh)
         // Update PATIENTS array entry
