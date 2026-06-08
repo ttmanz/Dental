@@ -6564,9 +6564,11 @@ window._avatarClick  = function(avatarEl) {
 }
 
 // ── API config ───────────────────────────────────────────────────────────
+// Use relative URLs in production so API calls always go to the same server
+// that served this HTML — no cross-server mismatch.
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:3000'
-  : 'https://api.dentapro.org'
+  : ''
 
 // ── Auth state ───────────────────────────────────────────────────────────
 const AUTH = {
