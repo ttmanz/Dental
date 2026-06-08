@@ -7911,11 +7911,24 @@ function populateApptForm() {
   }
 }
 
-function openApptForm(date, hour = null, min = 0, dentistPreset = null) {
+let _afEditingAppt = null  // appointment being edited, or null for new
+
+function openApptForm(date, hour = null, min = 0, dentistPreset = null, apptToEdit = null) {
+  _afEditingAppt = apptToEdit || null
   populateApptForm()
 
-  // Set defaults
-  const d = date || new Date()
+  const saveBtn = document.getElementById('af-save')
+  const title   = document.querySelector('#af-overlay .af-title')
+  if (_afEditingAppt) {
+    saveBtn.textContent = lang === 'el' ? 'Αποθήκευση αλλαγών' : 'Save Changes'
+    if (title) title.textContent = lang === 'el' ? 'Επεξεργασία Ραντεβού' : 'Edit Appointment'
+  } else {
+    saveBtn.textContent = lang === 'el' ? 'Αποθήκευση ραντεβού' : 'Save Appointment'
+    if (title) title.textContent = lang === 'el' ? 'Νέο Ραντεβού' : 'New Appointment'
+  }
+
+  // Set defaults or pre-fill from existing appointment
+  const d = apptToEdit ? apptRealDate(apptToEdit) : (date || new Date())
   document.getElementById('af-date').value = toISODate(d)
 
   // Subtitle shows the day
@@ -7925,37 +7938,54 @@ function openApptForm(date, hour = null, min = 0, dentistPreset = null) {
   document.getElementById('af-subtitle').textContent =
     `${days[dow]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
 
-  // Pre-fill time if clicked from a slot
-  if (hour !== null) {
-    document.getElementById('af-hour').value = hour
-    document.getElementById('af-min').value  = min
+  if (apptToEdit) {
+    // Pre-fill all fields from the existing appointment
+    document.getElementById('af-patient').value = apptToEdit.patient || ''
+    document.getElementById('af-hour').value    = apptToEdit.hour
+    document.getElementById('af-min').value     = apptToEdit.min
+    document.getElementById('af-dur').value     = apptToEdit.dur || 45
+    document.getElementById('af-notes').value   = apptToEdit.notes || ''
+    if (apptToEdit.type) document.getElementById('af-type').value = apptToEdit.type
+    const statusVal = apptToEdit.status || 'confirmed'
+    document.querySelectorAll('input[name="af-status"]').forEach(r => { r.checked = r.value === statusVal })
+    document.querySelectorAll('.af-status-opt').forEach(el => {
+      el.className = 'af-status-opt' + (el.dataset.status === statusVal ? ` selected-${statusVal}` : '')
+    })
+    const dentistSel = document.getElementById('af-dentist')
+    if (apptToEdit.dentist && [...dentistSel.options].some(o => o.value === apptToEdit.dentist)) {
+      dentistSel.value = apptToEdit.dentist
+    }
+    dentistSel.disabled = false
   } else {
-    // Default to next round hour
-    const now = new Date()
-    const nextHour = Math.min(Math.max(now.getHours() + 1, START_HOUR), END_HOUR)
-    document.getElementById('af-hour').value = nextHour
-    document.getElementById('af-min').value  = 0
+    // Pre-fill time if clicked from a slot
+    if (hour !== null) {
+      document.getElementById('af-hour').value = hour
+      document.getElementById('af-min').value  = min
+    } else {
+      const now = new Date()
+      const nextHour = Math.min(Math.max(now.getHours() + 1, START_HOUR), END_HOUR)
+      document.getElementById('af-hour').value = nextHour
+      document.getElementById('af-min').value  = 0
+    }
+    // Reset other fields
+    document.getElementById('af-patient').value = ''
+    document.getElementById('af-notes').value   = ''
+    document.getElementById('af-dur').value     = '45'
+    document.querySelectorAll('input[name="af-status"]').forEach(r => { r.checked = r.value === 'confirmed' })
+    document.querySelectorAll('.af-status-opt').forEach(el => {
+      el.className = 'af-status-opt' + (el.dataset.status === 'confirmed' ? ' selected-confirmed' : '')
+    })
+    // Pre-select dentist: explicit preset > dentist-role lock > first option
+    const dentistSel = document.getElementById('af-dentist')
+    const rolePreset = AUTH.user?.role === 'dentist'
+      ? (window._DENTISTS||[]).find(d => d.user_id === AUTH.user.userId)?.display_name
+      : null
+    const toPreset = dentistPreset || rolePreset
+    if (toPreset && [...dentistSel.options].some(o => o.value === toPreset)) {
+      dentistSel.value = toPreset
+    }
+    dentistSel.disabled = !!rolePreset && !dentistPreset
   }
-
-  // Reset other fields
-  document.getElementById('af-patient').value = ''
-  document.getElementById('af-notes').value   = ''
-  document.getElementById('af-dur').value     = '45'
-  document.querySelectorAll('input[name="af-status"]').forEach(r => { r.checked = r.value === 'confirmed' })
-  document.querySelectorAll('.af-status-opt').forEach(el => {
-    el.className = 'af-status-opt' + (el.dataset.status === 'confirmed' ? ' selected-confirmed' : '')
-  })
-
-  // Pre-select dentist: explicit preset > dentist-role lock > first option
-  const dentistSel = document.getElementById('af-dentist')
-  const rolePreset = AUTH.user?.role === 'dentist'
-    ? (window._DENTISTS||[]).find(d => d.user_id === AUTH.user.userId)?.display_name
-    : null
-  const toPreset = dentistPreset || rolePreset
-  if (toPreset && [...dentistSel.options].some(o => o.value === toPreset)) {
-    dentistSel.value = toPreset
-  }
-  dentistSel.disabled = !!rolePreset && !dentistPreset  // lock for dentist role
 
   document.getElementById('af-overlay').classList.add('open')
   setTimeout(() => document.getElementById('af-patient').focus(), 120)
@@ -7963,6 +7993,7 @@ function openApptForm(date, hour = null, min = 0, dentistPreset = null) {
 
 function closeApptForm() {
   document.getElementById('af-overlay').classList.remove('open')
+  _afEditingAppt = null
 }
 
 // Status radio visual toggle
@@ -8011,16 +8042,34 @@ document.getElementById('af-save').addEventListener('click', () => {
   }
 
   const startTime = `${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')}`
-  apiFetch('/api/appointments', {
-    method: 'POST',
-    body: { patientId, dentistId, appointmentDate: dateVal, startTime, durationMinutes: dur, type: typeKey, notes }
-  }).then(res => res.json()).then(data => {
-    if (data.id) {
-      APPTS.push(apptFromApi({ ...data, patient_name: patient, dentist_name: dentist }))
-      renderCalendar()
-      if (typeof auditLog === 'function') auditLog('appointment created', patient, `${dateVal} ${startTime} with ${dentist}`)
-    }
-  }).catch(() => showToast('Could not save appointment — check connection.'))
+
+  if (_afEditingAppt && _afEditingAppt.id) {
+    // ── EDIT mode — PATCH existing appointment ──────────────────────────────
+    apiFetch(`/api/appointments/${_afEditingAppt.id}`, {
+      method: 'PATCH',
+      body: { patientId, dentistId, appointmentDate: dateVal, startTime,
+              durationMinutes: dur, type: typeKey, notes, status }
+    }).then(res => res.json()).then(data => {
+      if (data.id) {
+        Object.assign(_afEditingAppt, apptFromApi({ ...data, patient_name: patient, dentist_name: dentist }))
+        renderCalendar()
+        showToast(lang === 'el' ? 'Αποθηκεύτηκε ✓' : 'Saved ✓')
+        if (typeof auditLog === 'function') auditLog('appointment updated', patient, `${dateVal} ${startTime} type:${typeKey}`)
+      }
+    }).catch(() => showToast('Could not save — check connection.'))
+  } else {
+    // ── CREATE mode — POST new appointment ──────────────────────────────────
+    apiFetch('/api/appointments', {
+      method: 'POST',
+      body: { patientId, dentistId, appointmentDate: dateVal, startTime, durationMinutes: dur, type: typeKey, notes }
+    }).then(res => res.json()).then(data => {
+      if (data.id) {
+        APPTS.push(apptFromApi({ ...data, patient_name: patient, dentist_name: dentist }))
+        renderCalendar()
+        if (typeof auditLog === 'function') auditLog('appointment created', patient, `${dateVal} ${startTime} with ${dentist}`)
+      }
+    }).catch(() => showToast('Could not save appointment — check connection.'))
+  }
 
   closeApptForm()
 })
@@ -9031,6 +9080,33 @@ document.getElementById('modal-treat-btn').addEventListener('click', () => {
   if (_modalAppt && window.aiStartSession) {
     document.getElementById('modal-overlay').classList.remove('open')
     window.aiStartSession(_modalAppt)
+  }
+})
+
+// ── Modal: Edit button → open appt form in edit mode ─────────────────────
+document.querySelector('.modal-btn.secondary[data-en="Edit"]').addEventListener('click', () => {
+  if (!_modalAppt) return
+  document.getElementById('modal-overlay').classList.remove('open')
+  openApptForm(null, null, 0, null, _modalAppt)
+})
+
+// ── Modal: Cancel (appointment) button ───────────────────────────────────
+document.querySelector('.modal-btn.danger[data-en="Cancel"]').addEventListener('click', async () => {
+  if (!_modalAppt?.id) return
+  const confirmMsg = lang === 'el' ? 'Να ακυρωθεί το ραντεβού;' : 'Cancel this appointment?'
+  if (!confirm(confirmMsg)) return
+  try {
+    await apiFetch(`/api/appointments/${_modalAppt.id}`, {
+      method: 'PATCH', body: { status: 'cancelled' }
+    })
+    _modalAppt.status = 'cancelled'
+    const idx = APPTS.findIndex(a => a.id === _modalAppt.id)
+    if (idx >= 0) APPTS[idx].status = 'cancelled'
+    renderCalendar()
+    document.getElementById('modal-overlay').classList.remove('open')
+    showToast(lang === 'el' ? 'Ακυρώθηκε' : 'Appointment cancelled')
+  } catch {
+    showToast('Could not cancel appointment.')
   }
 })
 
