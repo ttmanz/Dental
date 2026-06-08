@@ -3245,6 +3245,15 @@
       position: fixed; top: 0; left: 0; right: 0; z-index: 99998; letter-spacing: .03em;
     }
 
+    /* Demo banner */
+    .demo-banner {
+      background: #1e40af; color: #dbeafe; text-align: center;
+      font-size: 12px; font-weight: 700; padding: 6px 16px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 99997; letter-spacing: .03em;
+      display: none;
+    }
+    .demo-banner a { color: #bfdbfe; text-decoration: underline; cursor: pointer; }
+
     /* ── Prescription Module ────────────────────────────────────────────── */
     .rx-overlay {
       position:fixed; inset:0; z-index:8300; display:flex; align-items:center; justify-content:center;
@@ -4364,6 +4373,11 @@
 <!-- ── Impersonation banner ───────────────────────────────────────────── -->
 <div class="impersonation-banner" id="impersonation-banner" style="display:none">
   ⚠️ SUPERADMIN — You are viewing this practice as <span id="impersonation-target"></span>. <a href="/superadmin" style="color:#FEF3C7;font-weight:900">← Back to Admin Panel</a>
+</div>
+
+<!-- ── Demo banner ───────────────────────────────────────────────────── -->
+<div class="demo-banner" id="demo-banner">
+  🎭 Demo Mode — This is a live demo with sample data. <a onclick="if(confirm('Exit demo and go to sign-in?')){localStorage.removeItem('dental_jwt');localStorage.removeItem('dental_user');window.location.href='/app'}">Exit demo</a>
 </div>
 
 <!-- ── Upgrade modal ──────────────────────────────────────────────────── -->
@@ -14757,6 +14771,26 @@ if (AUTH.isValid()) {
   window.onLoginSuccess()
   window._syncPanelData()
 }
+
+// ── Demo mode banner ─────────────────────────────────────────────────────
+;(function() {
+  const user = AUTH.user
+  if (!user || !user.isDemo) return
+  const banner = document.getElementById('demo-banner')
+  if (!banner) return
+  banner.style.display = 'block'
+  // If impersonation banner is also visible, push demo banner below it
+  const impBanner = document.getElementById('impersonation-banner')
+  if (impBanner && impBanner.style.display !== 'none') {
+    banner.style.top = '32px'
+  }
+  // Push topbar down
+  const topbar = document.querySelector('.topbar')
+  if (topbar) {
+    const currentMargin = parseInt(topbar.style.marginTop || '0', 10)
+    topbar.style.marginTop = (currentMargin + 32) + 'px'
+  }
+})();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </body>

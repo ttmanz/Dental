@@ -111,4 +111,35 @@ router.post('/register-practice', async (req, res) => {
   }
 })
 
+// GET /api/auth/demo  — auto-login to the demo practice (no password)
+router.get('/demo', async (req, res) => {
+  try {
+    const { rows } = await queryRaw(
+      `SELECT u.*, p.name AS practice_name, p.locale, p.timezone, p.is_demo
+       FROM users u JOIN practices p ON p.id = u.practice_id
+       WHERE u.email = 'demo@dentapro.org' AND p.is_demo = TRUE
+         AND u.is_active = TRUE AND p.is_active = TRUE LIMIT 1`)
+    const user = rows[0]
+    if (!user) return res.status(404).json({ error: 'Demo not available' })
+
+    const token = jwt.sign(
+      { userId: user.id, practiceId: user.practice_id, role: user.role,
+        email: user.email, isDemo: true },
+      process.env.JWT_SECRET,
+      { expiresIn: '4h' }
+    )
+    res.json({
+      token,
+      user: {
+        id: user.id, email: user.email,
+        firstName: user.first_name, lastName: user.last_name,
+        role: user.role, practiceId: user.practice_id,
+        practiceName: user.practice_name,
+        locale: user.locale, timezone: user.timezone,
+        isDemo: true
+      }
+    })
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+})
+
 module.exports = router
