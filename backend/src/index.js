@@ -50,6 +50,26 @@ app.use('/api/superadmin', require('./routes/superadmin'))
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
 
+// ── Contact form — public, no auth ────────────────────────────────────────
+app.post('/api/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body || {}
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'name, email and message are required' })
+  }
+  // Basic email format check
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Invalid email address' })
+  }
+  try {
+    await require('./email').sendContactForm({ name, email, subject, message })
+    console.log(`[contact] Form submission from ${name} <${email}>`)
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('[contact] Failed to send:', err)
+    res.status(500).json({ error: 'Failed to send message. Please email us directly at dentaasst@gmail.com' })
+  }
+})
+
 // ── Public site content (pricing, headline) — used by landing page ────────
 app.get('/api/content', async (_, res) => {
   try {

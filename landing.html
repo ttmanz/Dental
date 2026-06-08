@@ -227,6 +227,50 @@
     .cta-banner .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
     .cta-banner-note { font-size: 13px; color: rgba(255,255,255,.6); margin-top: 16px; }
 
+    /* ── CONTACT ───────────────────────────────────────────────────────── */
+    .contact-section { background: var(--cream); }
+    .contact-grid {
+      display: grid; grid-template-columns: 1fr 1.4fr; gap: 64px; align-items: start;
+    }
+    .contact-info-title { font-size: 36px; font-weight: 900; letter-spacing: -.02em; line-height: 1.2; margin-bottom: 16px; }
+    .contact-info-sub { font-size: 16px; color: var(--mid); line-height: 1.7; margin-bottom: 36px; }
+    .contact-detail { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    .contact-detail-icon {
+      width: 44px; height: 44px; border-radius: 12px; background: var(--primary-l);
+      display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+    .contact-detail-text { font-size: 14px; color: var(--mid); }
+    .contact-detail-text strong { display: block; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .contact-detail-text a { color: var(--primary); font-weight: 600; }
+    .contact-card {
+      background: #fff; border-radius: 20px; padding: 40px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.06); border: 1px solid var(--border);
+    }
+    .contact-card h3 { font-size: 20px; font-weight: 800; margin-bottom: 24px; }
+    .cfield { margin-bottom: 20px; }
+    .cfield label { display: block; font-size: 13px; font-weight: 700; color: var(--mid); margin-bottom: 6px; letter-spacing: .02em; }
+    .cfield input, .cfield select, .cfield textarea {
+      width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 15px; font-family: inherit; color: var(--text);
+      background: #fff; outline: none; transition: border-color .15s;
+    }
+    .cfield input:focus, .cfield textarea:focus { border-color: var(--primary); }
+    .cfield textarea { resize: vertical; min-height: 120px; }
+    .cfield-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .contact-submit {
+      width: 100%; padding: 14px; border-radius: 11px; border: none;
+      background: var(--primary); color: #fff; font-size: 16px; font-weight: 800;
+      cursor: pointer; font-family: inherit; transition: all .2s; margin-top: 4px;
+    }
+    .contact-submit:hover { background: var(--primary-d); transform: translateY(-1px); }
+    .contact-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .contact-success {
+      display: none; text-align: center; padding: 24px 0;
+    }
+    .contact-success .cs-icon { font-size: 48px; margin-bottom: 12px; }
+    .contact-success h4 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .contact-success p { color: var(--mid); font-size: 15px; }
+
     /* ── FOOTER ────────────────────────────────────────────────────────── */
     footer {
       background: var(--text); color: rgba(255,255,255,.6);
@@ -268,6 +312,12 @@
       .footer-top { grid-template-columns: 1fr; }
       .proof-bar { padding: 20px 24px; }
       .pricing-section { padding: 64px 24px; }
+      .contact-grid { grid-template-columns: 1fr; gap: 32px; }
+      .cfield-row { grid-template-columns: 1fr; }
+      .contact-card { padding: 28px 20px; }
+    }
+    @media (max-width: 1024px) {
+      .contact-grid { grid-template-columns: 1fr; gap: 40px; }
     }
   </style>
 </head>
@@ -284,6 +334,7 @@
     <a href="#eopyy" data-en="EOPYY" data-el="ΕΟΠΥΥ">EOPYY</a>
     <a href="#pricing" data-en="Pricing" data-el="Τιμές">Pricing</a>
     <a href="#faq" data-en="FAQ" data-el="FAQ">FAQ</a>
+    <a href="#contact" data-en="Contact" data-el="Επικοινωνία">Contact</a>
   </div>
   <div class="nav-right">
     <div class="lang-toggle">
@@ -630,6 +681,80 @@
   </div>
 </div>
 
+<!-- ── CONTACT ───────────────────────────────────────────────────────────── -->
+<section id="contact" class="contact-section">
+  <div class="contact-grid">
+
+    <!-- Left: info -->
+    <div>
+      <div class="section-label" data-en="Get in touch" data-el="Επικοινωνήστε μαζί μας">Get in touch</div>
+      <h2 class="contact-info-title" data-en="We'd love to hear from you" data-el="Θέλουμε να σας ακούσουμε">We'd love to<br>hear from you</h2>
+      <p class="contact-info-sub" data-en="Have a question about DentaPro? Interested in a personalised demo for your practice? Our team responds within one business day." data-el="Έχετε ερώτηση για το DentaPro; Ενδιαφέρεστε για ένα εξατομικευμένο demo; Η ομάδα μας απαντά εντός μίας εργάσιμης ημέρας.">
+        Have a question about DentaPro? Interested in a personalised demo for your practice? Our team responds within one business day.
+      </p>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon">✉️</div>
+        <div class="contact-detail-text">
+          <strong data-en="Email us" data-el="Email">Email us</strong>
+          <a href="mailto:dentaasst@gmail.com">dentaasst@gmail.com</a>
+        </div>
+      </div>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon">🕐</div>
+        <div class="contact-detail-text">
+          <strong data-en="Response time" data-el="Χρόνος απόκρισης">Response time</strong>
+          <span data-en="Within 1 business day" data-el="Εντός 1 εργάσιμης ημέρας">Within 1 business day</span>
+        </div>
+      </div>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon">🌍</div>
+        <div class="contact-detail-text">
+          <strong data-en="Languages" data-el="Γλώσσες">Languages</strong>
+          <span data-en="Greek & English" data-el="Ελληνικά & Αγγλικά">Greek &amp; English</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: form -->
+    <div class="contact-card">
+      <h3 data-en="Send us a message" data-el="Στείλτε μας μήνυμα">Send us a message</h3>
+
+      <div id="contact-form-wrap">
+        <div class="cfield-row">
+          <div class="cfield">
+            <label data-en="Your name" data-el="Όνομά σας">Your name</label>
+            <input type="text" id="cf-name" placeholder="Dr. Παπαδόπουλος" autocomplete="name"/>
+          </div>
+          <div class="cfield">
+            <label data-en="Email address" data-el="Email">Email address</label>
+            <input type="email" id="cf-email" placeholder="you@example.com" autocomplete="email"/>
+          </div>
+        </div>
+        <div class="cfield">
+          <label data-en="Subject" data-el="Θέμα">Subject</label>
+          <input type="text" id="cf-subject" placeholder="Question about pricing, demo request, etc."/>
+        </div>
+        <div class="cfield">
+          <label data-en="Message" data-el="Μήνυμα">Message</label>
+          <textarea id="cf-message" placeholder="Tell us about your practice and how we can help…"></textarea>
+        </div>
+        <div id="cf-error" style="color:#D95F5F;font-size:13px;margin-bottom:12px;display:none"></div>
+        <button class="contact-submit" id="cf-submit" onclick="submitContact()" data-en="Send message →" data-el="Αποστολή →">Send message →</button>
+      </div>
+
+      <div class="contact-success" id="contact-success">
+        <div class="cs-icon">✅</div>
+        <h4 data-en="Message sent!" data-el="Το μήνυμα στάλθηκε!">Message sent!</h4>
+        <p data-en="Thank you — we'll get back to you within one business day." data-el="Ευχαριστούμε — θα σας απαντήσουμε εντός μίας εργάσιμης ημέρας.">Thank you — we'll get back to you within one business day.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <!-- ── FOOTER ─────────────────────────────────────────────────────────────── -->
 <footer>
   <div class="footer-top">
@@ -659,7 +784,8 @@
     <div class="footer-col">
       <h4 data-en="Support" data-el="Υποστήριξη">Support</h4>
       <a href="#faq" data-en="FAQ" data-el="FAQ">FAQ</a>
-      <a href="mailto:support@dentapro.org" data-en="Email support" data-el="Email υποστήριξη">Email support</a>
+      <a href="#contact" data-en="Contact us" data-el="Επικοινωνία">Contact us</a>
+      <a href="mailto:dentaasst@gmail.com" data-en="Email support" data-el="Email υποστήριξη">dentaasst@gmail.com</a>
       <a href="/superadmin" data-en="Admin portal" data-el="Πύλη διαχειριστή">Admin portal</a>
     </div>
   </div>
@@ -725,6 +851,47 @@
       if (c.plan_group_price)  document.getElementById('price-group').textContent  = '€' + c.plan_group_price
     })
     .catch(() => {}) // silently keep hardcoded defaults if API unreachable
+
+  // ── Contact form submission ──────────────────────────────────────────────
+  async function submitContact() {
+    const name    = document.getElementById('cf-name').value.trim()
+    const email   = document.getElementById('cf-email').value.trim()
+    const subject = document.getElementById('cf-subject').value.trim()
+    const message = document.getElementById('cf-message').value.trim()
+    const errEl   = document.getElementById('cf-error')
+    const btn     = document.getElementById('cf-submit')
+
+    errEl.style.display = 'none'
+    if (!name || !email || !message) {
+      errEl.textContent = currentLang === 'el'
+        ? 'Παρακαλώ συμπληρώστε όνομα, email και μήνυμα.'
+        : 'Please fill in your name, email and message.'
+      errEl.style.display = 'block'
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = currentLang === 'el' ? 'Αποστολή…' : 'Sending…'
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed')
+      document.getElementById('contact-form-wrap').style.display = 'none'
+      document.getElementById('contact-success').style.display = 'block'
+    } catch (err) {
+      errEl.textContent = err.message || (currentLang === 'el'
+        ? 'Αποτυχία αποστολής. Στείλτε email στο dentaasst@gmail.com'
+        : 'Failed to send. Please email dentaasst@gmail.com directly.')
+      errEl.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = currentLang === 'el' ? 'Αποστολή →' : 'Send message →'
+    }
+  }
 
   // ── Demo launch ──────────────────────────────────────────────────────────
   async function launchDemo(e) {

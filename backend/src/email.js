@@ -86,4 +86,31 @@ async function sendWelcome({ to, name, practiceName, loginUrl }) {
   })
 }
 
-module.exports = { sendMail, sendPasswordReset, sendWelcome }
+async function sendContactForm({ name, email, subject, message }) {
+  const CONTACT_TO = process.env.CONTACT_EMAIL || 'dentaasst@gmail.com'
+  return sendMail({
+    to: CONTACT_TO,
+    subject: `[DentaPro Contact] ${subject || 'New enquiry from ' + name}`,
+    html: `
+      <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F7F4EF;border-radius:16px">
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="font-size:40px">🦷</div>
+          <h1 style="font-size:20px;font-weight:800;color:#2C2A27;margin:8px 0 4px">New Contact Message</h1>
+          <p style="color:#9C9890;font-size:13px;margin:0">dentapro.org contact form</p>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:24px;margin-bottom:16px">
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <tr><td style="padding:8px 0;color:#9C9890;width:90px">From</td><td style="padding:8px 0;color:#2C2A27;font-weight:600">${name}</td></tr>
+            <tr><td style="padding:8px 0;color:#9C9890">Email</td><td style="padding:8px 0"><a href="mailto:${email}" style="color:#3D9E8F">${email}</a></td></tr>
+            <tr><td style="padding:8px 0;color:#9C9890">Subject</td><td style="padding:8px 0;color:#2C2A27">${subject || '—'}</td></tr>
+          </table>
+          <hr style="border:none;border-top:1px solid #E5E0D8;margin:16px 0"/>
+          <p style="color:#2C2A27;font-size:14px;line-height:1.7;white-space:pre-wrap;margin:0">${message}</p>
+        </div>
+        <p style="color:#9C9890;font-size:12px;text-align:center;margin:0">Reply directly to this email to respond to ${name}.</p>
+      </div>`,
+    text: `New contact from ${name} <${email}>\nSubject: ${subject || 'N/A'}\n\n${message}`
+  })
+}
+
+module.exports = { sendMail, sendPasswordReset, sendWelcome, sendContactForm }
