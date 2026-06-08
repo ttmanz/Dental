@@ -6969,6 +6969,11 @@ function _registerType(id, name, color) {
 }
 
 async function fetchAppointmentTypes() {
+  // Always seed built-in defaults into the legend first
+  Object.entries(DEFAULT_TYPES).forEach(([key, t]) => {
+    _registerType(key, lang === 'el' ? t.el : t.en, t.color)
+  })
+  // Then load user-defined custom types from the API
   try {
     const res = await apiFetch('/api/appointment-types')
     if (!res.ok) return
@@ -7873,33 +7878,23 @@ document.getElementById('type-add-cancel').addEventListener('click', () => {
   document.getElementById('type-name-input').value = ''
   document.getElementById('add-type-form').classList.remove('open')
 })
-document.getElementById('type-add-confirm').addEventListener('click', async () => {
+document.getElementById('type-add-confirm').addEventListener('click', () => {
   const name = document.getElementById('type-name-input').value.trim()
   if (!name) { document.getElementById('type-name-input').focus(); return }
 
-  const btn = document.getElementById('type-add-confirm')
-  btn.disabled = true
-  try {
-    const res = await apiFetch('/api/appointment-types', {
-      method: 'POST',
-      body: { name, color: _newTypeColor }
-    })
-    const data = await res.json()
+  apiFetch('/api/appointment-types', {
+    method: 'POST',
+    body: { name, color: _newTypeColor }
+  }).then(res => res.json()).then(data => {
     if (!data.id) { showToast('Could not save type — try again.'); return }
-
-    // Register using the stable DB UUID as the key
     _registerType(data.id, data.name, data.color)
-
-    document.getElementById('type-name-input').value = ''
-    document.getElementById('add-type-form').classList.remove('open')
-    // Rotate colour suggestion
-    _newTypeColor = PALETTE[(Object.keys(TYPE_COLORS).length) % PALETTE.length]
+    _newTypeColor = PALETTE[Object.keys(TYPE_COLORS).length % PALETTE.length]
     buildSwatches('type-color-row', _newTypeColor, c => { _newTypeColor = c })
-  } catch {
-    showToast('Could not save type — check connection.')
-  } finally {
-    btn.disabled = false
-  }
+  }).catch(() => showToast('Could not save type — check connection.'))
+
+  // Close form immediately (same as dentist pattern)
+  document.getElementById('type-name-input').value = ''
+  document.getElementById('add-type-form').classList.remove('open')
 })
 
 // ── New Appointment form ──────────────────────────────────────────────────
