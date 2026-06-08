@@ -6,12 +6,12 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
-  CREATE TYPE plan_status AS ENUM ('trialing','active','past_due','cancelled','paused');
+  CREATE TYPE billing_status AS ENUM ('trialing','active','past_due','cancelled','paused');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 ALTER TABLE practices
   ADD COLUMN IF NOT EXISTS plan             practice_plan  NOT NULL DEFAULT 'trial',
-  ADD COLUMN IF NOT EXISTS plan_status      plan_status    NOT NULL DEFAULT 'trialing',
+  ADD COLUMN IF NOT EXISTS plan_status      billing_status NOT NULL DEFAULT 'trialing',
   ADD COLUMN IF NOT EXISTS trial_ends_at    TIMESTAMPTZ    NOT NULL DEFAULT (NOW() + INTERVAL '14 days'),
   ADD COLUMN IF NOT EXISTS stripe_customer_id   TEXT,
   ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT,
