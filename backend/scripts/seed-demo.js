@@ -200,8 +200,8 @@ async function seed() {
   const planItems = [
     { code:'E003', name:'Root Canal — 3 canals', tooth:[36], cost:350, status:'completed' },
     { code:'C001', name:'Metal-Ceramic Crown', tooth:[36], cost:350, status:'in_progress' },
-    { code:'R001', name:'Composite Filling (1 surface)', tooth:[37], cost:80, status:'pending' },
-    { code:'P004', name:'Professional Cleaning', tooth:null, cost:80, status:'pending' },
+    { code:'R001', name:'Composite Filling (1 surface)', tooth:[37], cost:80, status:'planned' },
+    { code:'P004', name:'Professional Cleaning', tooth:null, cost:80, status:'planned' },
   ]
   for (const item of planItems) {
     await q(`
