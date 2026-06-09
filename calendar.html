@@ -1443,6 +1443,26 @@
     .ai-cfg-note {
       font-size: 11px; color: var(--text-muted); line-height: 1.5; text-align: center;
     }
+    /* Mode selector */
+    .ai-mode-row { display: flex; gap: 8px; }
+    .ai-mode-opt {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; padding: 11px 8px; border-radius: 10px; border: 1.5px solid var(--border);
+      cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-mid);
+      transition: all .15s; text-align: center; line-height: 1.3; user-select: none;
+    }
+    .ai-mode-opt input[type=radio] { display: none; }
+    .ai-mode-opt:has(input:checked) {
+      border-color: var(--primary); background: var(--primary-light); color: var(--primary);
+    }
+    .ai-mode-opt .aimo-icon { font-size: 20px; }
+    .ai-mode-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px;
+      border-radius: 6px; background: #E8F5E9; color: #2E7D32;
+    }
+    .ai-mode-badge.need-key { background: #E3F2FD; color: #1565C0; }
+    .ai-key-section { display: flex; flex-direction: column; gap: 10px; }
+    .ai-key-section.hidden { display: none !important; }
 
     /* ── Treatment Session Banner ────────────────────────────────────────── */
     .session-banner {
@@ -6178,8 +6198,25 @@
       <button id="ai-cfg-close" title="Close">✕</button>
     </div>
     <div class="ai-cfg-body">
-      <label class="ai-cfg-lbl">Anthropic API Key</label>
-      <input class="ai-cfg-in" type="password" id="ai-api-key" placeholder="sk-ant-api03-…" />
+      <label class="ai-cfg-lbl">ASSISTANT MODE</label>
+      <div class="ai-mode-row">
+        <label class="ai-mode-opt">
+          <input type="radio" name="ai_mode_sel" value="vtt" id="ai-mode-vtt">
+          <span class="aimo-icon">🎤</span>
+          <span>Voice-to-Text</span>
+          <span class="ai-mode-badge">Free</span>
+        </label>
+        <label class="ai-mode-opt">
+          <input type="radio" name="ai_mode_sel" value="ai" id="ai-mode-ai">
+          <span class="aimo-icon">🤖</span>
+          <span>AI Assistant</span>
+          <span class="ai-mode-badge need-key">API key needed</span>
+        </label>
+      </div>
+      <div class="ai-key-section hidden" id="ai-key-section">
+        <label class="ai-cfg-lbl">Anthropic API Key</label>
+        <input class="ai-cfg-in" type="password" id="ai-api-key" placeholder="sk-ant-api03-…" />
+      </div>
       <label class="ai-cfg-lbl">Wake phrase</label>
       <input class="ai-cfg-in" type="text" id="ai-wake" value="hey denta" />
       <label class="ai-cfg-chk">
@@ -6189,7 +6226,7 @@
         <input type="checkbox" id="ai-continuous-on" /> Always listening (uses wake phrase)
       </label>
       <button class="ai-cfg-save" id="ai-cfg-save">Save Settings</button>
-      <p class="ai-cfg-note">Your API key is stored only in this browser's local storage and sent directly to Anthropic — nowhere else.</p>
+      <p class="ai-cfg-note">In AI mode, your API key is stored only in this browser's local storage and sent directly to Anthropic — nowhere else.</p>
     </div>
   </div>
 
@@ -6218,10 +6255,10 @@
     <div class="ai-log" id="ai-log">
       <div class="ai-welcome" id="ai-welcome">
         <div class="ai-welcome-icon">🦷</div>
-        <div class="ai-welcome-txt">
-          Chair-Side Assistant ready.<br>
-          Say <em>"Hey Denta"</em> or tap the mic<br>
-          for hands-free charting.
+        <div class="ai-welcome-txt" id="ai-welcome-txt">
+          Tap the mic and speak —<br>
+          your words are saved directly<br>
+          to the patient's notes.
         </div>
       </div>
     </div>
@@ -9257,6 +9294,7 @@ setInterval(renderCalendar, 60000)
   const AI_MODEL      = 'claude-sonnet-4-5'
 
   let aiKey        = localStorage.getItem('ai_key')        || ''
+  let aiMode       = localStorage.getItem('ai_mode')       || (localStorage.getItem('ai_key') ? 'ai' : 'vtt')
   let aiWake       = localStorage.getItem('ai_wake')       || 'hey denta'
   let aiVoice      = localStorage.getItem('ai_voice')      !== 'false'
   let aiContinuous = localStorage.getItem('ai_continuous') === 'true'
@@ -9605,7 +9643,7 @@ General rules (non-session):
 
   // ── Claude API call with tool use ─────────────────────────────────────────
   async function askClaude(userText) {
-    if (!aiKey) return 'Please add your Anthropic API key in the assistant settings first — tap the ⚙ button.'
+    if (!aiKey) return 'Please add your Anthropic API key in ⚙ Settings, or switch to Voice-to-Text mode (free — no key needed).'
 
     aiHistory.push({ role: 'user', content: userText })
     if (aiHistory.length > 24) aiHistory = aiHistory.slice(-24)
@@ -9673,16 +9711,30 @@ General rules (non-session):
     if (!text.trim()) return
     stopOneShot()
     addMsg('user', text)
+
+    // ── Voice-to-Text mode (free, no API key) ────────────────────────────────
+    if (aiMode === 'vtt') {
+      if (activeSession) {
+        execTool('add_clinical_note', { note: text })
+        const reply = `✅ Saved to ${activeSession.patient}'s notes.`
+        addMsg('assistant', reply)
+        if (aiVoice) speak(reply)
+      } else {
+        addMsg('assistant', '📋 Transcribed. Tap ▶ Treat on an appointment to start a session and auto-save notes to a patient\'s record.')
+      }
+      resetStatus()
+      return
+    }
+
+    // ── AI mode ───────────────────────────────────────────────────────────────
     setStatus('thinking', 'Thinking…', '')
     showTyping()
-
     let reply
     try {
       reply = await askClaude(text)
     } catch (err) {
       reply = err.message || 'Something went wrong — please try again.'
     }
-
     removeTyping()
     addMsg('assistant', reply)
     speak(reply)
@@ -9788,10 +9840,26 @@ General rules (non-session):
   }
 
   // ── Panel open/close ──────────────────────────────────────────────────────
+  function updatePanelMode() {
+    const sub   = document.querySelector('.ai-head-sub')
+    const chips = $('ai-chips')
+    const wt    = $('ai-welcome-txt')
+    if (aiMode === 'vtt') {
+      if (sub)   sub.textContent = 'Free voice transcription'
+      if (chips) chips.style.display = 'none'
+      if (wt)    wt.innerHTML = 'Tap the mic and speak —<br>your words are saved directly<br>to the patient\'s notes.'
+    } else {
+      if (sub)   sub.textContent = 'Hands-free AI charting'
+      if (chips) chips.style.display = ''
+      if (wt)    wt.innerHTML = 'Say <em>"Hey Denta"</em> or tap the mic<br>for hands-free AI charting.'
+    }
+  }
+
   function openPanel() {
     aiPanelOpen = true
     panel.classList.remove('hidden')
     cfgPanel.classList.add('hidden')
+    updatePanelMode()
     txtIn.focus()
   }
   function closePanel() {
@@ -9811,10 +9879,21 @@ General rules (non-session):
   $('ai-cfg-btn').addEventListener('click', () => {
     $('ai-api-key').value = aiKey
     $('ai-wake').value    = aiWake
-    $('ai-voice-on').checked     = aiVoice
+    $('ai-voice-on').checked      = aiVoice
     $('ai-continuous-on').checked = aiContinuous
+    // Set mode radio
+    const modeRadio = document.querySelector(`input[name="ai_mode_sel"][value="${aiMode}"]`)
+    if (modeRadio) modeRadio.checked = true
+    $('ai-key-section').classList.toggle('hidden', aiMode !== 'ai')
     cfgPanel.classList.remove('hidden')
     panel.classList.add('hidden')
+  })
+
+  // Show/hide API key section when mode radio changes
+  document.querySelectorAll('input[name="ai_mode_sel"]').forEach(r => {
+    r.addEventListener('change', () => {
+      $('ai-key-section').classList.toggle('hidden', r.value !== 'ai')
+    })
   })
 
   // Config panel
@@ -9823,11 +9902,13 @@ General rules (non-session):
     panel.classList.remove('hidden')
   })
   $('ai-cfg-save').addEventListener('click', () => {
+    aiMode = document.querySelector('input[name="ai_mode_sel"]:checked')?.value || 'vtt'
     aiKey  = $('ai-api-key').value.trim()
     aiWake = $('ai-wake').value.trim() || 'hey denta'
     aiVoice = $('ai-voice-on').checked
     const newCont = $('ai-continuous-on').checked
 
+    localStorage.setItem('ai_mode',      aiMode)
     localStorage.setItem('ai_key',       aiKey)
     localStorage.setItem('ai_wake',      aiWake)
     localStorage.setItem('ai_voice',     aiVoice)
@@ -9839,6 +9920,7 @@ General rules (non-session):
 
     cfgPanel.classList.add('hidden')
     panel.classList.remove('hidden')
+    updatePanelMode()
     resetStatus()
   })
 
