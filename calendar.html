@@ -872,6 +872,10 @@
       background: #E05555; box-shadow: 0 0 0 12px rgba(224,85,85,.18);
       animation: mic-pulse 1.2s ease-in-out infinite;
     }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
     @keyframes mic-pulse {
       0%, 100% { box-shadow: 0 0 0 8px rgba(224,85,85,.18); }
       50%       { box-shadow: 0 0 0 20px rgba(224,85,85,.08); }
@@ -13866,6 +13870,7 @@ window.auditLog = (function() {
     if (!data.length) { list.innerHTML = '<div class="ref-empty">No referrals yet. Click <b>+ New Referral</b> to create one.</div>'; return }
     list.innerHTML = data.map(r => {
       const spec = SPECIALISTS.find(s => s.id === r.specialistId)
+      const hasEmail = spec && spec.email
       return `
         <div class="ref-referral-card">
           <div class="ref-ref-info">
@@ -13877,6 +13882,9 @@ window.auditLog = (function() {
             </div>
           </div>
           <div class="ref-ref-actions">
+            <button class="ref-card-btn" title="${hasEmail ? 'Email referral to '+spec.email : 'No email on file for this specialist'}"
+              data-email-ref="${r.id}" style="${hasEmail?'':'opacity:.4;cursor:default'}">✉️</button>
+            <button class="ref-card-btn" title="Print referral letter" data-print-ref="${r.id}">🖨️</button>
             <select class="ref-status-select" data-ref-id="${r.id}">
               <option value="pending"   ${r.status==='pending'  ?'selected':''}>Pending</option>
               <option value="accepted"  ${r.status==='accepted' ?'selected':''}>Accepted</option>
@@ -13888,6 +13896,185 @@ window.auditLog = (function() {
           </div>
         </div>`
     }).join('')
+  }
+
+  // ── Practice / doctor info helpers ────────────────────────────────────────
+  function getPracticeInfo() {
+    const u = (typeof AUTH !== 'undefined' && AUTH.user) || {}
+    return {
+      practiceName : u.practiceName || localStorage.getItem('dental_practice_name') || 'Dental Practice',
+      doctorName   : [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || 'Dr.',
+      doctorRole   : u.role || 'Dentist',
+    }
+  }
+
+  // ── Email a referral ──────────────────────────────────────────────────────
+  function emailReferral(refId) {
+    const r    = REFERRALS.find(x => x.id === refId)
+    if (!r) return
+    const spec = SPECIALISTS.find(s => s.id === r.specialistId)
+    if (!spec || !spec.email) { if (typeof showToast === 'function') showToast('No email on file for this specialist'); return }
+    const { practiceName, doctorName } = getPracticeInfo()
+    const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) } catch(e){ return d } }
+
+    const subject = encodeURIComponent(`Referral: ${r.patientName} — ${spec.specialty || spec.name}`)
+    const body = encodeURIComponent(
+`Dear ${spec.name},
+
+I am writing to refer the following patient to your care.
+
+PATIENT:    ${r.patientName}
+DATE:       ${fmtDate(r.date)}
+REFERRED BY: ${doctorName} — ${practiceName}
+
+REASON FOR REFERRAL:
+${r.reason || '(see clinical notes)'}
+
+Please do not hesitate to contact us if you require any further information.
+
+Kind regards,
+${doctorName}
+${practiceName}
+`)
+    window.location.href = `mailto:${spec.email}?subject=${subject}&body=${body}`
+  }
+
+  // ── Print referral letter ─────────────────────────────────────────────────
+  function printReferral(refId) {
+    const r    = REFERRALS.find(x => x.id === refId)
+    if (!r) return
+    const spec = SPECIALISTS.find(s => s.id === r.specialistId)
+    const { practiceName, doctorName, doctorRole } = getPracticeInfo()
+    const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) } catch(e){ return d } }
+    const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Referral Letter — ${r.patientName}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Georgia', serif; font-size: 13px; color: #1a1a1a;
+         padding: 40px 60px; max-width: 800px; margin: auto; line-height: 1.6; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 2px solid #2C6E63; padding-bottom: 18px; margin-bottom: 28px; }
+  .practice-name { font-size: 20px; font-weight: 700; color: #2C6E63; }
+  .practice-sub  { font-size: 12px; color: #555; margin-top: 3px; }
+  .doc-info      { text-align: right; font-size: 12px; color: #555; }
+  .letter-title  { font-size: 16px; font-weight: 700; text-align: center;
+                   letter-spacing: .1em; text-transform: uppercase; color: #2C6E63;
+                   margin: 0 0 24px; }
+  .date-line     { text-align: right; margin-bottom: 20px; color: #555; font-size: 12px; }
+  .salutation    { margin-bottom: 16px; }
+  .section       { margin: 20px 0; padding: 14px 18px; background: #F5FAF9;
+                   border-left: 3px solid #2C6E63; border-radius: 4px; }
+  .section-title { font-size: 11px; font-weight: 700; color: #2C6E63;
+                   text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+  .field-row     { display: flex; gap: 12px; margin-bottom: 4px; }
+  .field-label   { font-weight: 700; min-width: 130px; color: #333; font-size: 12px; }
+  .field-val     { color: #1a1a1a; font-size: 12px; }
+  .reason-box    { white-space: pre-wrap; line-height: 1.7; font-size: 13px; }
+  .close-para    { margin: 24px 0 32px; }
+  .sig-block     { margin-top: 48px; border-top: 1px solid #ccc; padding-top: 12px;
+                   display: flex; justify-content: space-between; }
+  .sig-col       { font-size: 12px; color: #555; }
+  .sig-name      { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .confidential  { text-align: center; font-size: 10px; color: #aaa;
+                   margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; }
+  @media print { body { padding: 20px 40px; } }
+</style></head><body>
+
+<div class="header">
+  <div>
+    <div class="practice-name">${practiceName}</div>
+    <div class="practice-sub">${doctorName} · ${doctorRole}</div>
+  </div>
+  <div class="doc-info">Date: ${today}</div>
+</div>
+
+<div class="letter-title">Referral Letter</div>
+
+<div class="salutation">Dear ${spec ? spec.name : 'Colleague'},</div>
+
+<p>I am writing to refer the following patient for specialist assessment and management. I would be grateful for your expert opinion and any treatment you deem appropriate.</p>
+
+<div class="section">
+  <div class="section-title">Patient Details</div>
+  <div class="field-row"><span class="field-label">Patient Name:</span><span class="field-val">${r.patientName}</span></div>
+  <div class="field-row"><span class="field-label">Referral Date:</span><span class="field-val">${fmtDate(r.date)}</span></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Referred To</div>
+  <div class="field-row"><span class="field-label">Specialist:</span><span class="field-val">${spec ? spec.name : '—'}</span></div>
+  <div class="field-row"><span class="field-label">Specialty:</span><span class="field-val">${spec ? spec.specialty : '—'}</span></div>
+  ${spec && spec.clinic ? `<div class="field-row"><span class="field-label">Clinic:</span><span class="field-val">${spec.clinic}</span></div>` : ''}
+</div>
+
+<div class="section">
+  <div class="section-title">Reason for Referral / Clinical Notes</div>
+  <div class="reason-box">${r.reason || '(Please see attached clinical notes)'}</div>
+</div>
+
+<p class="close-para">Please do not hesitate to contact us should you require any further clinical information or documentation. We look forward to your report.</p>
+
+<div class="sig-block">
+  <div class="sig-col">
+    <div class="sig-name">${doctorName}</div>
+    <div>${doctorRole} — ${practiceName}</div>
+  </div>
+  <div class="sig-col" style="text-align:right">
+    <div style="font-size:11px;color:#aaa;margin-bottom:30px">Signature</div>
+    <div style="border-top:1px solid #555;width:160px;text-align:center;font-size:11px;padding-top:4px">Date</div>
+  </div>
+</div>
+
+<div class="confidential">CONFIDENTIAL — This letter contains privileged medical information intended solely for the named recipient.</div>
+
+</body></html>`
+
+    const w = window.open('', '_blank', 'width=850,height=1000')
+    w.document.write(html)
+    w.document.close()
+    w.onload = () => { w.focus(); w.print() }
+  }
+
+  // ── Post-save action prompt ───────────────────────────────────────────────
+  function _showRefActionPrompt(r, spec) {
+    const existing = document.getElementById('ref-action-prompt')
+    if (existing) existing.remove()
+
+    const hasEmail = spec && spec.email
+    const toast = document.createElement('div')
+    toast.id = 'ref-action-prompt'
+    toast.style.cssText = `
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+      background:#2C2A27; color:#fff; border-radius:14px; padding:14px 20px;
+      z-index:99999; box-shadow:0 8px 32px rgba(0,0,0,.35);
+      display:flex; align-items:center; gap:12px; font-family:Inter,sans-serif;
+      font-size:13px; max-width:92vw; animation:fadeInUp .2s ease;`
+    toast.innerHTML = `
+      <span>✅ Referral saved for <strong>${r.patientName}</strong></span>
+      <button id="rp-email" style="padding:7px 14px;border-radius:8px;border:none;
+        background:${hasEmail?'#3D9E8F':'#555'};color:#fff;font-size:12px;font-weight:700;
+        cursor:${hasEmail?'pointer':'default'};font-family:inherit;white-space:nowrap;opacity:${hasEmail?1:.5}">
+        ✉️ Send Email
+      </button>
+      <button id="rp-print" style="padding:7px 14px;border-radius:8px;border:none;
+        background:#5B9ED6;color:#fff;font-size:12px;font-weight:700;
+        cursor:pointer;font-family:inherit;white-space:nowrap">
+        🖨️ Print Letter
+      </button>
+      <button id="rp-dismiss" style="padding:7px 10px;border-radius:8px;border:none;
+        background:rgba(255,255,255,.15);color:#fff;font-size:12px;
+        cursor:pointer;font-family:inherit">✕</button>`
+
+    document.body.appendChild(toast)
+
+    toast.querySelector('#rp-email').onclick = () => { if (hasEmail) emailReferral(r.id); toast.remove() }
+    toast.querySelector('#rp-print').onclick = () => { printReferral(r.id); toast.remove() }
+    toast.querySelector('#rp-dismiss').onclick = () => toast.remove()
+
+    // Auto-dismiss after 12 seconds
+    setTimeout(() => { if (toast.parentNode) toast.remove() }, 12000)
   }
 
   function populateSpecialistDropdown() {
@@ -14051,25 +14238,34 @@ window.auditLog = (function() {
       if (!patient) document.getElementById('ref-ref-patient').focus()
       return
     }
-    REFERRALS.push({
+    const newRef = {
       id: genId(), patientName: patient, specialistId: specId, date,
       reason: document.getElementById('ref-ref-reason').value.trim(),
       status: 'pending'
-    })
+    }
+    REFERRALS.push(newRef)
     saveReferrals()
     ;['ref-ref-patient','ref-ref-reason'].forEach(id=>{ document.getElementById(id).value='' })
     document.getElementById('ref-referral-form').classList.remove('open')
     updateRefStats(); renderReferrals()
-    if (typeof showToast === 'function') showToast('Referral sent ✓')
+
+    // Prompt to send email or print
+    const spec = SPECIALISTS.find(s => s.id === specId)
+    _showRefActionPrompt(newRef, spec)
   })
 
   // Referral list actions (delegate)
   document.getElementById('ref-referral-list').addEventListener('click', e => {
-    const btn = e.target.closest('[data-del-ref]')
-    if (btn) {
+    const btn = e.target.closest('[data-del-ref],[data-email-ref],[data-print-ref]')
+    if (!btn) return
+    if (btn.dataset.delRef) {
       if (!confirm('Delete this referral?')) return
       REFERRALS = REFERRALS.filter(r => r.id !== btn.dataset.delRef)
       saveReferrals(); updateRefStats(); renderReferrals()
+    } else if (btn.dataset.emailRef) {
+      emailReferral(btn.dataset.emailRef)
+    } else if (btn.dataset.printRef) {
+      printReferral(btn.dataset.printRef)
     }
   })
   document.getElementById('ref-referral-list').addEventListener('change', e => {
