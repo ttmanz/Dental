@@ -5288,7 +5288,7 @@
         <div class="login-err" id="reset-err"></div>
         <div class="lf">
           <label>New password</label>
-          <input type="password" id="reset-password" placeholder="Min. 8 characters" autocomplete="new-password" />
+          <input type="password" id="reset-password" placeholder="Min. 4 characters" autocomplete="new-password" />
         </div>
         <div class="lf">
           <label>Confirm password</label>
@@ -6527,7 +6527,7 @@ window.openStaffPanel = function() {
           '<input id="sp-first" placeholder="First name"      style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
           '<input id="sp-last"  placeholder="Last name"       style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
           '<input id="sp-email" placeholder="Email address"   style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
-          '<input id="sp-pwd"   placeholder="Temp password (min 8)" type="password" style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
+          '<input id="sp-pwd"   placeholder="Temp password (min 4)" type="password" style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
         '</div>' +
         '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
           '<select id="sp-role" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit">' + roleOptions + '</select>' +
@@ -6626,7 +6626,7 @@ window.openStaffPanel = function() {
     var err   = p.querySelector('#sp-err')
     err.style.display = 'none'
     if (!first||!last||!email||!pwd) { err.textContent='All fields required'; err.style.display='block'; return }
-    if (pwd.length<8) { err.textContent='Password must be at least 8 characters'; err.style.display='block'; return }
+    if (pwd.length<4) { err.textContent='Password must be at least 4 characters'; err.style.display='block'; return }
     var btn = p.querySelector('#sp-add'); btn.disabled=true; btn.textContent='Adding…'
     apiFetch('/api/users',{method:'POST',body:{first_name:first,last_name:last,email:email,password:pwd,role:role}})
       .then(function(r){return r.json()})
@@ -14904,7 +14904,7 @@ window._dentalSync = new DentalSync()
       const confirm = document.getElementById('reset-confirm')?.value
       const errEl   = document.getElementById('reset-err')
       errEl.textContent = ''
-      if (!pwd || pwd.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; return }
+      if (!pwd || pwd.length < 4) { errEl.textContent = 'Password must be at least 4 characters.'; return }
       if (pwd !== confirm) { errEl.textContent = 'Passwords do not match.'; return }
       const btn = document.getElementById('reset-submit-btn')
       btn.disabled = true; btn.textContent = 'Updating…'
