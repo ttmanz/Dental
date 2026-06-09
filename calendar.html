@@ -6446,39 +6446,29 @@ window.openStaffPanel = function() {
   var ROLE_COLOR = { owner:'#3D9E8F', admin:'#5B9ED6', dentist:'#8B7CC8', assistant:'#E07850', receptionist:'#E8A87C' }
   var ROLE_LABEL = { owner:'Owner', admin:'Admin', dentist:'Dentist', assistant:'Assistant', receptionist:'Receptionist' }
 
-  // Permissions matrix data
-  var PERMS = [
-    { feature:'📅 Calendar',        owner:1, admin:1, dentist:2, assistant:1, receptionist:1, note:'Dentist sees own schedule only' },
-    { feature:'🧑‍🤝‍🧑 Patients',        owner:1, admin:1, dentist:1, assistant:2, receptionist:1, note:'Assistant: view only' },
-    { feature:'🩺 Clinical Notes',   owner:1, admin:1, dentist:1, assistant:2, receptionist:0, note:'Assistant: view only' },
-    { feature:'💊 Prescriptions',    owner:1, admin:1, dentist:1, assistant:0, receptionist:0, note:'' },
-    { feature:'🧾 Billing',          owner:1, admin:1, dentist:0, assistant:0, receptionist:1, note:'' },
-    { feature:'🔬 Lab Orders',       owner:1, admin:1, dentist:1, assistant:1, receptionist:1, note:'' },
-    { feature:'📊 Analytics',        owner:1, admin:1, dentist:0, assistant:0, receptionist:0, note:'' },
-    { feature:'👥 Manage Staff',     owner:1, admin:1, dentist:0, assistant:0, receptionist:0, note:'' },
-    { feature:'📦 Inventory',        owner:1, admin:1, dentist:0, assistant:1, receptionist:1, note:'' },
-    { feature:'🔗 Referrals',        owner:1, admin:1, dentist:1, assistant:0, receptionist:1, note:'' },
-    { feature:'🔔 Reminders',        owner:1, admin:1, dentist:0, assistant:0, receptionist:1, note:'' },
+  // Feature definitions: key, label, whether "view only" is a valid option
+  var FEATURES = [
+    { key:'calendar',      label:'📅 Calendar',       hasView:true  },
+    { key:'patients',      label:'🧑‍🤝‍🧑 Patients',       hasView:true  },
+    { key:'clinicalNotes', label:'🩺 Clinical Notes',  hasView:true  },
+    { key:'prescriptions', label:'💊 Prescriptions',   hasView:false },
+    { key:'billing',       label:'🧾 Billing',         hasView:false },
+    { key:'labOrders',     label:'🔬 Lab Orders',      hasView:false },
+    { key:'analytics',     label:'📊 Analytics',       hasView:false },
+    { key:'manageStaff',   label:'👥 Manage Staff',    hasView:false },
+    { key:'inventory',     label:'📦 Inventory',       hasView:false },
+    { key:'referrals',     label:'🔗 Referrals',       hasView:false },
+    { key:'reminders',     label:'🔔 Reminders',       hasView:false },
   ]
 
-  function permIcon(v) {
-    if (v===1) return '<span style="color:#3D9E8F;font-weight:700">✓</span>'
-    if (v===2) return '<span style="color:#E8A87C;font-weight:700;font-size:10px">VIEW</span>'
-    return '<span style="color:#E5E0D8">—</span>'
+  // Role defaults (2=full, 1=view, 0=none)
+  var ROLE_DEFAULTS = {
+    owner:       { calendar:2,patients:2,clinicalNotes:2,prescriptions:2,billing:2,labOrders:2,analytics:2,manageStaff:2,inventory:2,referrals:2,reminders:2 },
+    admin:       { calendar:2,patients:2,clinicalNotes:2,prescriptions:2,billing:2,labOrders:2,analytics:2,manageStaff:2,inventory:2,referrals:2,reminders:2 },
+    dentist:     { calendar:2,patients:2,clinicalNotes:2,prescriptions:2,billing:0,labOrders:2,analytics:0,manageStaff:0,inventory:0,referrals:2,reminders:0 },
+    assistant:   { calendar:2,patients:1,clinicalNotes:1,prescriptions:0,billing:0,labOrders:2,analytics:0,manageStaff:0,inventory:2,referrals:0,reminders:0 },
+    receptionist:{ calendar:2,patients:2,clinicalNotes:0,prescriptions:0,billing:2,labOrders:2,analytics:0,manageStaff:0,inventory:2,referrals:2,reminders:2 },
   }
-
-  var permRows = PERMS.map(function(r) {
-    return '<tr>' +
-      '<td style="padding:7px 10px;font-size:12px;color:#2C2A27;border-bottom:1px solid #F7F4EF;white-space:nowrap">' + r.feature + (r.note ? '<div style="font-size:10px;color:#9C9890;margin-top:1px">' + r.note + '</div>' : '') + '</td>' +
-      ['owner','admin','dentist','assistant','receptionist'].map(function(role) {
-        return '<td style="padding:7px 10px;text-align:center;border-bottom:1px solid #F7F4EF">' + permIcon(r[role]) + '</td>'
-      }).join('') +
-    '</tr>'
-  }).join('')
-
-  var permHeaders = ['owner','admin','dentist','assistant','receptionist'].map(function(role) {
-    return '<th style="padding:8px 10px;font-size:11px;font-weight:700;text-transform:capitalize;color:' + ROLE_COLOR[role] + ';text-align:center;border-bottom:2px solid #E5E0D8">' + ROLE_LABEL[role] + '</th>'
-  }).join('')
 
   var roleOptions = Object.keys(ROLE_LABEL).map(function(v) {
     return '<option value="' + v + '">' + ROLE_LABEL[v] + '</option>'
@@ -6487,53 +6477,29 @@ window.openStaffPanel = function() {
   var p = document.createElement('div')
   p.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(44,42,39,.5);display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif'
   p.innerHTML =
-    '<div style="background:#fff;border-radius:20px;width:min(780px,96vw);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(44,42,39,.18);overflow:hidden;">' +
-
-      // Header
+    '<div style="background:#fff;border-radius:20px;width:min(820px,96vw);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(44,42,39,.18);overflow:hidden;">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid #E5E0D8;flex-shrink:0">' +
         '<div>' +
           '<div style="font-size:18px;font-weight:800;color:#2C2A27">👥 Manage Staff</div>' +
-          '<div style="font-size:13px;color:#9C9890;margin-top:2px">Add team members and manage their access</div>' +
+          '<div style="font-size:13px;color:#9C9890;margin-top:2px">Add team members · Set individual access permissions</div>' +
         '</div>' +
         '<button id="sp-close" style="width:32px;height:32px;border-radius:8px;border:1px solid #E5E0D8;background:none;cursor:pointer;font-size:18px;color:#5C5854">×</button>' +
       '</div>' +
-
-      // Scrollable body
       '<div style="flex:1;overflow-y:auto;">' +
-
-        // Permissions guide (collapsible)
-        '<div style="border-bottom:1px solid #E5E0D8">' +
-          '<button id="sp-perm-toggle" style="width:100%;text-align:left;padding:12px 28px;background:#F7F4EF;border:none;cursor:pointer;font-size:13px;font-weight:700;color:#2C2A27;display:flex;align-items:center;justify-content:space-between;font-family:inherit">' +
-            '<span>📋 Role Permissions Guide</span><span id="sp-perm-arrow" style="font-size:11px;color:#9C9890">▼ Show</span>' +
-          '</button>' +
-          '<div id="sp-perm-table" style="display:none;overflow-x:auto;padding:0 28px 16px">' +
-            '<table style="width:100%;border-collapse:collapse;margin-top:12px">' +
-              '<thead><tr><th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#9C9890;border-bottom:2px solid #E5E0D8">Feature</th>' + permHeaders + '</tr></thead>' +
-              '<tbody>' + permRows + '</tbody>' +
-            '</table>' +
-            '<div style="margin-top:10px;font-size:11px;color:#9C9890">✓ Full access &nbsp; VIEW = read-only &nbsp; — = no access</div>' +
-          '</div>' +
-        '</div>' +
-
-        // Staff list
         '<div id="sp-list" style="padding:8px 28px 16px">Loading…</div>' +
-
       '</div>' +
-
-      // Add form
       '<div style="border-top:1px solid #E5E0D8;padding:18px 28px;flex-shrink:0;background:#F7F4EF">' +
         '<div style="font-size:12px;font-weight:700;color:#9C9890;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Add New Team Member</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
-          '<input id="sp-first" placeholder="First name"      style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
-          '<input id="sp-last"  placeholder="Last name"       style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
-          '<input id="sp-email" placeholder="Email address"   style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
+          '<input id="sp-first" placeholder="First name"            style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
+          '<input id="sp-last"  placeholder="Last name"             style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
+          '<input id="sp-email" placeholder="Email address"         style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
           '<input id="sp-pwd"   placeholder="Temp password (min 4)" type="password" style="padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit"/>' +
         '</div>' +
         '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
           '<select id="sp-role" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit">' + roleOptions + '</select>' +
           '<button id="sp-add" style="padding:8px 22px;border-radius:8px;border:none;background:#3D9E8F;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Add Member</button>' +
         '</div>' +
-        '<div id="sp-role-preview" style="display:none;background:#fff;border:1px solid #E5E0D8;border-radius:10px;padding:12px 14px;margin-bottom:8px"></div>' +
         '<div id="sp-err" style="color:#D95F5F;font-size:12px;margin-top:6px;display:none"></div>' +
       '</div>' +
     '</div>'
@@ -6541,82 +6507,185 @@ window.openStaffPanel = function() {
   document.body.appendChild(p)
   window._staffPanelEl = p
 
-  // Close
   p.querySelector('#sp-close').onclick = function() { p.remove(); window._staffPanelEl = null }
   p.onclick = function(e) { if (e.target === p) { p.remove(); window._staffPanelEl = null } }
 
-  // Permissions toggle (full table)
-  p.querySelector('#sp-perm-toggle').onclick = function() {
-    var tbl   = p.querySelector('#sp-perm-table')
-    var arrow = p.querySelector('#sp-perm-arrow')
-    var open  = tbl.style.display === 'block'
-    tbl.style.display = open ? 'none' : 'block'
-    arrow.textContent = open ? '▼ Show all roles' : '▲ Hide'
-  }
+  // ── Build permissions editor for one staff member ─────────────────────────
+  function buildPermEditor(s) {
+    var role    = s.role || 'receptionist'
+    var color   = ROLE_COLOR[role] || '#ccc'
+    var defaults = ROLE_DEFAULTS[role] || ROLE_DEFAULTS.receptionist
+    // Merge: saved permissions override defaults
+    var current = Object.assign({}, defaults, s.permissions || {})
 
-  // Live permissions preview — updates as owner changes the role dropdown
-  function showRolePreview(role) {
-    var preview = p.querySelector('#sp-role-preview')
-    if (!role) { preview.style.display = 'none'; return }
-    var color = ROLE_COLOR[role] || '#ccc'
-    var can   = PERMS.filter(function(r){ return r[role] > 0 })
-    var cant  = PERMS.filter(function(r){ return r[role] === 0 })
-    preview.style.display = 'block'
-    preview.innerHTML =
-      '<div style="font-size:12px;font-weight:800;color:' + color + ';text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">' +
-        ROLE_LABEL[role] + ' — what this person can access' +
-      '</div>' +
-      '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
-        '<div style="flex:1;min-width:140px">' +
-          '<div style="font-size:11px;font-weight:700;color:#3D9E8F;margin-bottom:4px">✓ CAN ACCESS</div>' +
-          can.map(function(r){ return '<div style="font-size:12px;color:#2C2A27;padding:2px 0">' + r.feature + (r[role]===2?' <span style="font-size:10px;color:#E8A87C">(view only)</span>':'') + '</div>' }).join('') +
+    var rows = FEATURES.map(function(f) {
+      var val = current[f.key] !== undefined ? current[f.key] : (defaults[f.key] || 0)
+      var defVal = defaults[f.key] || 0
+      var isCustom = s.permissions && s.permissions[f.key] !== undefined && s.permissions[f.key] !== defVal
+
+      function opt(v, lbl, col) {
+        var sel = val === v
+        return '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 9px;border-radius:7px;border:1.5px solid ' +
+          (sel ? col : '#E5E0D8') + ';background:' + (sel ? col + '18' : '#fff') +
+          ';font-size:11px;font-weight:' + (sel?'700':'500') + ';color:' + (sel?col:'#9C9890') + ';white-space:nowrap;user-select:none">' +
+          '<input type="radio" name="perm_' + s.id + '_' + f.key + '" value="' + v + '"' + (sel?' checked':'') +
+          ' style="display:none">' + lbl + '</label>'
+      }
+
+      return '<div class="sp-perm-row" style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F7F4EF;" data-uid="' + s.id + '" data-key="' + f.key + '">' +
+        '<div style="flex:1;font-size:12px;color:#2C2A27;font-weight:' + (isCustom?'700':'400') + '">' + f.label +
+          (isCustom ? ' <span style="font-size:9px;background:#E8F5E9;color:#2E7D32;padding:1px 5px;border-radius:4px;font-weight:700">CUSTOM</span>' : '') +
         '</div>' +
-        (cant.length ? '<div style="flex:1;min-width:140px">' +
-          '<div style="font-size:11px;font-weight:700;color:#D95F5F;margin-bottom:4px">— NO ACCESS</div>' +
-          cant.map(function(r){ return '<div style="font-size:12px;color:#9C9890;padding:2px 0">' + r.feature + '</div>' }).join('') +
-        '</div>' : '') +
+        '<div style="display:flex;gap:5px;align-items:center">' +
+          opt(2, '✓ Full', '#3D9E8F') +
+          (f.hasView ? opt(1, '👁 View', '#E8A87C') : '') +
+          opt(0, '✕ Off', '#D95F5F') +
+        '</div>' +
       '</div>'
+    }).join('')
+
+    return rows
   }
 
-  var roleSelect = p.querySelector('#sp-role')
-  showRolePreview(roleSelect.value)
-  roleSelect.onchange = function() { showRolePreview(this.value) }
-
-  // Load staff list
+  // ── Load & render staff list ───────────────────────────────────────────────
   function loadStaff() {
     var list = p.querySelector('#sp-list')
     list.innerHTML = '<div style="text-align:center;padding:24px;color:#9C9890">Loading…</div>'
     apiFetch('/api/users').then(function(r) { return r.json() }).then(function(data) {
       var staff = Array.isArray(data) ? data : (data.data || [])
-      if (!staff.length) { list.innerHTML = '<div style="padding:24px;color:#9C9890;text-align:center">No team members yet. Add your first below.</div>'; return }
-      list.innerHTML = staff.map(function(s) {
+      if (!staff.length) {
+        list.innerHTML = '<div style="padding:24px;color:#9C9890;text-align:center">No team members yet.</div>'
+        return
+      }
+      list.innerHTML = ''
+      staff.forEach(function(s) {
+        var color    = ROLE_COLOR[s.role] || '#ccc'
         var initials = ((s.first_name||'')[0]||'').toUpperCase() + ((s.last_name||'')[0]||'').toUpperCase()
-        var color = ROLE_COLOR[s.role] || '#ccc'
         var roleOpts = Object.keys(ROLE_LABEL).map(function(v) {
           return '<option value="' + v + '"' + (s.role===v?' selected':'') + '>' + ROLE_LABEL[v] + '</option>'
         }).join('')
-        return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F0EDE8">' +
-          '<div style="width:36px;height:36px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">' + initials + '</div>' +
-          '<div style="flex:1;min-width:0">' +
-            '<div style="font-size:13px;font-weight:700;color:' + (s.active===false?'#9C9890':'#2C2A27') + '">' + s.first_name + ' ' + s.last_name + '</div>' +
-            '<div style="font-size:11px;color:#9C9890">' + s.email + '</div>' +
+
+        var card = document.createElement('div')
+        card.style.cssText = 'border:1px solid #E5E0D8;border-radius:12px;margin-bottom:10px;overflow:hidden;'
+        card.innerHTML =
+          // Staff row header
+          '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff;">' +
+            '<div style="width:38px;height:38px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">' + initials + '</div>' +
+            '<div style="flex:1;min-width:0">' +
+              '<div style="font-size:13px;font-weight:700;color:' + (s.active===false?'#9C9890':'#2C2A27') + '">' + (s.first_name||'') + ' ' + (s.last_name||'') + '</div>' +
+              '<div style="font-size:11px;color:#9C9890">' + (s.email||'') + '</div>' +
+            '</div>' +
+            '<select data-role-uid="' + s.id + '" style="padding:5px 8px;border-radius:7px;border:1px solid #E5E0D8;font-size:11px;font-family:inherit;color:#2C2A27">' + roleOpts + '</select>' +
+            '<button class="sp-perm-toggle" data-uid="' + s.id + '" style="padding:5px 11px;border-radius:7px;border:1px solid ' + color + ';font-size:11px;font-weight:700;cursor:pointer;background:#fff;font-family:inherit;color:' + color + ';white-space:nowrap">⚙ Permissions</button>' +
+            '<button data-deact-uid="' + s.id + '" data-active="' + (s.active!==false) + '" style="padding:5px 10px;border-radius:7px;border:1px solid #E5E0D8;font-size:11px;cursor:pointer;background:#fff;font-family:inherit;white-space:nowrap;color:' + (s.active===false?'#3D9E8F':'#D95F5F') + '">' + (s.active===false?'Activate':'Deactivate') + '</button>' +
           '</div>' +
-          '<span style="padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;background:' + color + '22;color:' + color + ';white-space:nowrap">' + (ROLE_LABEL[s.role]||s.role) + '</span>' +
-          '<select data-uid="' + s.id + '" style="padding:5px 6px;border-radius:6px;border:1px solid #E5E0D8;font-size:11px;font-family:inherit">' + roleOpts + '</select>' +
-          '<button data-uid="' + s.id + '" data-active="' + (s.active!==false) + '" style="padding:5px 10px;border-radius:6px;border:1px solid #E5E0D8;font-size:11px;cursor:pointer;background:#fff;font-family:inherit;white-space:nowrap;color:' + (s.active===false?'#3D9E8F':'#D95F5F') + '">' + (s.active===false?'Activate':'Deactivate') + '</button>' +
-        '</div>'
-      }).join('')
-      list.querySelectorAll('select[data-uid]').forEach(function(sel) {
-        sel.onchange = function() { apiFetch('/api/users/'+sel.dataset.uid,{method:'PATCH',body:{role:sel.value}}).then(loadStaff) }
+          // Permissions panel (hidden by default)
+          '<div class="sp-perm-panel" data-uid="' + s.id + '" style="display:none;border-top:1px solid #E5E0D8;background:#FAFAF8;padding:12px 16px">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+              '<div style="font-size:11px;font-weight:700;color:#9C9890;text-transform:uppercase;letter-spacing:.05em">Access Permissions — tick what this person can do</div>' +
+              '<div style="display:flex;gap:8px">' +
+                '<button class="sp-reset-btn" data-uid="' + s.id + '" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid #E5E0D8;background:#fff;cursor:pointer;color:#9C9890;font-family:inherit">↺ Reset to role defaults</button>' +
+                '<button class="sp-save-btn" data-uid="' + s.id + '" style="font-size:11px;padding:4px 12px;border-radius:6px;border:none;background:#3D9E8F;color:#fff;cursor:pointer;font-weight:700;font-family:inherit">Save</button>' +
+              '</div>' +
+            '</div>' +
+            buildPermEditor(s) +
+            '<div class="sp-perm-msg" style="font-size:11px;margin-top:8px;min-height:14px"></div>' +
+          '</div>'
+
+        list.appendChild(card)
       })
-      list.querySelectorAll('button[data-uid]').forEach(function(btn) {
-        btn.onclick = function() { apiFetch('/api/users/'+btn.dataset.uid,{method:'PATCH',body:{active:btn.dataset.active==='true'?false:true}}).then(loadStaff) }
+
+      // ── Role change ────────────────────────────────────────────────────────
+      list.querySelectorAll('select[data-role-uid]').forEach(function(sel) {
+        sel.onchange = function() {
+          apiFetch('/api/users/'+sel.dataset.roleUid, {method:'PATCH', body:{role:sel.value}})
+            .then(function(){ loadStaff() })
+        }
       })
-    }).catch(function() { p.querySelector('#sp-list').innerHTML = '<div style="padding:24px;color:#D95F5F">Could not load staff.</div>' })
+
+      // ── Activate / Deactivate ──────────────────────────────────────────────
+      list.querySelectorAll('button[data-deact-uid]').forEach(function(btn) {
+        btn.onclick = function() {
+          apiFetch('/api/users/'+btn.dataset.deactUid, {method:'PATCH', body:{active: btn.dataset.active==='true' ? false : true}})
+            .then(function(){ loadStaff() })
+        }
+      })
+
+      // ── Permissions toggle ─────────────────────────────────────────────────
+      list.querySelectorAll('.sp-perm-toggle').forEach(function(btn) {
+        btn.onclick = function() {
+          var panel = list.querySelector('.sp-perm-panel[data-uid="'+btn.dataset.uid+'"]')
+          var open  = panel.style.display === 'block'
+          // Close all first
+          list.querySelectorAll('.sp-perm-panel').forEach(function(x){ x.style.display='none' })
+          list.querySelectorAll('.sp-perm-toggle').forEach(function(x){ x.textContent='⚙ Permissions' })
+          if (!open) {
+            panel.style.display = 'block'
+            btn.textContent = '✕ Close'
+          }
+        }
+      })
+
+      // ── Radio permission changes (re-render pill styles inline) ───────────
+      list.addEventListener('change', function(e) {
+        var inp = e.target
+        if (inp.type !== 'radio' || !inp.name.startsWith('perm_')) return
+        var label = inp.closest('label')
+        if (!label) return
+        // Re-style all siblings in the same radio group
+        var group = list.querySelectorAll('input[name="'+inp.name+'"]')
+        group.forEach(function(r) {
+          var lbl = r.closest('label')
+          if (!lbl) return
+          var col = r.value==='2' ? '#3D9E8F' : r.value==='1' ? '#E8A87C' : '#D95F5F'
+          var sel = r === inp
+          lbl.style.borderColor  = sel ? col : '#E5E0D8'
+          lbl.style.background   = sel ? col + '18' : '#fff'
+          lbl.style.color        = sel ? col : '#9C9890'
+          lbl.style.fontWeight   = sel ? '700' : '500'
+        })
+      })
+
+      // ── Reset to role defaults ─────────────────────────────────────────────
+      list.querySelectorAll('.sp-reset-btn').forEach(function(btn) {
+        btn.onclick = function() {
+          var uid = btn.dataset.uid
+          apiFetch('/api/users/'+uid, {method:'PATCH', body:{permissions: null}})
+            .then(function(){ loadStaff() })
+        }
+      })
+
+      // ── Save permissions ───────────────────────────────────────────────────
+      list.querySelectorAll('.sp-save-btn').forEach(function(btn) {
+        btn.onclick = function() {
+          var uid  = btn.dataset.uid
+          var panel = list.querySelector('.sp-perm-panel[data-uid="'+uid+'"]')
+          var perms = {}
+          FEATURES.forEach(function(f) {
+            var checked = panel.querySelector('input[name="perm_'+uid+'_'+f.key+'"]:checked')
+            if (checked) perms[f.key] = parseInt(checked.value, 10)
+          })
+          var msg = panel.querySelector('.sp-perm-msg')
+          btn.textContent = 'Saving…'; btn.disabled = true
+          apiFetch('/api/users/'+uid, {method:'PATCH', body:{permissions: perms}})
+            .then(function(r){ return r.json() })
+            .then(function(d){
+              if (d.success===false) { msg.style.color='#D95F5F'; msg.textContent='Save failed: '+(d.error||'error'); return }
+              msg.style.color='#3D9E8F'; msg.textContent='✓ Permissions saved'
+              setTimeout(function(){ loadStaff() }, 800)
+            })
+            .catch(function(){ msg.style.color='#D95F5F'; msg.textContent='Network error' })
+            .finally(function(){ btn.textContent='Save'; btn.disabled=false })
+        }
+      })
+
+    }).catch(function() {
+      p.querySelector('#sp-list').innerHTML = '<div style="padding:24px;color:#D95F5F">Could not load staff.</div>'
+    })
   }
   loadStaff()
 
-  // Add member
+  // ── Add new member ─────────────────────────────────────────────────────────
   p.querySelector('#sp-add').onclick = function() {
     var first = p.querySelector('#sp-first').value.trim()
     var last  = p.querySelector('#sp-last').value.trim()
