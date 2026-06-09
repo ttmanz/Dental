@@ -5542,27 +5542,18 @@
       </button>
     </div>
 
-    <!-- Quick stats -->
+    <!-- X-Ray import -->
     <div>
-      <div class="section-title" data-en="THIS WEEK" data-el="ΑΥΤΗ ΤΗΝ ΕΒΔΟΜΑΔΑ">THIS WEEK</div>
-      <div class="stats-grid">
-        <div class="stat-card highlight">
-          <div class="stat-value">12</div>
-          <div class="stat-label" data-en="Appointments" data-el="Ραντεβού">Appointments</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">9</div>
-          <div class="stat-label" data-en="Patients" data-el="Ασθενείς">Patients</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">2</div>
-          <div class="stat-label" data-en="Pending" data-el="Εκκρεμεί">Pending</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">1</div>
-          <div class="stat-label" data-en="Emergency" data-el="Επείγον">Emergency</div>
-        </div>
-      </div>
+      <div class="section-title" data-en="X-RAYS" data-el="ΑΚΤΙΝΟΓΡΑΦΙΕΣ">X-RAYS</div>
+      <button id="xray-open-btn" style="
+        width:100%; display:flex; align-items:center; gap:10px;
+        background:var(--primary-light); border:1.5px solid var(--primary);
+        border-radius:10px; padding:12px 14px; cursor:pointer;
+        color:var(--primary); font-weight:700; font-size:13px;
+        transition:background .15s;">
+        <span style="font-size:20px">🩻</span>
+        <span data-en="Import &amp; View X-Rays" data-el="Εισαγωγή &amp; Ακτινογραφίες">Import &amp; View X-Rays</span>
+      </button>
     </div>
 
   </aside>
@@ -6072,6 +6063,7 @@
       <button class="pc-btn secondary" id="pc-consent-btn" data-en="📝 Consent" data-el="📝 Συναίνεση">📝 Consent</button>
       <button class="pc-btn secondary" id="pc-perio-btn" data-en="🦷 Perio Chart" data-el="🦷 Περιοδοντικό">🦷 Perio Chart</button>
       <button class="pc-btn secondary" id="pc-tp-btn" data-en="📋 Treatment Plan" data-el="📋 Πλάνο Θεραπείας">📋 Treatment Plan</button>
+      <button class="pc-btn secondary" id="pc-xray-btn" data-en="🩻 X-Rays" data-el="🩻 Ακτινογραφίες">🩻 X-Rays</button>
       <button class="pc-btn primary" id="pc-new-appt-btn" data-en="+ New Appointment" data-el="+ Νέο Ραντεβού">+ New Appointment</button>
     </div>
 
@@ -6080,6 +6072,96 @@
 
 <!-- Hidden input for changing photo from Patient Chart -->
 <input type="file" id="pc-photo-input" accept="image/*"/>
+
+<!-- ── X-Ray Overlay ─────────────────────────────────────────────────────── -->
+<div id="xray-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
+     z-index:3000; align-items:center; justify-content:center;">
+  <div id="xray-modal" style="background:#fff; border-radius:16px; width:min(780px,96vw);
+       max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.3);">
+
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between;
+         padding:18px 22px; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <div>
+        <div style="font-size:17px; font-weight:800; color:var(--text)">🩻 X-Ray Images</div>
+        <div id="xray-patient-name" style="font-size:12px; color:var(--text-muted); margin-top:2px"></div>
+      </div>
+      <button id="xray-close-btn" style="background:none; border:none; font-size:22px;
+              cursor:pointer; color:var(--text-muted); line-height:1; padding:4px 8px">×</button>
+    </div>
+
+    <!-- Upload zone -->
+    <div id="xray-drop-zone" style="margin:16px 22px; border:2px dashed var(--primary);
+         border-radius:12px; padding:28px 20px; text-align:center; cursor:pointer;
+         background:var(--primary-light); transition:background .15s; flex-shrink:0;">
+      <div style="font-size:36px; margin-bottom:6px">🩻</div>
+      <div style="font-weight:700; color:var(--primary); font-size:14px"
+           data-en="Drop X-Ray images here or click to upload"
+           data-el="Σύρτε ακτινογραφίες εδώ ή κάντε κλικ">
+        Drop X-Ray images here or click to upload
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px">
+        JPEG, PNG, DICOM • Max 20 MB each
+      </div>
+      <input type="file" id="xray-file-input" accept="image/*,.dcm" multiple
+             style="position:absolute; opacity:0; width:0; height:0; pointer-events:none">
+    </div>
+
+    <!-- Patient selector (shown when opened from sidebar, not from patient chart) -->
+    <div id="xray-patient-select-row" style="padding:0 22px 12px; flex-shrink:0; display:none;">
+      <select id="xray-patient-sel" style="width:100%; padding:9px 12px; border-radius:9px;
+              border:1.5px solid var(--border); font-size:13px; background:#fff; color:var(--text);">
+        <option value="">— Select patient —</option>
+      </select>
+    </div>
+
+    <!-- Upload meta (description/region) -->
+    <div id="xray-meta-row" style="padding:0 22px 12px; display:flex; gap:10px; flex-shrink:0; display:none;">
+      <input id="xray-desc-in" placeholder="Description (e.g. Panoramic, Periapical…)"
+             style="flex:2; padding:8px 12px; border-radius:9px; border:1.5px solid var(--border);
+                    font-size:12px; background:#fff; color:var(--text)">
+      <input id="xray-region-in" placeholder="Tooth / Region (e.g. #14, Upper)"
+             style="flex:1; padding:8px 12px; border-radius:9px; border:1.5px solid var(--border);
+                    font-size:12px; background:#fff; color:var(--text)">
+      <input id="xray-date-in" type="date"
+             style="flex:1; padding:8px 12px; border-radius:9px; border:1.5px solid var(--border);
+                    font-size:12px; background:#fff; color:var(--text)">
+    </div>
+
+    <!-- Grid of x-ray thumbnails -->
+    <div id="xray-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+         gap:12px; padding:0 22px 20px; overflow-y:auto; flex:1; min-height:0;"></div>
+
+    <!-- Footer -->
+    <div style="padding:14px 22px; border-top:1px solid var(--border); display:flex;
+         align-items:center; justify-content:space-between; flex-shrink:0; gap:10px;">
+      <span id="xray-status" style="font-size:12px; color:var(--text-muted)">Loading…</span>
+      <div style="display:flex; gap:8px;">
+        <button id="xray-upload-btn" style="background:var(--primary); color:#fff; border:none;
+                border-radius:9px; padding:9px 18px; font-size:13px; font-weight:700;
+                cursor:pointer; opacity:.4; pointer-events:none">Upload Selected</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- X-Ray viewer lightbox -->
+<div id="xray-viewer" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.88);
+     z-index:3100; align-items:center; justify-content:center; flex-direction:column;">
+  <img id="xray-viewer-img" src="" alt="X-Ray"
+       style="max-width:92vw; max-height:80vh; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,.6)">
+  <div style="display:flex; gap:14px; margin-top:18px; align-items:center; flex-wrap:wrap; justify-content:center;">
+    <button id="xray-viewer-dl" style="background:#fff; border:none; border-radius:8px;
+            padding:9px 20px; font-weight:700; font-size:13px; cursor:pointer">⬇ Download</button>
+    <button id="xray-viewer-email" style="background:#4CAF50; color:#fff; border:none; border-radius:8px;
+            padding:9px 20px; font-weight:700; font-size:13px; cursor:pointer">✉ Send to Doctor</button>
+    <button id="xray-viewer-del" style="background:#f44336; color:#fff; border:none; border-radius:8px;
+            padding:9px 20px; font-weight:700; font-size:13px; cursor:pointer">🗑 Delete</button>
+    <button id="xray-viewer-close" style="background:rgba(255,255,255,.15); color:#fff; border:none;
+            border-radius:8px; padding:9px 20px; font-weight:700; font-size:13px; cursor:pointer">✕ Close</button>
+  </div>
+  <div id="xray-viewer-info" style="color:rgba(255,255,255,.65); font-size:12px; margin-top:10px; text-align:center"></div>
+</div>
 
 <!-- ── Import Patients overlay ───────────────────────────────────────────── -->
 <div class="import-overlay" id="import-overlay">
@@ -6601,7 +6683,7 @@ window._avatarClick  = function(avatarEl) {
 }
 
 // ── API config ───────────────────────────────────────────────────────────
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const API_BASE = window.API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:3000'
   : 'https://api.dentapro.org'
 
@@ -9089,6 +9171,8 @@ function openPatientChart(patientNameOrId) {
   // Initial render from cached PATIENTS data (may be partial)
   _renderPatientChart(patient, patientNameOrId)
   _pcCurrentPatientId = patient?.id || null
+  overlay.dataset.patientId   = patient?.id || ''
+  overlay.dataset.patientName = patient?.fullName || (typeof patientNameOrId === 'string' ? patientNameOrId : '')
   overlay.classList.add('open')
   document.getElementById('modal-overlay').classList.remove('open')
 
@@ -15089,6 +15173,288 @@ if (AUTH.isValid()) {
   window.onLoginSuccess()
   window._syncPanelData()
 }
+
+// ── X-Ray Module ─────────────────────────────────────────────────────────
+;(function initXray() {
+
+  const overlay      = document.getElementById('xray-overlay')
+  const modal        = document.getElementById('xray-modal')
+  const closeBtn     = document.getElementById('xray-close-btn')
+  const dropZone     = document.getElementById('xray-drop-zone')
+  const fileInput    = document.getElementById('xray-file-input')
+  const uploadBtn    = document.getElementById('xray-upload-btn')
+  const grid         = document.getElementById('xray-grid')
+  const statusEl     = document.getElementById('xray-status')
+  const patNameEl    = document.getElementById('xray-patient-name')
+  const patSelRow    = document.getElementById('xray-patient-select-row')
+  const patSel       = document.getElementById('xray-patient-sel')
+  const metaRow      = document.getElementById('xray-meta-row')
+  const descIn       = document.getElementById('xray-desc-in')
+  const regionIn     = document.getElementById('xray-region-in')
+  const dateIn       = document.getElementById('xray-date-in')
+
+  const viewer       = document.getElementById('xray-viewer')
+  const viewerImg    = document.getElementById('xray-viewer-img')
+  const viewerDl     = document.getElementById('xray-viewer-dl')
+  const viewerEmail  = document.getElementById('xray-viewer-email')
+  const viewerDel    = document.getElementById('xray-viewer-del')
+  const viewerClose  = document.getElementById('xray-viewer-close')
+  const viewerInfo   = document.getElementById('xray-viewer-info')
+
+  let _currentPatientId   = null
+  let _currentPatientName = ''
+  let _pendingFiles       = []
+  let _viewingXray        = null   // { id, original_name, description, tooth_region, xray_date }
+
+  // ── Open / close ──────────────────────────────────────────────────────────
+  function open(patientId, patientName) {
+    _currentPatientId   = patientId || null
+    _currentPatientName = patientName || ''
+    overlay.style.display = 'flex'
+    patNameEl.textContent  = patientName ? `Patient: ${patientName}` : ''
+    metaRow.style.display  = 'flex'
+    if (!patientId) {
+      patSelRow.style.display = 'block'
+      populatePatientSel()
+    } else {
+      patSelRow.style.display = 'none'
+    }
+    dateIn.value = new Date().toISOString().slice(0, 10)
+    _pendingFiles = []
+    updateUploadBtn()
+    loadList()
+  }
+
+  function close() {
+    overlay.style.display = 'none'
+    _pendingFiles = []
+    fileInput.value = ''
+    updateUploadBtn()
+  }
+
+  closeBtn.addEventListener('click', close)
+  overlay.addEventListener('click', e => { if (e.target === overlay) close() })
+
+  // ── Sidebar open button ────────────────────────────────────────────────────
+  const sidebarBtn = document.getElementById('xray-open-btn')
+  if (sidebarBtn) sidebarBtn.addEventListener('click', () => open(null, ''))
+
+  // ── Patient selector (sidebar mode) ──────────────────────────────────────
+  function populatePatientSel() {
+    patSel.innerHTML = '<option value="">— Select patient —</option>'
+    const pts = (window.patients || []).slice().sort((a, b) =>
+      (a.fullName || '').localeCompare(b.fullName || ''))
+    pts.forEach(p => {
+      const o = document.createElement('option')
+      o.value = p.id
+      o.textContent = p.fullName || `${p.firstName} ${p.lastName}`
+      patSel.appendChild(o)
+    })
+  }
+
+  patSel.addEventListener('change', () => {
+    _currentPatientId   = patSel.value || null
+    const opt = patSel.options[patSel.selectedIndex]
+    _currentPatientName = opt ? opt.textContent : ''
+    patNameEl.textContent = _currentPatientName ? `Patient: ${_currentPatientName}` : ''
+    if (_currentPatientId) loadList()
+  })
+
+  // ── Drag & drop + file picker ─────────────────────────────────────────────
+  dropZone.addEventListener('click', () => fileInput.click())
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.style.background = '#c8e6c9' })
+  dropZone.addEventListener('dragleave', () => dropZone.style.background = '')
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault()
+    dropZone.style.background = ''
+    handleFiles(Array.from(e.dataTransfer.files))
+  })
+  fileInput.addEventListener('change', () => handleFiles(Array.from(fileInput.files)))
+
+  function handleFiles(files) {
+    const allowed = files.filter(f => /image\//i.test(f.type) || /\.dcm$/i.test(f.name))
+    _pendingFiles = allowed
+    updateUploadBtn()
+    if (allowed.length) {
+      descIn.placeholder = allowed.map(f => f.name).join(', ')
+    }
+  }
+
+  function updateUploadBtn() {
+    const has = _pendingFiles.length > 0
+    uploadBtn.style.opacity = has ? '1' : '.4'
+    uploadBtn.style.pointerEvents = has ? 'auto' : 'none'
+    uploadBtn.textContent = has ? `Upload ${_pendingFiles.length} file${_pendingFiles.length>1?'s':''}` : 'Upload Selected'
+  }
+
+  // ── Upload ────────────────────────────────────────────────────────────────
+  uploadBtn.addEventListener('click', async () => {
+    if (!_pendingFiles.length) return
+    if (!_currentPatientId) { showToast('Please select a patient first.'); return }
+    statusEl.textContent = 'Uploading…'
+    uploadBtn.disabled = true
+    let ok = 0, fail = 0
+    for (const file of _pendingFiles) {
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('patientId',   _currentPatientId)
+        fd.append('description', descIn.value.trim() || file.name)
+        fd.append('toothRegion', regionIn.value.trim())
+        fd.append('xrayDate',    dateIn.value)
+        const r = await fetch(window.API_BASE + '/api/xrays', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${AUTH.token}` },
+          body: fd
+        })
+        if (!r.ok) throw new Error(await r.text())
+        ok++
+      } catch(e) { console.error('xray upload:', e); fail++ }
+    }
+    uploadBtn.disabled = false
+    _pendingFiles = []
+    fileInput.value = ''
+    descIn.value = ''
+    regionIn.value = ''
+    updateUploadBtn()
+    if (ok)   showToast(`✅ ${ok} x-ray${ok>1?'s':''} uploaded`)
+    if (fail) showToast(`❌ ${fail} file${fail>1?'s':''} failed`)
+    loadList()
+  })
+
+  // ── Load list ─────────────────────────────────────────────────────────────
+  async function loadList() {
+    grid.innerHTML = ''
+    statusEl.textContent = 'Loading…'
+    const qs = _currentPatientId ? `?patientId=${_currentPatientId}` : ''
+    try {
+      const r = await apiFetch(`/api/xrays${qs}`)
+      const rows = await r.json()
+      if (!Array.isArray(rows) || !rows.length) {
+        statusEl.textContent = 'No x-rays yet — upload the first one above.'
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px 0;
+          color:var(--text-muted); font-size:13px;">No x-rays yet</div>`
+        return
+      }
+      statusEl.textContent = `${rows.length} x-ray${rows.length>1?'s':''}`
+      rows.forEach(xr => grid.appendChild(makeThumb(xr)))
+    } catch(e) {
+      statusEl.textContent = 'Error loading x-rays'
+      console.error(e)
+    }
+  }
+
+  // ── Thumbnail card ────────────────────────────────────────────────────────
+  function makeThumb(xr) {
+    const card = document.createElement('div')
+    card.style.cssText = `
+      border-radius:10px; overflow:hidden; border:1.5px solid var(--border);
+      cursor:pointer; transition:box-shadow .15s; background:var(--cream);
+      display:flex; flex-direction:column;`
+    card.onmouseover = () => card.style.boxShadow = '0 4px 16px rgba(0,0,0,.15)'
+    card.onmouseout  = () => card.style.boxShadow = ''
+
+    const imgUrl = `${window.API_BASE}/api/xrays/${xr.id}/file`
+    const img = document.createElement('img')
+    img.src   = imgUrl
+    img.alt   = xr.description || xr.original_name
+    img.style.cssText = 'width:100%; height:110px; object-fit:cover; background:#111;'
+    img.onerror = () => {
+      img.style.display = 'none'
+      card.insertBefore(Object.assign(document.createElement('div'), {
+        textContent: '🩻',
+        style: 'font-size:44px; text-align:center; padding:24px; background:#111;'
+      }), img.nextSibling)
+    }
+
+    const meta = document.createElement('div')
+    meta.style.cssText = 'padding:8px 10px; flex:1;'
+    meta.innerHTML = `
+      <div style="font-size:12px; font-weight:700; color:var(--text); white-space:nowrap;
+                  overflow:hidden; text-overflow:ellipsis">${xr.description || xr.original_name}</div>
+      ${xr.tooth_region ? `<div style="font-size:10px; color:var(--primary); margin-top:2px">${xr.tooth_region}</div>` : ''}
+      <div style="font-size:10px; color:var(--text-muted); margin-top:2px">${fmtDate(xr.xray_date)}</div>`
+
+    card.appendChild(img)
+    card.appendChild(meta)
+    card.addEventListener('click', () => openViewer(xr))
+    return card
+  }
+
+  function fmtDate(d) {
+    if (!d) return ''
+    const dt = new Date(d)
+    return isNaN(dt) ? d : dt.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
+  }
+
+  // ── Viewer lightbox ────────────────────────────────────────────────────────
+  function openViewer(xr) {
+    _viewingXray = xr
+    viewerImg.src = `${window.API_BASE}/api/xrays/${xr.id}/file`
+    viewerInfo.textContent = [
+      xr.description || xr.original_name,
+      xr.tooth_region,
+      fmtDate(xr.xray_date)
+    ].filter(Boolean).join('  ·  ')
+    viewer.style.display = 'flex'
+  }
+
+  viewerClose.addEventListener('click', () => { viewer.style.display = 'none'; _viewingXray = null })
+  viewer.addEventListener('click', e => { if (e.target === viewer) { viewer.style.display = 'none'; _viewingXray = null } })
+
+  viewerDl.addEventListener('click', () => {
+    if (!_viewingXray) return
+    const a = document.createElement('a')
+    a.href     = `${window.API_BASE}/api/xrays/${_viewingXray.id}/download`
+    a.download = _viewingXray.original_name || 'xray'
+    a.click()
+  })
+
+  viewerEmail.addEventListener('click', () => {
+    if (!_viewingXray) return
+    const fileUrl = encodeURIComponent(`${window.API_BASE}/api/xrays/${_viewingXray.id}/file`)
+    const desc    = _viewingXray.description || _viewingXray.original_name || 'X-Ray'
+    const region  = _viewingXray.tooth_region ? ` (${_viewingXray.tooth_region})` : ''
+    const patient = _currentPatientName ? ` for ${_currentPatientName}` : ''
+    const subject = encodeURIComponent(`X-Ray${region}${patient}`)
+    const body    = encodeURIComponent(
+      `Please find the attached X-Ray image${patient}.\n\n` +
+      `Description: ${desc}${region}\n` +
+      `Date: ${fmtDate(_viewingXray.xray_date)}\n\n` +
+      `View / download: ${decodeURIComponent(fileUrl)}\n\n` +
+      `Sent via DentaPro`
+    )
+    window.location.href = `mailto:?subject=${subject}&body=${body}`
+  })
+
+  viewerDel.addEventListener('click', async () => {
+    if (!_viewingXray) return
+    if (!confirm(`Delete this x-ray (${_viewingXray.description || _viewingXray.original_name})?`)) return
+    try {
+      await apiFetch(`/api/xrays/${_viewingXray.id}`, { method: 'DELETE' })
+      viewer.style.display = 'none'
+      _viewingXray = null
+      showToast('X-ray deleted')
+      loadList()
+    } catch(e) { showToast('Delete failed'); console.error(e) }
+  })
+
+  // ── Expose globally so patient chart can also call open ───────────────────
+  window.openXrayOverlay = open
+
+})()
+
+// ── Wire pc-xray-btn via global (needs openPatientChart context) ──────────
+;(function() {
+  const btn = document.getElementById('pc-xray-btn')
+  if (!btn) return
+  btn.addEventListener('click', () => {
+    const ov = document.getElementById('pc-overlay')
+    const pid   = ov && ov.dataset.patientId   ? ov.dataset.patientId   : null
+    const pname = ov && ov.dataset.patientName ? ov.dataset.patientName : ''
+    if (window.openXrayOverlay) window.openXrayOverlay(pid, pname)
+  })
+})()
 
 // ── Demo mode banner ─────────────────────────────────────────────────────
 ;(function() {
