@@ -365,7 +365,7 @@
         <span>🦷</span>
         <span data-en="Start 14-day free trial" data-el="14 ημέρες δωρεάν">Start 14-day free trial</span>
       </a>
-      <a href="#" class="btn-ghost" id="demo-btn" data-en="View demo →" data-el="Δείτε demo →" onclick="launchDemo(event)">View demo →</a>
+      <a href="https://wa.me/35799636224?text=Hi%2C%20I%27d%20like%20to%20see%20a%20demo%20of%20DentaPro!" class="btn-ghost" id="demo-btn" data-en="View demo →" data-el="Δείτε demo →" target="_blank" rel="noopener">View demo →</a>
     </div>
     <p class="hero-note" data-en="No credit card required · Cancel anytime · GDPR compliant" data-el="Χωρίς κάρτα · Ακύρωση οποτεδήποτε · GDPR">
       No credit card required · Cancel anytime · GDPR compliant
@@ -771,7 +771,6 @@
       <a href="#faq" data-en="FAQ" data-el="FAQ">FAQ</a>
       <a href="#contact" data-en="Contact us" data-el="Επικοινωνία">Contact us</a>
       <a href="mailto:dentaasst@gmail.com" data-en="Email support" data-el="Email υποστήριξη">dentaasst@gmail.com</a>
-      <a href="/superadmin" data-en="Admin portal" data-el="Πύλη διαχειριστή">Admin portal</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -837,24 +836,6 @@
     })
     .catch(() => {}) // silently keep hardcoded defaults if API unreachable
 
-  // ── Demo launch ──────────────────────────────────────────────────────────
-  async function launchDemo(e) {
-    e.preventDefault()
-    const btn = document.getElementById('demo-btn')
-    if (btn) { btn.textContent = 'Loading…'; btn.style.pointerEvents = 'none' }
-    try {
-      const res = await fetch('/api/auth/demo')
-      if (!res.ok) throw new Error('Demo unavailable')
-      const { token, user } = await res.json()
-      localStorage.setItem('dental_jwt', token)
-      localStorage.setItem('dental_user', JSON.stringify(user))
-      window.location.href = '/app'
-    } catch (err) {
-      console.error(err)
-      if (btn) { btn.textContent = 'View demo →'; btn.style.pointerEvents = '' }
-      alert('Demo is temporarily unavailable. Please try again shortly.')
-    }
-  }
 </script>
 </body>
 </html>
