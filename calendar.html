@@ -5117,6 +5117,7 @@
     <div class="sup-tabs">
       <button class="sup-tab active" data-sup-tab="suppliers" data-en="Suppliers" data-el="Προμηθευτές">Suppliers</button>
       <button class="sup-tab" data-sup-tab="orders" data-en="Orders" data-el="Παραγγελίες">Orders</button>
+      <button class="sup-tab" data-sup-tab="alerts" id="sup-alerts-tab" data-en="🔔 Stock Alerts" data-el="🔔 Ειδοποιήσεις">🔔 Stock Alerts</button>
     </div>
     <div class="sup-body">
 
@@ -5231,6 +5232,30 @@
               <button class="sup-btn-save" id="sup-order-save-btn">Place Order</button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ── Stock Alerts tab ──────────────────────────────────────────── -->
+      <div class="sup-tab-panel" id="sup-panel-alerts">
+        <!-- Summary banner -->
+        <div id="sup-alert-banner" style="display:none; align-items:center; gap:10px;
+             padding:12px 20px; background:#FEF2F2; border-bottom:1px solid #FECACA; flex-shrink:0;">
+          <span style="font-size:18px">⚠️</span>
+          <span id="sup-alert-banner-text" style="font-size:13px; font-weight:700; color:#B91C1C; flex:1"></span>
+        </div>
+        <!-- Toolbar -->
+        <div style="display:flex; align-items:center; gap:10px; padding:14px 20px;
+             border-bottom:1px solid var(--border); flex-shrink:0;">
+          <span style="font-size:13px; color:var(--text-muted); flex:1">
+            Set the minimum stock level for each item. You'll be alerted when stock reaches that number.
+          </span>
+          <button id="sup-alerts-save-btn" style="padding:7px 18px; border-radius:8px; border:none;
+                  background:var(--primary); color:#fff; font-size:13px; font-weight:700;
+                  cursor:pointer; font-family:inherit;">💾 Save All Thresholds</button>
+        </div>
+        <!-- Alerts table -->
+        <div style="flex:1; overflow-y:auto; padding:16px 20px;">
+          <div id="sup-alerts-list"></div>
         </div>
       </div>
 
@@ -5553,6 +5578,20 @@
         transition:background .15s;">
         <span style="font-size:20px">🩻</span>
         <span data-en="Import &amp; View X-Rays" data-el="Εισαγωγή &amp; Ακτινογραφίες">Import &amp; View X-Rays</span>
+      </button>
+    </div>
+
+    <!-- Stock alerts widget (shown only when items are low) -->
+    <div id="stock-alert-widget" style="display:none;">
+      <div class="section-title" style="color:#D95F5F;" data-en="⚠️ STOCK ALERTS" data-el="⚠️ ΑΠΟΘΕΜΑΤΑ">⚠️ STOCK ALERTS</div>
+      <div id="stock-alert-items" style="
+        background:#FEF2F2; border:1.5px solid #FECACA; border-radius:10px;
+        padding:8px 10px; font-size:12px; display:flex; flex-direction:column; gap:4px;"></div>
+      <button id="stock-alert-manage-btn" style="
+        width:100%; margin-top:6px; padding:8px; border-radius:8px;
+        border:1.5px solid #D95F5F; background:#fff; color:#D95F5F;
+        font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;">
+        📦 Manage Reorder Alerts
       </button>
     </div>
 
@@ -13418,6 +13457,8 @@ window.auditLog = (function() {
       banner.style.display = 'flex'
       document.getElementById('inv-low-text').textContent = `${low.length} item${low.length>1?'s':''} below minimum stock: ${low.map(i=>i.name).join(', ')}`
     } else { banner.style.display = 'none' }
+    // Also refresh sidebar widget
+    if (window._refreshStockAlerts) window._refreshStockAlerts()
   }
 
   function renderInventory() {
@@ -14191,7 +14232,12 @@ window.auditLog = (function() {
   })
 
   document.querySelectorAll('.sup-tab').forEach(btn => {
-    btn.addEventListener('click', () => { switchSupTab(btn.dataset.supTab); renderSuppliers(); renderOrders() })
+    btn.addEventListener('click', () => {
+      switchSupTab(btn.dataset.supTab)
+      renderSuppliers()
+      renderOrders()
+      if (btn.dataset.supTab === 'alerts' && window._renderAlertsTab) window._renderAlertsTab()
+    })
   })
 
   document.getElementById('sup-sup-search').addEventListener('input', renderSuppliers)
@@ -15510,6 +15556,156 @@ if (AUTH.isValid()) {
 
   // ── Expose globally so patient chart can also call open ───────────────────
   window.openXrayOverlay = open
+
+})()
+
+// ── Stock Alert System ────────────────────────────────────────────────────
+;(function initStockAlerts() {
+
+  // ── Sidebar widget: refresh whenever called ───────────────────────────────
+  function refreshWidget() {
+    const INV    = JSON.parse(localStorage.getItem('dental_inventory') || '[]')
+    const SUPS   = JSON.parse(localStorage.getItem('dental_suppliers')  || '[]')
+    const low    = INV.filter(i => {
+      const qty = parseInt(i.qty) || 0
+      const min = parseInt(i.minQty) || 0
+      return min > 0 && qty <= min
+    })
+    const widget = document.getElementById('stock-alert-widget')
+    const list   = document.getElementById('stock-alert-items')
+    if (!widget || !list) return
+    if (!low.length) { widget.style.display = 'none'; return }
+    widget.style.display = 'block'
+    list.innerHTML = low.map(item => {
+      const qty  = parseInt(item.qty) || 0
+      const min  = parseInt(item.minQty) || 0
+      const sup  = item.supplierId ? (SUPS.find(s => s.id === item.supplierId) || {}).name || '' : ''
+      const col  = qty === 0 ? '#B91C1C' : '#D95F5F'
+      return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #FECACA;cursor:pointer"
+                   onclick="window.openSupplierHub&&window.openSupplierHub('${item.supplierId||''}')">
+        <span style="font-size:14px">${qty === 0 ? '🔴' : '🟠'}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;color:${col};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.name}</div>
+          <div style="color:#9C9890;font-size:10px">${qty === 0 ? 'OUT OF STOCK' : qty + ' left (min ' + min + ')'}${sup ? ' · ' + sup : ''}</div>
+        </div>
+      </div>`
+    }).join('')
+  }
+  window._refreshStockAlerts = refreshWidget
+
+  // Open button → open supplier hub on alerts tab
+  const manageBtn = document.getElementById('stock-alert-manage-btn')
+  if (manageBtn) manageBtn.addEventListener('click', () => {
+    if (window.openSupplierHub) window.openSupplierHub()
+    setTimeout(() => {
+      const alertsTabBtn = document.querySelector('.sup-tab[data-sup-tab="alerts"]')
+      if (alertsTabBtn) alertsTabBtn.click()
+    }, 150)
+  })
+
+  // ── Alerts tab: render inventory items with editable minQty ──────────────
+  window._renderAlertsTab = function() {
+    const INV  = JSON.parse(localStorage.getItem('dental_inventory') || '[]')
+    const SUPS = JSON.parse(localStorage.getItem('dental_suppliers')  || '[]')
+    const list = document.getElementById('sup-alerts-list')
+    const banner = document.getElementById('sup-alert-banner')
+    const bannerText = document.getElementById('sup-alert-banner-text')
+    if (!list) return
+
+    const low = INV.filter(i => parseInt(i.qty)||0 <= (parseInt(i.minQty)||0) && (parseInt(i.minQty)||0) > 0)
+    if (banner) {
+      if (low.length) {
+        banner.style.display = 'flex'
+        bannerText.textContent = `${low.length} item${low.length>1?'s':''} at or below minimum stock — reorder needed!`
+      } else {
+        banner.style.display = 'none'
+      }
+    }
+
+    if (!INV.length) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">No inventory items yet.<br>Add items in the Inventory tab first.</div>'
+      return
+    }
+
+    // Sort: low-stock first, then alphabetical
+    const sorted = [...INV].sort((a, b) => {
+      const aLow = (parseInt(a.qty)||0) <= (parseInt(a.minQty)||0) && (parseInt(a.minQty)||0) > 0
+      const bLow = (parseInt(b.qty)||0) <= (parseInt(b.minQty)||0) && (parseInt(b.minQty)||0) > 0
+      return bLow - aLow || a.name.localeCompare(b.name)
+    })
+
+    list.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left; padding:8px 10px; color:var(--text-muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;">Item</th>
+            <th style="text-align:center; padding:8px 10px; color:var(--text-muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;">Supplier</th>
+            <th style="text-align:center; padding:8px 10px; color:var(--text-muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;">Current Stock</th>
+            <th style="text-align:center; padding:8px 10px; color:var(--text-muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;">Alert When ≤</th>
+            <th style="text-align:center; padding:8px 10px; color:var(--text-muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(item => {
+            const qty  = parseInt(item.qty) || 0
+            const min  = parseInt(item.minQty) || 0
+            const isLow  = min > 0 && qty <= min
+            const isEmpty = qty === 0
+            const sup  = item.supplierId ? (SUPS.find(s => s.id === item.supplierId) || {}).name || '—' : '—'
+            const statusIcon = isEmpty ? '🔴 Out of Stock' : isLow ? '🟠 Low Stock' : '✅ OK'
+            const rowBg = isEmpty ? '#FEF2F2' : isLow ? '#FFF7ED' : '#fff'
+            return `<tr style="border-bottom:1px solid var(--border); background:${rowBg};">
+              <td style="padding:10px 10px;">
+                <div style="font-weight:700; color:var(--text)">${item.name}</div>
+                <div style="font-size:11px; color:var(--text-muted)">${item.category || ''}</div>
+              </td>
+              <td style="text-align:center; padding:10px; color:var(--text-muted); font-size:12px">${sup}</td>
+              <td style="text-align:center; padding:10px;">
+                <span style="font-size:16px; font-weight:800; color:${isEmpty?'#B91C1C':isLow?'#D97706':'var(--text)'}">${qty}</span>
+                <span style="font-size:11px; color:var(--text-muted)"> ${item.unit||'units'}</span>
+              </td>
+              <td style="text-align:center; padding:10px;">
+                <input type="number" min="0" value="${min}"
+                  data-alert-id="${item.id}"
+                  style="width:70px; text-align:center; padding:6px 8px; border-radius:8px;
+                         border:1.5px solid ${isLow?'#FECACA':'var(--border)'}; font-size:13px;
+                         font-weight:700; background:#fff; color:var(--text);"
+                  placeholder="0" />
+              </td>
+              <td style="text-align:center; padding:10px; font-size:12px; font-weight:700;">${statusIcon}</td>
+            </tr>`
+          }).join('')}
+        </tbody>
+      </table>`
+  }
+
+  // Save all thresholds
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#sup-alerts-save-btn') && e.target.id !== 'sup-alerts-save-btn') return
+    const INV = JSON.parse(localStorage.getItem('dental_inventory') || '[]')
+    let changed = 0
+    document.querySelectorAll('input[data-alert-id]').forEach(inp => {
+      const item = INV.find(i => i.id === inp.dataset.alertId)
+      if (!item) return
+      const newMin = Math.max(0, parseInt(inp.value) || 0)
+      if (item.minQty !== newMin) { item.minQty = newMin; changed++ }
+    })
+    localStorage.setItem('dental_inventory', JSON.stringify(INV))
+    refreshWidget()
+    window._renderAlertsTab && window._renderAlertsTab()
+    // Also refresh the ops inventory banner if visible
+    if (typeof refreshInvLowBanner === 'function') refreshInvLowBanner()
+    if (typeof showToast === 'function') showToast(`✅ ${changed} alert threshold${changed!==1?'s':''} saved`)
+  })
+
+  // Run on page load
+  setTimeout(refreshWidget, 800)
+
+  // Hook into inventory changes — patch saveInv if available
+  const _origSaveInv = window.saveInv
+  if (typeof _origSaveInv === 'function') {
+    window.saveInv = function() { _origSaveInv.apply(this, arguments); refreshWidget() }
+  }
 
 })()
 
