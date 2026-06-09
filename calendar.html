@@ -14931,25 +14931,41 @@ window._dentalSync = new DentalSync()
   function render() {
     list.querySelectorAll('.dentist-item[data-locum]').forEach(el => el.remove())
     locums.forEach(l => {
+      // Register in DENTIST_MAP so the calendar filter can match by name
+      const mapKey = l.apiId || ('locum_' + l.id)
+      if (!DENTIST_MAP[mapKey]) DENTIST_MAP[mapKey] = l.name
+
       const item = document.createElement('div')
-      item.className = 'dentist-item' + (removeMode ? '' : '')
-      item.dataset.locum = l.id
-      item.style.color = l.color
+      item.className = 'dentist-item' + (activeDentists.has(mapKey) ? ' checked' : '')
+      item.dataset.locum   = l.id
+      item.dataset.dentist = mapKey   // ← plugs into existing click delegation
+      item.style.color     = l.color
       item.innerHTML = `
         <div class="dentist-check"></div>
         <div class="dentist-dot" style="background:${l.color}"></div>
         <div style="flex:1">
           <div class="dentist-name">${l.name}</div>
           ${l.dates ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px">${l.dates}</div>` : ''}
-        </div>`
+        </div>
+        <div class="dentist-count" id="count-${mapKey}">0</div>`
       if (removeMode) {
         item.style.cursor = 'pointer'
-        item.addEventListener('click', () => {
+        item.addEventListener('click', e => {
+          e.stopPropagation()
+          // If registered with API, deactivate dentist too
+          if (l.apiId) {
+            activeDentists.delete(l.apiId)
+            delete DENTIST_MAP[l.apiId]
+          }
+          activeDentists.delete(mapKey)
+          delete DENTIST_MAP[mapKey]
           locums = locums.filter(x => x.id !== l.id); save(); render()
+          updateDentistCounts(); renderCalendar()
         })
       }
       list.appendChild(item)
     })
+    updateDentistCounts()
   }
 
   addBtn.addEventListener('click', () => { form.style.display = 'block'; buildSwatches(); nameInput.focus() })
@@ -14957,8 +14973,34 @@ window._dentalSync = new DentalSync()
   confirmBtn.addEventListener('click', () => {
     const name = nameInput.value.trim()
     if (!name) return
-    locums.push({ id: Date.now().toString(36), name, dates: datesInput.value.trim(), color: addColor })
-    save(); render()
+    const dates = datesInput.value.trim()
+    const color = addColor
+    const locId = Date.now().toString(36)
+
+    // Register as a dentist via API so appointments can be assigned + calendar filters work
+    const nameParts = name.replace(/^Dr\.?\s*/i, '').split(/\s+/)
+    const firstName = nameParts[0] || name
+    const lastName  = nameParts.slice(1).join(' ') || ''
+    apiFetch('/api/dentists', {
+      method: 'POST',
+      body: { firstName, lastName, displayName: name, color }
+    }).then(r => r.json()).then(d => {
+      const apiId = d.id || null
+      const locum = { id: locId, name, dates, color, apiId }
+      locums.push(locum)
+      // Also register in DENTIST_MAP & _DENTISTS so appointment form picker includes them
+      if (apiId) {
+        DENTIST_MAP[apiId] = d.display_name || name
+        window._DENTISTS = [...(window._DENTISTS || []), d]
+        activeDentists.add(apiId)
+      }
+      save(); render()
+    }).catch(() => {
+      // Fallback: save without API ID — filtering still works via name match
+      locums.push({ id: locId, name, dates, color })
+      save(); render()
+    })
+
     form.style.display = 'none'; nameInput.value = ''; datesInput.value = ''
   })
   removeBtn.addEventListener('click', () => {
