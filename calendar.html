@@ -4277,6 +4277,7 @@
         <div class="bill-editor-footer">
           <button class="bill-action secondary" id="bill-save-meta-btn" data-en="Save Changes" data-el="Αποθήκευση">Save Changes</button>
           <button class="bill-action primary" id="bill-issue-btn" data-en="Issue Invoice" data-el="Έκδοση">Issue Invoice</button>
+          <button class="bill-action secondary" id="bill-email-patient-btn" title="Email invoice to patient" style="padding:0 12px">✉️</button>
           <button class="bill-action secondary" id="bill-print-btn" data-en="🖨 Print" data-el="🖨 Εκτύπωση">🖨 Print</button>
           <button class="bill-action danger" id="bill-void-btn" data-en="Void" data-el="Ακύρωση">Void</button>
         </div>
@@ -9318,7 +9319,7 @@ function openPatientChart(patientNameOrId) {
             <span style="color:var(--text)">${v}</span>
           </div>`).join('')
       } else {
-        const portalUrl = `${window.location.origin}/portal?practice=${AUTH.user?.practiceId}`
+        const portalUrl = `${window.location.origin}/portal.html?practice=${AUTH.user?.practiceId}`
         intakeBadge.innerHTML = `<span style="background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700">${lang==='el'?'Εκκρεμεί':'Pending'}</span>`
         intakeBody.innerHTML  = `<div style="font-size:12px;color:var(--text-muted);margin-top:6px">
           ${lang==='el'?'Ο ασθενής δεν έχει συμπληρώσει τη φόρμα υγείας.':'Patient has not completed their health intake form.'}
@@ -12161,6 +12162,44 @@ General rules (non-session):
     setTimeout(() => win.print(), 300)
   })
 
+  // ── Email invoice to patient ──────────────────────────────────────────────
+  document.getElementById('bill-email-patient-btn').addEventListener('click', () => {
+    if (!_billCurrent) return
+    const inv = _billCurrent
+    if (!inv.patient_email) { showToast('No email address on file for this patient.'); return }
+    const pracName  = document.querySelector('.sb-name')?.textContent?.trim() || 'Our Dental Practice'
+    const portalUrl = `${location.origin}/portal.html?practice=${AUTH.user?.practiceId||''}`
+    const subtotal  = (inv.items||[]).reduce((s,i)=>s+i.quantity*i.unit_price*(1-(i.discount_pct||0)/100),0)
+    const ins       = parseFloat(inv.insurance_amount||0)
+    const disc      = parseFloat(inv.discount_amount||0)
+    const paid      = (inv.payments||[]).reduce((s,p)=>s+parseFloat(p.amount||0),0)
+    const patOwes   = Math.max(0, subtotal - ins - disc)
+    const balance   = Math.max(0, patOwes - paid)
+    const invDate   = fmtDate(inv.invoice_date || inv.issued_at)
+    const dueDate   = (inv.due_date||inv.due_at) ? fmtDate(inv.due_date||inv.due_at) : null
+
+    const items = (inv.items||[]).map(i =>
+      `  · ${i.description}${i.procedure_code?` (${i.procedure_code})`:''}  ${i.quantity} × €${fmtAmt(i.unit_price)}${(i.discount_pct||0)>0?` −${i.discount_pct}%`:''} = €${fmtAmt(i.quantity*i.unit_price*(1-(i.discount_pct||0)/100))}`
+    ).join('\n')
+
+    const subject = encodeURIComponent(`Invoice ${inv.invoice_number} from ${pracName}`)
+    const body = encodeURIComponent(
+      `Dear ${inv.patient_name},\n\nPlease find below your invoice from ${pracName}.\n\n` +
+      `Invoice No: ${inv.invoice_number}\nDate: ${invDate}${dueDate?`\nDue: ${dueDate}`:''}\n\n` +
+      `SERVICES\n${items}\n\n` +
+      `Subtotal:       €${fmtAmt(subtotal)}\n` +
+      (ins  > 0 ? `Insurance:      −€${fmtAmt(ins)}\n` : '') +
+      (disc > 0 ? `Discount:       −€${fmtAmt(disc)}\n` : '') +
+      `Your Total:     €${fmtAmt(patOwes)}\n` +
+      `Paid:           €${fmtAmt(paid)}\n` +
+      `Balance Due:    €${fmtAmt(balance)}\n\n` +
+      (balance < 0.01 ? 'Thank you — this invoice is fully paid.\n\n' : 'Please contact us to arrange payment at your earliest convenience.\n\n') +
+      `You can view your appointments and invoices online at:\n${portalUrl}\n\n` +
+      `If you have any questions, please don't hesitate to contact us.\n\nKind regards,\n${pracName}`
+    )
+    window.open(`mailto:${inv.patient_email}?subject=${subject}&body=${body}`)
+  })
+
   // ── "Create Invoice" shortcut from appointment modal ─────────────────────
   window.createInvoiceFromAppointment = async function(appt) {
     const patient = findPatientByName(appt.patient)
@@ -13485,7 +13524,7 @@ window.auditLog = (function() {
     renderDashActivity()
 
     // ── Patient portal link + QR ─────────────────────────────────────────
-    const portalUrl = `${window.location.origin}/portal?practice=${AUTH.user?.practiceId}`
+    const portalUrl = `${window.location.origin}/portal.html?practice=${AUTH.user?.practiceId}`
     const urlEl     = document.getElementById('dash-portal-url')
     if (urlEl) urlEl.textContent = portalUrl
     renderPortalQR(portalUrl)

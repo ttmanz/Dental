@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Patient Portal — DentaPro</title>
+<style>
+:root {
+  --primary:    #3D9E8F;
+  --primary-dk: #2D8B7A;
+  --cream:      #FAF7F2;
+  --cream-dk:   #F0EBE2;
+  --border:     #E5E0D8;
+  --text:       #1C1B18;
+  --text-mid:   #4A4845;
+  --text-muted: #8C8884;
+  --white:      #FFFFFF;
+  --green:      #065F46;
+  --green-bg:   #D1FAE5;
+  --amber:      #92400E;
+  --amber-bg:   #FEF3C7;
+  --red:        #991B1B;
+  --red-bg:     #FEE2E2;
+  --blue:       #1E40AF;
+  --blue-bg:    #DBEAFE;
+  --radius:     14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+
+/* ── LOGIN ── */
+#portal-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+.login-card{background:var(--white);border-radius:20px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 4px 32px rgba(0,0,0,.1);}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.login-logo-icon{font-size:36px;}
+.login-logo-name{font-size:22px;font-weight:800;color:var(--primary);letter-spacing:-.02em;}
+.login-practice{font-size:13px;color:var(--text-muted);margin-bottom:28px;min-height:18px;}
+.login-title{font-size:18px;font-weight:700;margin-bottom:6px;}
+.login-sub{font-size:13px;color:var(--text-muted);margin-bottom:24px;}
+.login-field{margin-bottom:16px;}
+.login-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:6px;}
+.login-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:15px;background:var(--cream);color:var(--text);outline:none;transition:border-color .15s;}
+.login-input:focus{border-color:var(--primary);}
+.login-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:11px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s;margin-top:4px;}
+.login-btn:hover{background:var(--primary-dk);}
+.login-btn:disabled{opacity:.6;cursor:default;}
+.login-err{color:var(--red);font-size:13px;margin-top:12px;text-align:center;min-height:18px;}
+.login-footer{font-size:11px;color:var(--text-muted);text-align:center;margin-top:20px;}
+
+/* ── MAIN APP ── */
+#portal-main{display:none;flex-direction:column;min-height:100vh;}
+.portal-header{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;height:60px;gap:12px;position:sticky;top:0;z-index:100;}
+.ph-logo{font-size:22px;font-weight:800;color:var(--primary);flex:1;letter-spacing:-.02em;}
+.ph-patient{font-size:13px;font-weight:600;color:var(--text-mid);}
+.ph-logout{border:1px solid var(--border);background:var(--cream);color:var(--text-mid);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;}
+.ph-logout:hover{background:var(--cream-dk);}
+
+.portal-nav{background:var(--white);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;}
+.pnav-btn{flex:1;min-width:80px;border:none;background:none;padding:14px 8px 12px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.pnav-btn .pnav-icon{font-size:18px;}
+.pnav-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+.pnav-badge{background:var(--red);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 5px;min-width:16px;text-align:center;}
+
+.portal-content{flex:1;padding:20px;max-width:700px;width:100%;margin:0 auto;}
+
+/* ── CARDS ── */
+.p-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;}
+.p-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;}
+.p-card-title{font-size:15px;font-weight:700;}
+.p-card-sub{font-size:12px;color:var(--text-muted);margin-top:3px;}
+.p-card-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.p-chip{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--cream-dk);color:var(--text-mid);}
+
+/* status badges */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;}
+.badge.scheduled,.badge.sent{background:var(--blue-bg);color:var(--blue);}
+.badge.confirmed{background:#E0F2FE;color:#0369A1;}
+.badge.completed,.badge.paid{background:var(--green-bg);color:var(--green);}
+.badge.cancelled{background:#F3F4F6;color:#6B7280;}
+.badge.overdue{background:var(--red-bg);color:var(--red);}
+.badge.draft{background:var(--cream-dk);color:var(--text-muted);}
+.badge.no_show{background:var(--amber-bg);color:var(--amber);}
+
+/* ── APPOINTMENTS ── */
+.appt-section-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin:20px 0 10px;padding-left:2px;}
+.appt-section-title:first-child{margin-top:0;}
+.appt-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;}
+.appt-date-block{background:var(--cream-dk);border-radius:10px;padding:8px 12px;text-align:center;flex-shrink:0;min-width:54px;}
+.appt-day{font-size:22px;font-weight:800;line-height:1;}
+.appt-month{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-top:2px;}
+.appt-info{flex:1;}
+.appt-title{font-size:15px;font-weight:700;}
+.appt-time{font-size:12px;color:var(--text-muted);margin-top:3px;}
+.appt-dentist{font-size:12px;color:var(--text-mid);margin-top:4px;}
+.appt-upcoming .appt-date-block{background:#EDF9F7;color:var(--primary);}
+
+/* ── INVOICES ── */
+.inv-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;}
+.inv-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.inv-num{font-size:13px;font-weight:700;color:var(--text-muted);}
+.inv-total{font-size:18px;font-weight:800;}
+.inv-row2{display:flex;align-items:center;justify-content:space-between;}
+.inv-date{font-size:12px;color:var(--text-muted);}
+.inv-balance{font-size:13px;font-weight:700;}
+.inv-balance.owed{color:var(--red);}
+.inv-balance.clear{color:var(--green);}
+.inv-summary{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.inv-sum-item{font-size:11px;color:var(--text-muted);}
+.inv-sum-item span{font-weight:600;color:var(--text);}
+
+/* Outstanding banner */
+.outstanding-banner{background:linear-gradient(135deg,#FEF3C7,#FDE68A);border:1px solid #FCD34D;border-radius:var(--radius);padding:16px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;}
+.ob-icon{font-size:28px;}
+.ob-text .ob-title{font-size:14px;font-weight:700;color:var(--amber);}
+.ob-text .ob-sub{font-size:12px;color:#92400E;margin-top:3px;}
+
+/* ── MESSAGES ── */
+.messages-wrap{display:flex;flex-direction:column;gap:0;}
+.msg-date-sep{text-align:center;font-size:11px;color:var(--text-muted);margin:12px 0 8px;font-weight:600;}
+.msg-bubble{max-width:78%;margin-bottom:8px;clear:both;}
+.msg-bubble.from-practice{float:left;}
+.msg-bubble.from-patient{float:right;}
+.msg-body{padding:11px 14px;border-radius:18px;font-size:14px;line-height:1.5;}
+.from-practice .msg-body{background:var(--white);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--text);}
+.from-patient  .msg-body{background:var(--primary);color:#fff;border-bottom-right-radius:4px;}
+.msg-time{font-size:10px;color:var(--text-muted);margin-top:4px;padding:0 4px;}
+.from-patient .msg-time{text-align:right;}
+.msg-clearfix{clear:both;}
+.messages-list{min-height:200px;padding:8px 0 16px;}
+.msg-compose{display:flex;gap:10px;margin-top:8px;}
+.msg-input{flex:1;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;font-size:14px;resize:none;font-family:inherit;outline:none;background:var(--white);}
+.msg-input:focus{border-color:var(--primary);}
+.msg-send-btn{background:var(--primary);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.msg-send-btn:hover{background:var(--primary-dk);}
+.msg-send-btn:disabled{opacity:.5;cursor:default;}
+
+/* ── EMPTY / LOADING ── */
+.p-empty{text-align:center;padding:48px 24px;color:var(--text-muted);}
+.p-empty-icon{font-size:36px;margin-bottom:12px;}
+.p-empty-text{font-size:14px;font-weight:600;}
+.p-empty-sub{font-size:12px;margin-top:6px;}
+.p-loading{text-align:center;padding:40px;color:var(--text-muted);font-size:14px;}
+
+/* ── TOAST ── */
+.p-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;border-radius:12px;padding:11px 20px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:fadeInUp .2s ease;white-space:nowrap;}
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* Mobile tweaks */
+@media(max-width:480px){
+  .portal-content{padding:14px;}
+  .login-card{padding:28px 20px;}
+  .pnav-btn{font-size:11px;padding:12px 6px 10px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────────────────────────────────── -->
+<div id="portal-login">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="login-logo-icon">🦷</span>
+      <span class="login-logo-name">DentaPro</span>
+    </div>
+    <div class="login-practice" id="login-practice-name">Patient Portal</div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in with your email and date of birth</div>
+    <form id="portal-login-form" autocomplete="on">
+      <div class="login-field">
+        <label class="login-label" for="pl-email">Email address</label>
+        <input class="login-input" type="email" id="pl-email" placeholder="you@example.com" autocomplete="email" required />
+      </div>
+      <div class="login-field">
+        <label class="login-label" for="pl-dob">Date of birth</label>
+        <input class="login-input" type="date" id="pl-dob" autocomplete="bday" required />
+      </div>
+      <button class="login-btn" type="submit" id="login-submit-btn">Sign In</button>
+      <div class="login-err" id="login-err"></div>
+    </form>
+    <div class="login-footer">🔒 Your information is secure and encrypted</div>
+  </div>
+</div>
+
+<!-- ── MAIN PORTAL ────────────────────────────────────────────────────────── -->
+<div id="portal-main">
+
+  <header class="portal-header">
+    <div class="ph-logo">🦷 <span id="ph-practice-name">DentaPro</span></div>
+    <span class="ph-patient" id="ph-patient-name"></span>
+    <button class="ph-logout" id="ph-logout-btn">Sign out</button>
+  </header>
+
+  <nav class="portal-nav">
+    <button class="pnav-btn active" data-tab="appointments">
+      <span class="pnav-icon">📅</span>Appointments
+    </button>
+    <button class="pnav-btn" data-tab="invoices">
+      <span class="pnav-icon">🧾</span>Invoices
+    </button>
+    <button class="pnav-btn" data-tab="messages" id="pnav-messages">
+      <span class="pnav-icon">💬</span>Messages
+    </button>
+  </nav>
+
+  <div class="portal-content">
+
+    <!-- Appointments tab -->
+    <div id="tab-appointments" class="p-tab">
+      <div class="p-loading">Loading appointments…</div>
+    </div>
+
+    <!-- Invoices tab -->
+    <div id="tab-invoices" class="p-tab" style="display:none">
+      <div class="p-loading">Loading invoices…</div>
+    </div>
+
+    <!-- Messages tab -->
+    <div id="tab-messages" class="p-tab" style="display:none">
+      <div class="messages-list" id="messages-list">
+        <div class="p-loading">Loading messages…</div>
+      </div>
+      <div class="msg-compose">
+        <textarea class="msg-input" id="msg-input" rows="2" placeholder="Type a message to your dental practice…"></textarea>
+        <button class="msg-send-btn" id="msg-send-btn">Send</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+;(function() {
+
+  const API = 'https://api.dentapro.org'
+  const params   = new URLSearchParams(location.search)
+  const TENANT   = params.get('practice') || params.get('tenant') || ''
+  let TOKEN      = ''
+  let PATIENT    = {}
+  let PRACTICE   = {}
+  let _activeTab = 'appointments'
+
+  // ── Fetch practice name for login screen ──────────────────────────────────
+  if (TENANT) {
+    fetch(`${API}/api/portal/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'probe', dob: '2000-01-01', tenantId: TENANT })
+    }).then(r => r.json()).then(d => {
+      // Will fail login but practice name comes back on valid 404
+    }).catch(() => {})
+
+    // Try a lightweight approach — check if practice exists via a dummy OPTIONS-style
+    // Actually just try to restore session first
+  }
+
+  // ── Restore session ───────────────────────────────────────────────────────
+  const saved = (() => { try { return JSON.parse(sessionStorage.getItem('dp_portal')) || null } catch { return null } })()
+  if (saved && saved.token && saved.tenantId === TENANT) {
+    TOKEN   = saved.token
+    PATIENT = saved.patient || {}
+    PRACTICE = saved.practice || {}
+    showMain()
+  }
+
+  // ── API helper ────────────────────────────────────────────────────────────
+  async function api(path, opts = {}) {
+    const r = await fetch(API + path, {
+      ...opts,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN,
+        ...(opts.headers || {})
+      },
+      body: opts.body != null ? JSON.stringify(opts.body) : undefined
+    })
+    if (r.status === 401) { signOut(); return null }
+    return r
+  }
+
+  // ── Login form ────────────────────────────────────────────────────────────
+  document.getElementById('portal-login-form').addEventListener('submit', async e => {
+    e.preventDefault()
+    const btn = document.getElementById('login-submit-btn')
+    const err = document.getElementById('login-err')
+    err.textContent = ''
+    btn.disabled = true
+    btn.textContent = 'Signing in…'
+    try {
+      const r = await fetch(API + '/api/portal/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email:    document.getElementById('pl-email').value.trim(),
+          dob:      document.getElementById('pl-dob').value,
+          tenantId: TENANT
+        })
+      })
+      const d = await r.json()
+      if (!r.ok) { err.textContent = d.error || 'Sign-in failed.'; btn.disabled = false; btn.textContent = 'Sign In'; return }
+      TOKEN   = d.token
+      PATIENT = d.patient
+      PRACTICE = d.practice
+      sessionStorage.setItem('dp_portal', JSON.stringify({ token: TOKEN, patient: PATIENT, practice: PRACTICE, tenantId: TENANT }))
+      showMain()
+    } catch { err.textContent = 'Connection error. Please try again.'; btn.disabled = false; btn.textContent = 'Sign In' }
+  })
+
+  // ── Show main after login ─────────────────────────────────────────────────
+  function showMain() {
+    document.getElementById('portal-login').style.display = 'none'
+    const m = document.getElementById('portal-main')
+    m.style.display = 'flex'
+    document.getElementById('ph-practice-name').textContent = PRACTICE.name || 'Your Practice'
+    document.getElementById('ph-patient-name').textContent  = `Hi, ${PATIENT.firstName || ''}`
+    document.getElementById('login-practice-name').textContent = PRACTICE.name || 'Patient Portal'
+    switchTab('appointments')
+  }
+
+  // ── Sign out ──────────────────────────────────────────────────────────────
+  function signOut() {
+    TOKEN = ''; PATIENT = {}; PRACTICE = {}
+    sessionStorage.removeItem('dp_portal')
+    document.getElementById('portal-main').style.display  = 'none'
+    document.getElementById('portal-login').style.display = 'flex'
+    document.getElementById('login-submit-btn').disabled  = false
+    document.getElementById('login-submit-btn').textContent = 'Sign In'
+    document.getElementById('login-err').textContent = ''
+  }
+  document.getElementById('ph-logout-btn').addEventListener('click', signOut)
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  document.querySelector('.portal-nav').addEventListener('click', e => {
+    const btn = e.target.closest('.pnav-btn')
+    if (!btn) return
+    switchTab(btn.dataset.tab)
+  })
+
+  function switchTab(tab) {
+    _activeTab = tab
+    document.querySelectorAll('.pnav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
+    document.querySelectorAll('.p-tab').forEach(t => t.style.display = t.id === `tab-${tab}` ? '' : 'none')
+    if (tab === 'appointments') loadAppointments()
+    if (tab === 'invoices')     loadInvoices()
+    if (tab === 'messages')     loadMessages()
+  }
+
+  // ── Appointments ──────────────────────────────────────────────────────────
+  async function loadAppointments() {
+    const el = document.getElementById('tab-appointments')
+    el.innerHTML = '<div class="p-loading">Loading…</div>'
+    const r = await api('/api/portal/appointments')
+    if (!r) return
+    const appts = await r.json()
+    if (!Array.isArray(appts) || !appts.length) {
+      el.innerHTML = `<div class="p-empty"><div class="p-empty-icon">📅</div><div class="p-empty-text">No appointments found</div><div class="p-empty-sub">Your upcoming appointments will appear here</div></div>`
+      return
+    }
+    const now = new Date()
+    const upcoming = appts.filter(a => new Date(a.starts_at) >= now && a.status !== 'cancelled')
+    const past     = appts.filter(a => new Date(a.starts_at) <  now || a.status === 'completed' || a.status === 'cancelled')
+    let html = ''
+    if (upcoming.length) {
+      html += '<div class="appt-section-title">Upcoming</div>'
+      upcoming.slice(0, 10).forEach(a => html += apptCard(a, true))
+    }
+    if (past.length) {
+      html += '<div class="appt-section-title">Past</div>'
+      past.slice(0, 20).forEach(a => html += apptCard(a, false))
+    }
+    el.innerHTML = html
+  }
+
+  function apptCard(a, upcoming) {
+    const dt   = new Date(a.starts_at)
+    const et   = new Date(a.ends_at)
+    const day  = dt.getDate()
+    const mon  = dt.toLocaleString('en-GB', { month: 'short' }).toUpperCase()
+    const time = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
+    const etime= et.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
+    const dateStr = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'long', year:'numeric' })
+    return `<div class="appt-card ${upcoming ? 'appt-upcoming' : ''}">
+      <div class="appt-date-block"><div class="appt-day">${day}</div><div class="appt-month">${mon}</div></div>
+      <div class="appt-info">
+        <div class="appt-title">${esc(a.title)}</div>
+        <div class="appt-time">📅 ${dateStr} · ${time}–${etime}</div>
+        ${a.dentist_name ? `<div class="appt-dentist">👨‍⚕️ ${esc(a.dentist_name)}</div>` : ''}
+        ${a.notes ? `<div class="appt-time" style="margin-top:4px;font-style:italic">${esc(a.notes)}</div>` : ''}
+      </div>
+      <span class="badge ${a.status}">${a.status.replace('_',' ')}</span>
+    </div>`
+  }
+
+  // ── Invoices ──────────────────────────────────────────────────────────────
+  async function loadInvoices() {
+    const el = document.getElementById('tab-invoices')
+    el.innerHTML = '<div class="p-loading">Loading…</div>'
+    const r = await api('/api/portal/invoices')
+    if (!r) return
+    const invs = await r.json()
+    if (!Array.isArray(invs) || !invs.length) {
+      el.innerHTML = `<div class="p-empty"><div class="p-empty-icon">🧾</div><div class="p-empty-text">No invoices yet</div><div class="p-empty-sub">Your invoices will appear here once issued</div></div>`
+      return
+    }
+    // Calculate outstanding total
+    let outstanding = 0
+    invs.forEach(inv => {
+      const bal = Math.max(0, parseFloat(inv.total||0) - parseFloat(inv.insurance_amount||0) - parseFloat(inv.discount_amount||0) - parseFloat(inv.amount_paid||0))
+      if (['sent','overdue'].includes(inv.status)) outstanding += bal
+    })
+    let html = ''
+    if (outstanding > 0.01) {
+      html += `<div class="outstanding-banner">
+        <div class="ob-icon">💰</div>
+        <div class="ob-text">
+          <div class="ob-title">Outstanding Balance: €${fmt(outstanding)}</div>
+          <div class="ob-sub">Please contact the practice to arrange payment</div>
+        </div>
+      </div>`
+    }
+    invs.forEach(inv => {
+      const total   = parseFloat(inv.total||0)
+      const ins     = parseFloat(inv.insurance_amount||0)
+      const disc    = parseFloat(inv.discount_amount||0)
+      const paid    = parseFloat(inv.amount_paid||0)
+      const patOwes = Math.max(0, total - ins - disc)
+      const balance = Math.max(0, patOwes - paid)
+      const statusLabel = { draft:'Draft', sent:'Issued', paid:'Paid', overdue:'Overdue', cancelled:'Cancelled' }
+      html += `<div class="inv-card">
+        <div class="inv-row1">
+          <span class="inv-num">${esc(inv.invoice_number)}</span>
+          <span class="badge ${inv.status}">${statusLabel[inv.status]||inv.status}</span>
+        </div>
+        <div class="inv-row1" style="margin-bottom:6px">
+          <span class="inv-total">€${fmt(patOwes)}</span>
+          <span class="inv-balance ${balance < 0.01 ? 'clear' : 'owed'}">${balance < 0.01 ? '✓ Paid in full' : `Balance: €${fmt(balance)}`}</span>
+        </div>
+        <div class="inv-row2">
+          <span class="inv-date">📅 ${fmtDate(inv.invoice_date)}</span>
+          ${inv.due_date ? `<span class="inv-date">Due: ${fmtDate(inv.due_date)}</span>` : ''}
+        </div>
+        ${ins > 0 || disc > 0 ? `<div class="inv-summary">
+          ${ins  > 0 ? `<div class="inv-sum-item">Insurance: <span>−€${fmt(ins)}</span></div>` : ''}
+          ${disc > 0 ? `<div class="inv-sum-item">Discount: <span>−€${fmt(disc)}</span></div>` : ''}
+          <div class="inv-sum-item">Paid: <span>€${fmt(paid)}</span></div>
+        </div>` : ''}
+        ${inv.notes ? `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${esc(inv.notes)}</div>` : ''}
+      </div>`
+    })
+    el.innerHTML = html
+  }
+
+  // ── Messages ──────────────────────────────────────────────────────────────
+  async function loadMessages() {
+    const listEl = document.getElementById('messages-list')
+    listEl.innerHTML = '<div class="p-loading">Loading…</div>'
+    const r = await api('/api/portal/messages')
+    if (!r) return
+    const msgs = await r.json()
+    renderMessages(msgs)
+  }
+
+  function renderMessages(msgs) {
+    const listEl = document.getElementById('messages-list')
+    if (!Array.isArray(msgs) || !msgs.length) {
+      listEl.innerHTML = `<div class="p-empty"><div class="p-empty-icon">💬</div><div class="p-empty-text">No messages yet</div><div class="p-empty-sub">Send a message to your dental practice below</div></div>`
+      return
+    }
+    let html = '<div class="messages-wrap">'
+    let lastDate = ''
+    msgs.forEach(m => {
+      const dt = new Date(m.created_at)
+      const dateStr = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
+      if (dateStr !== lastDate) {
+        html += `<div class="msg-date-sep">${dateStr}</div>`
+        lastDate = dateStr
+      }
+      const side  = m.from_patient ? 'from-patient' : 'from-practice'
+      const time  = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
+      html += `<div class="msg-bubble ${side}">
+        <div class="msg-body">${esc(m.body).replace(/\n/g,'<br>')}</div>
+        <div class="msg-time">${time}</div>
+      </div><div class="msg-clearfix"></div>`
+    })
+    html += '</div>'
+    listEl.innerHTML = html
+    listEl.scrollTop = listEl.scrollHeight
+  }
+
+  document.getElementById('msg-send-btn').addEventListener('click', sendMessage)
+  document.getElementById('msg-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
+  })
+
+  async function sendMessage() {
+    const input = document.getElementById('msg-input')
+    const body  = input.value.trim()
+    if (!body) return
+    const btn = document.getElementById('msg-send-btn')
+    btn.disabled = true
+    try {
+      const r = await api('/api/portal/messages', { method:'POST', body: { body } })
+      if (!r || !r.ok) { showToast('Could not send. Try again.'); btn.disabled = false; return }
+      input.value = ''
+      await loadMessages()
+    } catch { showToast('Connection error.') }
+    btn.disabled = false
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function fmt(n) { return parseFloat(n||0).toFixed(2) }
+  function fmtDate(d) {
+    if (!d) return '—'
+    return new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+  }
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  }
+  function showToast(msg, dur = 3000) {
+    const t = document.createElement('div')
+    t.className = 'p-toast'
+    t.textContent = msg
+    document.body.appendChild(t)
+    setTimeout(() => t.remove(), dur)
+  }
+
+})()
+</script>
+</body>
+</html>
