@@ -4157,10 +4157,10 @@
         <div class="bill-filter-label">Status</div>
         <button class="bill-filter-btn active" data-filter="all">All <span class="bill-filter-count" id="bcount-all">0</span></button>
         <button class="bill-filter-btn" data-filter="draft">Draft <span class="bill-filter-count" id="bcount-draft">0</span></button>
-        <button class="bill-filter-btn" data-filter="issued">Issued <span class="bill-filter-count" id="bcount-issued">0</span></button>
-        <button class="bill-filter-btn" data-filter="partial">Partial <span class="bill-filter-count" id="bcount-partial">0</span></button>
+        <button class="bill-filter-btn" data-filter="sent">Issued <span class="bill-filter-count" id="bcount-sent">0</span></button>
         <button class="bill-filter-btn" data-filter="paid">Paid <span class="bill-filter-count" id="bcount-paid">0</span></button>
         <button class="bill-filter-btn" data-filter="overdue">Overdue <span class="bill-filter-count" id="bcount-overdue">0</span></button>
+        <button class="bill-filter-btn" data-filter="cancelled">Cancelled <span class="bill-filter-count" id="bcount-cancelled">0</span></button>
       </div>
 
       <!-- Invoice list -->
@@ -11732,7 +11732,8 @@ General rules (non-session):
       const url = patientId ? `/api/invoices?patientId=${patientId}` : '/api/invoices?limit=200'
       const res = await apiFetch(url)
       if (!res.ok) { listEl.innerHTML = '<div class="bill-empty">Could not load invoices.</div>'; return }
-      _billAll = await res.json()
+      const d = await res.json()
+      _billAll = Array.isArray(d) ? d : (d.data || [])
       renderInvoiceList()
       updateFilterCounts()
     } catch { listEl.innerHTML = '<div class="bill-empty">Error loading invoices.</div>' }
@@ -11749,20 +11750,22 @@ General rules (non-session):
     }
     listEl.innerHTML = ''
     filtered.forEach(inv => {
-      const total   = parseFloat(inv.subtotal || 0)
+      const total   = parseFloat(inv.total || inv.subtotal || 0)
       const paid    = parseFloat(inv.amount_paid || 0)
-      const balance = total - parseFloat(inv.insurance_amount||0) - paid
+      const ins     = parseFloat(inv.insurance_amount || 0)
+      const disc    = parseFloat(inv.discount_amount || 0)
+      const balance = Math.max(0, total - ins - disc - paid)
       const row = document.createElement('div')
       row.className = 'bill-inv-row'
       row.innerHTML = `
         <div class="bill-inv-num">${inv.invoice_number}</div>
         <div class="bill-inv-patient">${inv.patient_name}</div>
-        <div class="bill-inv-date">${fmtDate(inv.invoice_date)}</div>
+        <div class="bill-inv-date">${fmtDate(inv.invoice_date || inv.issued_at)}</div>
         <div class="bill-inv-total">€${fmtAmt(total)}</div>
         <div class="bill-inv-balance ${balance > 0.01 ? 'owed' : 'clear'}">
           ${balance > 0.01 ? `Balance: €${fmtAmt(balance)}` : '✓ Paid'}
         </div>
-        <span class="bill-inv-status ${inv.status}">${inv.status}</span>`
+        <span class="bill-inv-status ${inv.status}">${STATUS_DISPLAY[inv.status]||inv.status}</span>`
       row.addEventListener('click', () => openInvoiceEditor(inv.id))
       listEl.appendChild(row)
     })
@@ -11771,11 +11774,13 @@ General rules (non-session):
   function updateFilterCounts() {
     const counts = { all: _billAll.length }
     _billAll.forEach(i => { counts[i.status] = (counts[i.status]||0) + 1 })
-    ;['all','draft','issued','partial','paid','overdue'].forEach(f => {
+    ;['all','draft','sent','paid','overdue','cancelled'].forEach(f => {
       const el = document.getElementById(`bcount-${f}`)
       if (el) el.textContent = counts[f] || 0
     })
   }
+
+  const STATUS_DISPLAY = { draft:'Draft', sent:'Issued', paid:'Paid', overdue:'Overdue', cancelled:'Cancelled' }
 
   // Sidebar filter clicks
   document.querySelector('.bill-sidebar').addEventListener('click', e => {
@@ -11840,7 +11845,7 @@ General rules (non-session):
 
     const isDraft = inv.status === 'draft'
     document.getElementById('bill-issue-btn').style.display = isDraft ? '' : 'none'
-    document.getElementById('bill-void-btn').style.display  = !['void','cancelled','paid'].includes(inv.status) ? '' : 'none'
+    document.getElementById('bill-void-btn').style.display  = !['cancelled','paid'].includes(inv.status) ? '' : 'none'
 
     renderItems()
     renderTotals()
@@ -11852,14 +11857,14 @@ General rules (non-session):
   function renderItems() {
     tbody.innerHTML = ''
     ;(_billCurrent.items || []).forEach((item, idx) => {
-      const lineTotal = item.quantity * item.unit_price * (1 - item.discount_pct/100)
+      const lineTotal = item.quantity * item.unit_price * (1 - (item.discount_pct||0)/100)
       const tr = document.createElement('tr')
       tr.innerHTML = `
         <td><input class="bill-item-desc-input" data-idx="${idx}" data-field="description" value="${item.description}" /></td>
         <td><input class="bill-item-num-input" data-idx="${idx}" data-field="procedure_code" value="${item.procedure_code||''}" style="width:80px" /></td>
         <td><input class="bill-item-num-input" data-idx="${idx}" data-field="quantity" type="number" min="0.01" step="0.5" value="${item.quantity}" /></td>
         <td><input class="bill-item-num-input" data-idx="${idx}" data-field="unit_price" type="number" min="0" step="5" value="${item.unit_price}" /></td>
-        <td><input class="bill-item-num-input" data-idx="${idx}" data-field="discount_pct" type="number" min="0" max="100" step="1" value="${item.discount_pct}" /></td>
+        <td><input class="bill-item-num-input" data-idx="${idx}" data-field="discount_pct" type="number" min="0" max="100" step="1" value="${item.discount_pct||0}" /></td>
         <td style="font-weight:700;text-align:right;padding-right:8px">€${fmtAmt(lineTotal)}</td>
         <td><button class="bill-item-del" data-id="${item.id}">✕</button></td>`
       // Debounced save on blur
@@ -11877,9 +11882,9 @@ General rules (non-session):
   }
 
   function recalcItemRow(idx, tr) {
-    const qty  = parseFloat(tr.querySelector('[data-field="quantity"]').value)  || 0
-    const up   = parseFloat(tr.querySelector('[data-field="unit_price"]').value) || 0
-    const disc = parseFloat(tr.querySelector('[data-field="discount_pct"]').value) || 0
+    const qty  = parseFloat(tr.querySelector('[data-field="quantity"]')?.value)  || 0
+    const up   = parseFloat(tr.querySelector('[data-field="unit_price"]')?.value) || 0
+    const disc = parseFloat(tr.querySelector('[data-field="discount_pct"]')?.value) || 0
     tr.querySelectorAll('td')[5].textContent = `€${fmtAmt(qty * up * (1 - disc/100))}`
     renderTotals(true) // live-recalc from DOM
   }
@@ -11892,7 +11897,7 @@ General rules (non-session):
       })
       const updated = await res.json()
       const idx = _billCurrent.items.findIndex(i => i.id === itemId)
-      if (idx !== -1) _billCurrent.items[idx] = updated
+      if (idx !== -1 && updated.id) Object.assign(_billCurrent.items[idx], updated)
       renderTotals()
     } catch {}
   }
@@ -11936,7 +11941,7 @@ General rules (non-session):
     }
     const insurance = parseFloat(document.getElementById('bill-insurance-amount').value) || 0
     const discount  = parseFloat(document.getElementById('bill-discount-amount').value)  || 0
-    const paid      = (_billCurrent?.payments||[]).reduce((s, p) => s + parseFloat(p.amount), 0)
+    const paid      = (_billCurrent?.payments||[]).reduce((s, p) => s + parseFloat(p.amount||0), 0)
     const patientOwes = Math.max(0, subtotal - insurance - discount)
     const balance     = Math.max(0, patientOwes - paid)
 
@@ -12032,7 +12037,7 @@ General rules (non-session):
       const res = await apiFetch(`/api/invoices/${_billCurrent.id}/issue`, { method:'POST' })
       const inv = await res.json()
       _billCurrent.status = inv.status
-      document.getElementById('bill-editor-status').textContent = inv.status
+      document.getElementById('bill-editor-status').textContent = STATUS_DISPLAY[inv.status]||inv.status
       document.getElementById('bill-editor-status').className = `bill-inv-status ${inv.status}`
       document.getElementById('bill-issue-btn').style.display = 'none'
       showToast(lang==='el'?'Τιμολόγιο εκδόθηκε ✓':'Invoice issued ✓')
@@ -12042,66 +12047,118 @@ General rules (non-session):
   })
 
   document.getElementById('bill-void-btn').addEventListener('click', async () => {
-    if (!confirm(lang==='el'?'Ακύρωση τιμολογίου;':'Void this invoice?')) return
+    if (!confirm(lang==='el'?'Ακύρωση τιμολογίου;':'Cancel this invoice?')) return
     try {
-      await apiFetch(`/api/invoices/${_billCurrent.id}`, { method:'PATCH', body:{ status:'void' }})
-      _billCurrent.status = 'void'
-      document.getElementById('bill-editor-status').textContent = 'void'
-      document.getElementById('bill-editor-status').className   = 'bill-inv-status void'
+      await apiFetch(`/api/invoices/${_billCurrent.id}`, { method:'PATCH', body:{ status:'cancelled' }})
+      _billCurrent.status = 'cancelled'
+      document.getElementById('bill-editor-status').textContent = STATUS_DISPLAY['cancelled']||'Cancelled'
+      document.getElementById('bill-editor-status').className   = 'bill-inv-status cancelled'
       document.getElementById('bill-void-btn').style.display  = 'none'
       document.getElementById('bill-issue-btn').style.display = 'none'
-      showToast(lang==='el'?'Ακυρώθηκε':'Voided'); loadStats()
+      showToast(lang==='el'?'Ακυρώθηκε':'Cancelled'); loadStats()
       if (typeof auditLog === 'function') auditLog('invoice voided', `Invoice #${_billCurrent.invoice_number||_billCurrent.id}`, `Patient: ${_billCurrent.patient_name||''}`)
     } catch { showToast('Could not void invoice.') }
   })
 
-  // ── Print ─────────────────────────────────────────────────────────────────
+  // ── Print invoice (new window popup) ─────────────────────────────────────
   document.getElementById('bill-print-btn').addEventListener('click', () => {
     if (!_billCurrent) return
-    const inv = _billCurrent
-    const subtotal  = (inv.items||[]).reduce((s,i) => s + i.quantity*i.unit_price*(1-i.discount_pct/100), 0)
+    const inv       = _billCurrent
+    const pracName  = document.querySelector('.sb-name')?.textContent?.trim() || 'Our Dental Practice'
+    const subtotal  = (inv.items||[]).reduce((s,i) => s + i.quantity*i.unit_price*(1-(i.discount_pct||0)/100), 0)
     const insurance = parseFloat(inv.insurance_amount||0)
-    const paid      = (inv.payments||[]).reduce((s,p)=>s+parseFloat(p.amount),0)
-    const balance   = Math.max(0, subtotal - insurance - paid)
+    const discount  = parseFloat(inv.discount_amount||0)
+    const paid      = (inv.payments||[]).reduce((s,p)=>s+parseFloat(p.amount||0),0)
+    const patOwes   = Math.max(0, subtotal - insurance - discount)
+    const balance   = Math.max(0, patOwes - paid)
+    const today     = fmtDate(inv.invoice_date || inv.issued_at)
+    const due       = inv.due_date || inv.due_at ? fmtDate(inv.due_date || inv.due_at) : '—'
 
-    document.getElementById('bill-print-area').innerHTML = `
-      <div class="bill-print-header">
-        <div>
-          <div class="bill-print-logo">🦷 Dental Assistant Pro</div>
-          <div style="font-size:12px;margin-top:4px;color:#5C5854">${inv.invoice_number} · ${fmtDate(inv.invoice_date)}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:16px;font-weight:700">${inv.patient_name}</div>
-          <div style="font-size:12px;color:#5C5854">${inv.patient_phone||''}</div>
-          <div style="font-size:12px;color:#5C5854">${inv.patient_email||''}</div>
-        </div>
+    const win = window.open('','_blank','width=820,height=1050')
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Invoice ${inv.invoice_number}</title>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;background:#fff;padding:30px 40px}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:14px;margin-bottom:24px}
+      .practice{font-size:22px;font-weight:800}.practice-sub{font-size:12px;color:#666;margin-top:3px}
+      .inv-badge{background:#1a1a1a;color:#fff;padding:8px 18px;border-radius:8px;font-size:16px;font-weight:800}
+      .to-from{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+      .to-box{background:#f4f1ec;border-radius:8px;padding:14px 16px}
+      .to-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:6px}
+      .to-name{font-size:15px;font-weight:700}
+      .to-detail{font-size:12px;color:#666;margin-top:2px}
+      .meta-row{display:flex;gap:24px;margin-bottom:20px;font-size:12px}
+      .meta-item{display:flex;flex-direction:column;gap:2px}
+      .meta-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999}
+      .meta-val{font-weight:600}
+      table{width:100%;border-collapse:collapse;margin-bottom:20px}
+      thead tr{background:#1a1a1a;color:#fff}
+      thead th{padding:8px 10px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.04em}
+      thead th:last-child{text-align:right}
+      tbody tr:nth-child(even){background:#fafafa}
+      tbody td{padding:8px 10px;font-size:13px;border-bottom:1px solid #eee}
+      tbody td:last-child{text-align:right;font-weight:600}
+      .totals{margin-left:auto;width:280px}
+      .t-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+      .t-row.main{font-weight:800;font-size:15px;border-top:1px solid #ccc;margin-top:4px;padding-top:8px}
+      .t-row.paid{color:#065F46}
+      .t-row.balance{font-weight:800;color:#2563eb;font-size:16px;border-top:2px solid #1a1a1a;margin-top:8px;padding-top:10px}
+      .t-row.clear{color:#065F46}
+      .notes-box{background:#fffdf7;border:1px solid #e8e0cc;border-radius:6px;padding:12px 14px;margin-top:16px;font-size:12px}
+      .notes-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:4px}
+      .footer{font-size:10px;color:#bbb;text-align:center;margin-top:28px;border-top:1px solid #eee;padding-top:12px}
+      @media print{body{padding:15px 20px}}
+    </style></head><body>
+    <div class="header">
+      <div><div class="practice">🦷 ${pracName}</div><div class="practice-sub">Tax Invoice / Receipt</div></div>
+      <div class="inv-badge">${inv.invoice_number}</div>
+    </div>
+    <div class="to-from">
+      <div class="to-box">
+        <div class="to-label">Billed To</div>
+        <div class="to-name">${inv.patient_name}</div>
+        ${inv.patient_phone?`<div class="to-detail">📞 ${inv.patient_phone}</div>`:''}
+        ${inv.patient_email?`<div class="to-detail">✉ ${inv.patient_email}</div>`:''}
+        ${inv.amka?`<div class="to-detail">ΑΜΚΑ: ${inv.amka}</div>`:''}
       </div>
-      <table class="bill-print-table">
-        <thead><tr><th>Description</th><th>Code</th><th>Qty</th><th>Unit</th><th>Disc</th><th style="text-align:right">Total</th></tr></thead>
-        <tbody>${(inv.items||[]).map(i=>`
-          <tr>
-            <td>${i.description}</td>
-            <td>${i.procedure_code||'—'}</td>
-            <td>${i.quantity}</td>
-            <td>€${fmtAmt(i.unit_price)}</td>
-            <td>${i.discount_pct}%</td>
-            <td style="text-align:right">€${fmtAmt(i.quantity*i.unit_price*(1-i.discount_pct/100))}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-      <div class="bill-print-totals">
-        <div class="bill-print-total-row"><span>Subtotal</span><span>€${fmtAmt(subtotal)}</span></div>
-        ${insurance ? `<div class="bill-print-total-row"><span>Insurance / EOPYY</span><span>−€${fmtAmt(insurance)}</span></div>` : ''}
-        <div class="bill-print-total-row main"><span>Patient Total</span><span>€${fmtAmt(subtotal-insurance)}</span></div>
-        <div class="bill-print-total-row"><span>Paid</span><span>€${fmtAmt(paid)}</span></div>
-        <div class="bill-print-total-row main"><span>Balance Due</span><span>€${fmtAmt(balance)}</span></div>
+      <div class="to-box">
+        <div class="to-label">From</div>
+        <div class="to-name">${pracName}</div>
+        ${inv.insurance_provider?`<div class="to-detail">Insurance: ${inv.insurance_provider}</div>`:''}
       </div>
-      ${inv.insurance_provider ? `<div style="margin-top:20px;font-size:12px;color:#5C5854">Insurance: ${inv.insurance_provider}</div>` : ''}
-      ${inv.notes ? `<div style="margin-top:8px;font-size:12px;color:#5C5854">Notes: ${inv.notes}</div>` : ''}
-      <div style="margin-top:32px;border-top:1px solid #E5E0D8;padding-top:16px;font-size:11px;color:#9C9890;text-align:center">
-        Thank you for choosing our practice · ${inv.invoice_number} · ${fmtDate(inv.invoice_date)}
-      </div>`
-    window.print()
+    </div>
+    <div class="meta-row">
+      <div class="meta-item"><span class="meta-lbl">Invoice Date</span><span class="meta-val">${today}</span></div>
+      <div class="meta-item"><span class="meta-lbl">Due Date</span><span class="meta-val">${due}</span></div>
+      <div class="meta-item"><span class="meta-lbl">Status</span><span class="meta-val">${STATUS_DISPLAY[inv.status]||inv.status}</span></div>
+    </div>
+    <table>
+      <thead><tr><th>Description</th><th>Code</th><th>Qty</th><th>Unit Price</th><th>Disc</th><th>Total</th></tr></thead>
+      <tbody>${(inv.items||[]).map(i=>`
+        <tr>
+          <td>${i.description}</td>
+          <td>${i.procedure_code||i.eopyy_code||'—'}</td>
+          <td>${i.quantity}</td>
+          <td>€${fmtAmt(i.unit_price)}</td>
+          <td>${i.discount_pct||0}%</td>
+          <td>€${fmtAmt(i.quantity*i.unit_price*(1-(i.discount_pct||0)/100))}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="totals">
+      <div class="t-row"><span>Subtotal</span><span>€${fmtAmt(subtotal)}</span></div>
+      ${insurance?`<div class="t-row"><span>Insurance / EOPYY</span><span>− €${fmtAmt(insurance)}</span></div>`:''}
+      ${discount?`<div class="t-row" style="color:#B45309"><span>Discount</span><span>− €${fmtAmt(discount)}</span></div>`:''}
+      <div class="t-row main"><span>Patient Total</span><span>€${fmtAmt(patOwes)}</span></div>
+      <div class="t-row paid"><span>Paid</span><span>€${fmtAmt(paid)}</span></div>
+      <div class="t-row balance ${balance<0.01?'clear':''}"><span>${balance<0.01?'✓ Fully Paid':'Balance Due'}</span><span>${balance<0.01?'':'€'+fmtAmt(balance)}</span></div>
+    </div>
+    ${(inv.notes||inv.discount_reason)?`<div class="notes-box"><div class="notes-lbl">Notes</div>${inv.discount_reason?`Discount: ${inv.discount_reason}<br>`:''}${inv.notes||''}</div>`:''}
+    <div class="footer">Thank you for choosing ${pracName} &nbsp;·&nbsp; ${inv.invoice_number} &nbsp;·&nbsp; ${today}</div>
+    </body></html>`)
+    win.document.close()
+    setTimeout(() => win.print(), 300)
   })
 
   // ── "Create Invoice" shortcut from appointment modal ─────────────────────
