@@ -325,6 +325,29 @@
       display: flex; align-items: flex-start; gap: 5px;
     }
     .appt:hover { transform: scale(1.015); box-shadow: 0 4px 16px rgba(0,0,0,.15); z-index: 20; }
+    .appt[draggable="true"] { cursor: grab; }
+    .appt[draggable="true"]:active { cursor: grabbing; }
+    .appt.dragging { opacity: .3; transform: none !important; box-shadow: none !important; }
+
+    /* Drop target highlight */
+    .day-col.drag-over { background: rgba(61,158,143,.07) !important; outline: 2px dashed var(--primary); outline-offset: -3px; }
+    .day-col.drag-over .time-cell:hover { background: transparent; }
+    .day-col.drag-over .time-cell:hover::after { display: none; }
+
+    /* Floating time label while dragging */
+    .drag-hint-line {
+      position: absolute; left: 6px; right: 6px; height: 2px;
+      background: var(--primary); border-radius: 2px;
+      z-index: 50; pointer-events: none;
+    }
+    .drag-hint-line::before {
+      content: attr(data-time);
+      position: absolute; left: 0; top: -18px;
+      background: var(--primary); color: #fff;
+      padding: 2px 6px; border-radius: 5px;
+      font-size: 10px; font-weight: 700; white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    }
 
     /* Avatar circle (left) */
     .appt-avatar {
@@ -7566,6 +7589,10 @@ function makeApptBlock(a, date) {
 
   // Click on the block body (not avatar/name/dot) → appointment detail modal
   block.addEventListener('click', e => { e.stopPropagation(); openModal(a, date) })
+
+  // Drag to reschedule
+  enableApptDrag(block, a)
+
   return block
 }
 
@@ -7795,6 +7822,9 @@ function renderDayView() {
       if (block) col.appendChild(block)
     })
 
+    // Enable drag-drop reschedule
+    enableColDrop(col, toISODate(targetDate))
+
     b.appendChild(col)
   })
 
@@ -7929,6 +7959,9 @@ function renderWeekView() {
       const block = makeApptBlock(a, date)
       if (block) col.appendChild(block)
     })
+
+    // Enable drag-drop reschedule
+    enableColDrop(col, toISODate(date))
 
     body.appendChild(col)
   })
@@ -9223,6 +9256,102 @@ document.getElementById('import-file-input').addEventListener('change', e => {
   processImportFile(file)
   e.target.value = ''
 })
+
+// ── Drag-to-Reschedule ────────────────────────────────────────────────────
+let _dragState = null  // { appt, grabOffsetMins }
+
+function enableApptDrag(block, a) {
+  block.setAttribute('draggable', 'true')
+
+  block.addEventListener('dragstart', e => {
+    const rect = block.getBoundingClientRect()
+    const grabY = e.clientY - rect.top
+    _dragState = { appt: a, grabOffsetMins: Math.max(0, (grabY / SLOT_H) * 60) }
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(a.id))  // required by Firefox
+    // defer class so the drag ghost still looks normal
+    setTimeout(() => block.classList.add('dragging'), 0)
+  })
+
+  block.addEventListener('dragend', () => {
+    block.classList.remove('dragging')
+    _dragState = null
+    document.querySelectorAll('.day-col.drag-over').forEach(c => c.classList.remove('drag-over'))
+    document.querySelectorAll('.drag-hint-line').forEach(c => c.remove())
+  })
+}
+
+function enableColDrop(col, dateStr) {
+  col.addEventListener('dragover', e => {
+    if (!_dragState) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    col.classList.add('drag-over')
+
+    // Calculate snapped target time
+    const rect = col.getBoundingClientRect()
+    const relY  = Math.max(0, e.clientY - rect.top)
+    const snapped = Math.round(((relY / SLOT_H) * 60 - _dragState.grabOffsetMins) / 15) * 15
+    const newHour = Math.min(END_HOUR - 1, Math.max(START_HOUR, START_HOUR + Math.floor(snapped / 60)))
+    const newMin  = Math.max(0, Math.min(59, ((snapped % 60) + 60) % 60))
+    const hintTop = ((newHour + newMin / 60) - START_HOUR) * SLOT_H
+
+    // Show / update hint line
+    let hint = col.querySelector('.drag-hint-line')
+    if (!hint) { hint = document.createElement('div'); hint.className = 'drag-hint-line'; col.appendChild(hint) }
+    hint.style.top = hintTop + 'px'
+    hint.dataset.time = `${String(newHour).padStart(2,'0')}:${String(newMin).padStart(2,'0')}`
+  })
+
+  col.addEventListener('dragleave', e => {
+    if (!col.contains(e.relatedTarget)) {
+      col.classList.remove('drag-over')
+      col.querySelector('.drag-hint-line')?.remove()
+    }
+  })
+
+  col.addEventListener('drop', e => {
+    if (!_dragState) return
+    e.preventDefault()
+    col.classList.remove('drag-over')
+    col.querySelector('.drag-hint-line')?.remove()
+
+    const rect  = col.getBoundingClientRect()
+    const relY  = Math.max(0, e.clientY - rect.top)
+    const snapped = Math.round(((relY / SLOT_H) * 60 - _dragState.grabOffsetMins) / 15) * 15
+    const newHour = Math.min(END_HOUR - 1, Math.max(START_HOUR, START_HOUR + Math.floor(snapped / 60)))
+    const newMin  = Math.max(0, Math.min(59, ((snapped % 60) + 60) % 60))
+    const newDate = dateStr
+
+    const a = _dragState.appt
+    // No change — drop on same slot
+    if (a.date === newDate && a.hour === newHour && a.min === newMin) return
+
+    // Update local model
+    a.date = newDate
+    a.hour = newHour
+    a.min  = newMin
+
+    // Persist to API
+    const startTime = `${String(newHour).padStart(2,'0')}:${String(newMin).padStart(2,'0')}`
+    if (a.id && AUTH.token) {
+      apiFetch(`/api/appointments/${a.id}`, {
+        method: 'PATCH',
+        body: { appointmentDate: newDate, startTime }
+      }).catch(() => showToast(lang === 'el' ? 'Δεν αποθηκεύτηκε — έλεγξε σύνδεση' : 'Could not save — check connection'))
+    }
+
+    // Toast with new time
+    const months = lang === 'en' ? MONTHS_EN : MONTHS_EL
+    const d = new Date(newDate + 'T00:00:00')
+    const dateLabel = newDate !== _dragState.appt?.date
+      ? `${d.getDate()} ${months[d.getMonth()]}, `
+      : ''
+    showToast(`📅 ${a.patient} → ${dateLabel}${String(newHour).padStart(2,'0')}:${String(newMin).padStart(2,'0')} ✓`)
+
+    renderCalendar()
+  })
+}
 
 // ── Sidebar Patient List ──────────────────────────────────────────────────
 function renderSidebarPatients(filter) {
