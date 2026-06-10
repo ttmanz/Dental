@@ -6803,15 +6803,46 @@ const API_BASE = window.API_BASE = (window.location.hostname === 'localhost' || 
   : 'https://api.dentapro.org'
 
 // ── Auth state ───────────────────────────────────────────────────────────
+
+// All localStorage keys that belong to a specific practice.
+// Cleared automatically whenever a different practice logs in.
+const PRACTICE_LS_KEYS = [
+  'dental_inventory', 'dental_suppliers', 'dental_orders',
+  'dental_specialists', 'dental_referrals',
+  'dental_rx_offline', 'dental_survey_settings',
+  'dental_audit', 'dental_locums',
+  'dental_practice_name',
+  'rem_tmpl_en', 'rem_tmpl_el'
+]
+
+function clearPracticeData() {
+  PRACTICE_LS_KEYS.forEach(k => localStorage.removeItem(k))
+}
+
 const AUTH = {
   token: null, user: null,
   load() {
     try {
       this.token = localStorage.getItem('dental_jwt') || null
       this.user  = JSON.parse(localStorage.getItem('dental_user') || 'null')
+      // Validate: if token's practiceId doesn't match stored user's practiceId, clear everything
+      if (this.token && this.user) {
+        const p = JSON.parse(atob(this.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))
+        if (p.practiceId && this.user.practiceId && p.practiceId !== this.user.practiceId) {
+          clearPracticeData()
+          this.token = null; this.user = null
+          localStorage.removeItem('dental_jwt'); localStorage.removeItem('dental_user')
+        }
+      }
     } catch { this.token = null; this.user = null }
   },
   save(token, user) {
+    // If the practice is changing, wipe all practice-specific cached data
+    const prevPracticeId = this.user?.practiceId
+    const newPracticeId  = user?.practiceId
+    if (prevPracticeId && newPracticeId && prevPracticeId !== newPracticeId) {
+      clearPracticeData()
+    }
     this.token = token; this.user = user
     localStorage.setItem('dental_jwt', token)
     localStorage.setItem('dental_user', JSON.stringify(user))
@@ -6820,6 +6851,7 @@ const AUTH = {
     this.token = null; this.user = null
     localStorage.removeItem('dental_jwt')
     localStorage.removeItem('dental_user')
+    clearPracticeData()
   },
   isValid() {
     if (!this.token) return false
