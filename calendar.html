@@ -2705,6 +2705,16 @@
       color: var(--text-muted); letter-spacing: .04em; transition: all .15s;
     }
     .login-lang-btn.active { background: var(--primary); color: #fff; }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 40px !important; }
+    .pw-eye {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      font-size: 16px; color: var(--text-muted); line-height: 1;
+      display: flex; align-items: center; opacity: .6; transition: opacity .15s;
+    }
+    .pw-eye:hover { opacity: 1; }
+    .pw-eye.visible { opacity: 1; color: var(--primary); }
     .lf { margin-bottom: 15px; }
     .lf label {
       display: block; font-size: 12px; font-weight: 600;
@@ -5398,7 +5408,7 @@
         </div>
         <div class="lf">
           <label id="lbl-password">Password</label>
-          <input type="password" id="login-password" autocomplete="current-password" />
+          <div class="pw-wrap"><input type="password" id="login-password" autocomplete="current-password" /><button type="button" class="pw-eye" onclick="togglePwd(this)" tabindex="-1">👁</button></div>
         </div>
         <button class="login-btn" id="login-submit-btn">Sign In</button>
         <div class="login-foot">
@@ -5425,11 +5435,11 @@
         <div class="login-err" id="reset-err"></div>
         <div class="lf">
           <label>New password</label>
-          <input type="password" id="reset-password" placeholder="Min. 4 characters" autocomplete="new-password" />
+          <div class="pw-wrap"><input type="password" id="reset-password" placeholder="Min. 4 characters" autocomplete="new-password" /><button type="button" class="pw-eye" onclick="togglePwd(this)" tabindex="-1">👁</button></div>
         </div>
         <div class="lf">
           <label>Confirm password</label>
-          <input type="password" id="reset-confirm" placeholder="Repeat new password" autocomplete="new-password" />
+          <div class="pw-wrap"><input type="password" id="reset-confirm" placeholder="Repeat new password" autocomplete="new-password" /><button type="button" class="pw-eye" onclick="togglePwd(this)" tabindex="-1">👁</button></div>
         </div>
         <button class="login-btn" id="reset-submit-btn">Set new password</button>
       </div>
@@ -5457,7 +5467,7 @@
         </div>
         <div class="lf">
           <label id="lbl-create-pwd">Password</label>
-          <input type="password" id="reg-password" />
+          <div class="pw-wrap"><input type="password" id="reg-password" /><button type="button" class="pw-eye" onclick="togglePwd(this)" tabindex="-1">👁</button></div>
         </div>
         <button class="login-btn" id="reg-submit-btn">Create Practice</button>
         <div class="login-foot">
@@ -9507,6 +9517,15 @@ document.getElementById('sb-pt-search').addEventListener('input', function() {
 // Called after PATIENTS array is populated (hooked into existing load flow)
 function refreshSidebarPatients() {
   renderSidebarPatients(document.getElementById('sb-pt-search')?.value || '')
+}
+
+// ── Password show/hide toggle ─────────────────────────────────────────────
+function togglePwd(btn) {
+  const input = btn.previousElementSibling
+  const show  = input.type === 'password'
+  input.type  = show ? 'text' : 'password'
+  btn.textContent = show ? '🙈' : '👁'
+  btn.classList.toggle('visible', show)
 }
 
 // ── Contact panel ─────────────────────────────────────────────────────────

@@ -23,6 +23,15 @@
     }
     .login-box h1 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
     .login-box p  { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 40px !important; }
+    .pw-eye {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      font-size: 16px; color: var(--muted); line-height: 1; opacity: .6; transition: opacity .15s;
+    }
+    .pw-eye:hover { opacity: 1; }
+    .pw-eye.visible { opacity: 1; color: var(--primary); }
     .lf { margin-bottom: 14px; }
     .lf label { display: block; font-size: 11px; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
     .lf input, .lf select {
@@ -210,7 +219,7 @@
     <h1>🦷 Platform Admin</h1>
     <p>Dental Assistant Pro — Superadmin Portal</p>
     <div class="lf"><label>Username</label><input type="text" id="sa-email" placeholder="TTmanz07" autocomplete="username"/></div>
-    <div class="lf"><label>Password</label><input type="password" id="sa-password"/></div>
+    <div class="lf"><label>Password</label><div class="pw-wrap"><input type="password" id="sa-password"/><button type="button" class="pw-eye" onclick="togglePwd(this)" tabindex="-1">👁</button></div></div>
     <button class="login-btn" id="sa-login-btn">Sign In</button>
     <div class="login-err" id="sa-err"></div>
   </div>
@@ -258,6 +267,14 @@ const API = ''
 let SA_TOKEN = localStorage.getItem('sa_token') || null
 let _selectedPracticeId = null
 let _planModalPracticeId = null
+
+function togglePwd(btn) {
+  const input = btn.previousElementSibling
+  const show  = input.type === 'password'
+  input.type  = show ? 'text' : 'password'
+  btn.textContent = show ? '🙈' : '👁'
+  btn.classList.toggle('visible', show)
+}
 
 function saFetch(path, opts = {}) {
   return fetch(API + path, {
