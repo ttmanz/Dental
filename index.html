@@ -436,15 +436,7 @@
 </div>
 
 <!-- ── SOCIAL PROOF ──────────────────────────────────────────────────────── -->
-<div class="proof-bar">
-  <div class="proof-item"><span class="proof-num">500+</span> <span data-en="dental clinics" data-el="οδοντιατρεία">dental clinics</span></div>
-  <div style="width:1px;height:32px;background:var(--border)"></div>
-  <div class="proof-item"><span class="proof-num">120k+</span> <span data-en="appointments managed" data-el="ραντεβού διαχείριση">appointments managed</span></div>
-  <div style="width:1px;height:32px;background:var(--border)"></div>
-  <div class="proof-item"><span class="proof-num">4.9★</span> <span data-en="average rating" data-el="μέσος όρος αξιολόγησης">average rating</span></div>
-  <div style="width:1px;height:32px;background:var(--border)"></div>
-  <div class="proof-item"><span class="proof-num">GDPR</span> <span data-en="compliant & certified" data-el="συμμόρφωση & πιστοποίηση">compliant & certified</span></div>
-</div>
+<div class="proof-bar" id="proof-bar"><!-- populated by JS --></div>
 
 <!-- ── FEATURES ──────────────────────────────────────────────────────────── -->
 <section id="features">
@@ -541,78 +533,11 @@
   <div>
     <div style="text-align:center">
       <div class="section-label" data-en="Simple, transparent pricing" data-el="Απλές, διαφανείς τιμές">Simple, transparent pricing</div>
-      <h2 class="section-title" data-en="Start free. Grow without limits." data-el="Ξεκινήστε δωρεάν. Αναπτυχθείτε χωρίς όρια.">Start free. Grow without limits.</h2>
-      <p class="section-sub" style="margin:0 auto" data-en="14-day free trial on all plans. No credit card required." data-el="14 ημέρες δωρεάν σε όλα τα πλάνα. Χωρίς κάρτα.">14-day free trial on all plans. No credit card required.</p>
+      <h2 class="section-title" id="pricing-heading">Start free. Grow without limits.</h2>
+      <p class="section-sub" style="margin:0 auto" id="pricing-sub">14-day free trial on all plans. No credit card required.</p>
     </div>
-    <div class="pricing-grid">
-
-      <div class="pricing-card">
-        <div class="pricing-plan" data-en="Solo" data-el="Solo">Solo</div>
-        <div class="pricing-price">
-          <div class="pricing-price-num">€49</div>
-          <div class="pricing-price-per" data-en="/month" data-el="/μήνα">/month</div>
-        </div>
-        <div class="pricing-sub" data-en="Perfect for single-dentist practices" data-el="Ιδανικό για μονοδοντιατρεία">Perfect for single-dentist practices</div>
-        <hr class="pricing-divider">
-        <ul class="pricing-features">
-          <li data-en="1 dentist" data-el="1 οδοντίατρος">1 dentist</li>
-          <li data-en="Unlimited patients" data-el="Απεριόριστοι ασθενείς">Unlimited patients</li>
-          <li data-en="Full calendar & scheduling" data-el="Πλήρες ημερολόγιο">Full calendar & scheduling</li>
-          <li data-en="Billing & EOPYY codes" data-el="Τιμολόγηση & ΕΟΠΥΥ">Billing & EOPYY codes</li>
-          <li data-en="AI chair-side assistant" data-el="AI βοηθός καρέκλας">AI chair-side assistant</li>
-          <li data-en="WhatsApp reminders" data-el="Υπενθυμίσεις WhatsApp">WhatsApp reminders</li>
-          <li data-en="Prescription module" data-el="Συνταγογράφηση">Prescription module</li>
-          <li class="no" data-en="Lab portal" data-el="Εργαστήριο">Lab portal</li>
-          <li class="no" data-en="Multi-location" data-el="Πολλαπλές τοποθεσίες">Multi-location</li>
-        </ul>
-      </div>
-
-      <div class="pricing-card featured">
-        <div class="pricing-popular" data-en="Most Popular" data-el="Πιο Δημοφιλές">Most Popular</div>
-        <div class="pricing-plan" data-en="Clinic" data-el="Κλινική">Clinic</div>
-        <div class="pricing-price">
-          <div class="pricing-price-num">€99</div>
-          <div class="pricing-price-per" data-en="/month" data-el="/μήνα">/month</div>
-        </div>
-        <div class="pricing-sub" data-en="For growing multi-dentist practices" data-el="Για πολυ-οδοντιατρεία σε ανάπτυξη">For growing multi-dentist practices</div>
-        <hr class="pricing-divider">
-        <ul class="pricing-features">
-          <li data-en="Up to 5 dentists" data-el="Έως 5 οδοντίατροι">Up to 5 dentists</li>
-          <li data-en="Unlimited patients" data-el="Απεριόριστοι ασθενείς">Unlimited patients</li>
-          <li data-en="Everything in Solo" data-el="Όλα του Solo">Everything in Solo</li>
-          <li data-en="Lab portal & orders" data-el="Εργαστήριο & παραγγελίες">Lab portal & orders</li>
-          <li data-en="Specialist referral network" data-el="Δίκτυο παραπομπών">Specialist referral network</li>
-          <li data-en="Analytics & reporting" data-el="Αναλυτικά & αναφορές">Analytics & reporting</li>
-          <li data-en="Inventory management" data-el="Αποθέματα">Inventory management</li>
-          <li data-en="Satisfaction surveys (NPS)" data-el="Ικανοποίηση ασθενών (NPS)">Satisfaction surveys (NPS)</li>
-          <li class="no" data-en="Multi-location" data-el="Πολλαπλές τοποθεσίες">Multi-location</li>
-        </ul>
-      </div>
-
-      <div class="pricing-card">
-        <div class="pricing-plan" data-en="Group" data-el="Όμιλος">Group</div>
-        <div class="pricing-price">
-          <div class="pricing-price-num">€199</div>
-          <div class="pricing-price-per" data-en="/month" data-el="/μήνα">/month</div>
-        </div>
-        <div class="pricing-sub" data-en="For clinic groups and chains" data-el="Για ομίλους και αλυσίδες οδοντιατρείων">For clinic groups and chains</div>
-        <hr class="pricing-divider">
-        <ul class="pricing-features">
-          <li data-en="Unlimited dentists" data-el="Απεριόριστοι οδοντίατροι">Unlimited dentists</li>
-          <li data-en="Unlimited patients" data-el="Απεριόριστοι ασθενείς">Unlimited patients</li>
-          <li data-en="Everything in Clinic" data-el="Όλα της Κλινικής">Everything in Clinic</li>
-          <li data-en="Multi-location management" data-el="Διαχείριση πολλαπλών τοποθεσιών">Multi-location management</li>
-          <li data-en="Consolidated reporting" data-el="Ενοποιημένες αναφορές">Consolidated reporting</li>
-          <li data-en="Priority support" data-el="Προτεραιότητα υποστήριξης">Priority support</li>
-          <li data-en="Custom onboarding" data-el="Εξατομικευμένη εισαγωγή">Custom onboarding</li>
-          <li data-en="SLA guarantee" data-el="Εγγύηση SLA">SLA guarantee</li>
-        </ul>
-      </div>
-
-    </div>
-    <p class="pricing-note" data-en="All prices exclude VAT. Annual billing available — save 2 months." data-el="Οι τιμές δεν περιλαμβάνουν ΦΠΑ. Ετήσια χρέωση διαθέσιμη — εξοικονομήστε 2 μήνες.">
-      All prices exclude VAT. Annual billing available — save 2 months.
-    </p>
+    <div class="pricing-grid" id="pricing-grid"><!-- populated by JS --></div>
+    <p class="pricing-note" id="pricing-note">All prices exclude VAT. Annual billing available — save 2 months.</p>
   </div>
 </div>
 
@@ -697,17 +622,13 @@
 
 <!-- ── CTA ───────────────────────────────────────────────────────────────── -->
 <div class="cta-banner">
-  <h2 data-en="Ready to modernise your practice?" data-el="Έτοιμοι να εκσυγχρονίσετε το ιατρείο σας;">Ready to modernise your practice?</h2>
-  <p data-en="Join 500+ dental practices already using DentaPro. 14-day free trial, no card required." data-el="Ελάτε στα 500+ οδοντιατρεία που χρησιμοποιούν ήδη το Dental-Pro-Assistant. 14 ημέρες δωρεάν, χωρίς κάρτα.">
-    Join 500+ dental practices already using DentaPro. 14-day free trial, no card required.
-  </p>
+  <h2 id="cta-title">Ready to modernise your practice?</h2>
+  <p id="cta-sub">Join 500+ dental practices already using DentaPro. 14-day free trial, no card required.</p>
   <a href="#" class="btn-white" onclick="openLeadModal('trial');return false;">
     <span>🦷</span>
-    <span data-en="Start your free trial" data-el="Ξεκινήστε τη δωρεάν δοκιμή σας">Start your free trial</span>
+    <span id="cta-btn-text">Start your free trial</span>
   </a>
-  <div class="cta-banner-note" data-en="No credit card · Cancel anytime · GDPR compliant · Based in Greece" data-el="Χωρίς κάρτα · Ακύρωση οποτεδήποτε · GDPR · Βασισμένο στην Ελλάδα">
-    No credit card · Cancel anytime · GDPR compliant · Based in Greece
-  </div>
+  <div class="cta-banner-note" id="cta-note">No credit card · Cancel anytime · GDPR compliant · Based in Greece</div>
 </div>
 
 <!-- ── FOOTER ─────────────────────────────────────────────────────────────── -->
@@ -799,6 +720,112 @@
   // ── Redirect /app to the calendar app ─────────────────────────────────
   // The Express server handles this — /app → calendar.html
   // Links here already point to /app
+
+  // ── Dynamic landing page ───────────────────────────────────────────────
+  const LANDING_API = 'https://api.dentapro.org/api/public/landing'
+
+  const DEFAULT_LANDING = {
+    hero: {
+      badge: 'Now available · GDPR compliant',
+      title: "The practice management system your patients <span>deserve</span>",
+      subtitle: 'Calendar · AI charting · billing · EOPYY codes · WhatsApp reminders — in one beautiful app. Start in minutes, not months.',
+      note: 'No credit card required · Cancel anytime · GDPR compliant'
+    },
+    proof: [
+      { number: '500+',  label: 'dental clinics' },
+      { number: '120k+', label: 'appointments managed' },
+      { number: '4.9★',  label: 'average rating' },
+      { number: 'GDPR',  label: 'compliant & certified' }
+    ],
+    pricing: [
+      {
+        plan: 'Solo', price: '49', currency: '€', period: '/month',
+        sub: 'Perfect for single-dentist practices', featured: false,
+        features: ['1 dentist','Unlimited patients','Full calendar & scheduling','Billing & EOPYY codes','AI chair-side assistant','WhatsApp reminders','Prescription module'],
+        featuresNo: ['Lab portal','Multi-location']
+      },
+      {
+        plan: 'Clinic', price: '99', currency: '€', period: '/month',
+        sub: 'For growing multi-dentist practices', featured: true, popularLabel: 'Most Popular',
+        features: ['Up to 5 dentists','Unlimited patients','Everything in Solo','Lab portal & orders','Specialist referral network','Analytics & reporting','Inventory management','Satisfaction surveys (NPS)'],
+        featuresNo: ['Multi-location']
+      },
+      {
+        plan: 'Group', price: '199', currency: '€', period: '/month',
+        sub: 'For clinic groups and chains', featured: false,
+        features: ['Unlimited dentists','Unlimited patients','Everything in Clinic','Multi-location management','Consolidated reporting','Priority support','Custom onboarding','SLA guarantee'],
+        featuresNo: []
+      }
+    ],
+    cta: {
+      title: 'Ready to modernise your practice?',
+      sub: 'Join 500+ dental practices already using DentaPro. 14-day free trial, no card required.',
+      note: 'No credit card · Cancel anytime · GDPR compliant · Based in Greece'
+    },
+    pricingHeading: 'Start free. Grow without limits.',
+    pricingSub: '14-day free trial on all plans. No credit card required.',
+    pricingNote: 'All prices exclude VAT. Annual billing available — save 2 months.'
+  }
+
+  function renderProof(proof) {
+    const bar = document.getElementById('proof-bar')
+    if (!bar || !proof?.length) return
+    bar.innerHTML = proof.map((p, i) =>
+      (i > 0 ? '<div style="width:1px;height:32px;background:var(--border)"></div>' : '') +
+      `<div class="proof-item"><span class="proof-num">${p.number}</span> <span>${p.label}</span></div>`
+    ).join('')
+  }
+
+  function renderPricing(cfg) {
+    const grid = document.getElementById('pricing-grid')
+    if (!grid || !cfg.pricing?.length) return
+    grid.innerHTML = cfg.pricing.map(p => `
+      <div class="pricing-card${p.featured ? ' featured' : ''}">
+        ${p.featured && p.popularLabel ? `<div class="pricing-popular">${p.popularLabel}</div>` : ''}
+        <div class="pricing-plan">${p.plan}</div>
+        <div class="pricing-price">
+          <div class="pricing-price-num">${p.currency||'€'}${p.price}</div>
+          <div class="pricing-price-per">${p.period||'/month'}</div>
+        </div>
+        <div class="pricing-sub">${p.sub}</div>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          ${(p.features||[]).map(f => `<li>${f}</li>`).join('')}
+          ${(p.featuresNo||[]).map(f => `<li class="no">${f}</li>`).join('')}
+        </ul>
+      </div>`).join('')
+
+    const h = document.getElementById('pricing-heading')
+    const s = document.getElementById('pricing-sub')
+    const n = document.getElementById('pricing-note')
+    if (h && cfg.pricingHeading) h.textContent = cfg.pricingHeading
+    if (s && cfg.pricingSub)     s.textContent = cfg.pricingSub
+    if (n && cfg.pricingNote)    n.textContent = cfg.pricingNote
+  }
+
+  function renderCta(cta) {
+    if (!cta) return
+    const t = document.getElementById('cta-title')
+    const s = document.getElementById('cta-sub')
+    const b = document.getElementById('cta-btn-text')
+    const n = document.getElementById('cta-note')
+    if (t && cta.title) t.textContent = cta.title
+    if (s && cta.sub)   s.textContent = cta.sub
+    if (b && cta.btnText) b.textContent = cta.btnText
+    if (n && cta.note)  n.textContent = cta.note
+  }
+
+  function applyLandingConfig(cfg) {
+    renderProof(cfg.proof)
+    renderPricing(cfg)
+    renderCta(cfg.cta)
+  }
+
+  // Render defaults immediately (no flicker), then update from API
+  applyLandingConfig(DEFAULT_LANDING)
+  fetch(LANDING_API).then(r => r.ok ? r.json() : null).then(cfg => {
+    if (cfg) applyLandingConfig(cfg)
+  }).catch(() => {})
 
   // ── Lead capture modal ─────────────────────────────────────────────────
   const LEAD_API = 'https://api.dentapro.org/api/leads'

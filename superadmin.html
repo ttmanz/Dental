@@ -239,7 +239,8 @@
   <div class="main">
     <div class="sidebar">
       <div class="nav-item active" data-view="practices">🏥 Practices</div>
-      <div class="nav-item" data-view="content">✏️ Content</div>
+      <div class="nav-item" data-view="landing">🌐 Landing Page</div>
+      <div class="nav-item" data-view="leads">📥 Leads</div>
       <div class="nav-item" data-view="audit">📋 Audit Log</div>
     </div>
     <div class="content" id="content"></div>
@@ -322,7 +323,8 @@ document.querySelectorAll('.nav-item').forEach(item => {
 
 function showView(view) {
   if (view === 'practices') loadPractices()
-  if (view === 'content')   loadContent()
+  if (view === 'landing')   loadLanding()
+  if (view === 'leads')     loadLeads()
   if (view === 'audit')     loadAudit()
 }
 
@@ -553,46 +555,183 @@ async function openDrawer(practiceId) {
   document.getElementById('drawer-close-btn').addEventListener('click', closeDrawer)
 }
 
-// ── Content / Pricing editor ──────────────────────────────────────────────
-async function loadContent() {
+// ── Landing Page editor ───────────────────────────────────────────────────
+let _landingCfg = null
+
+function lf(label, id, val, type='text', placeholder='') {
+  return `<div style="margin-bottom:14px">
+    <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">${label}</label>
+    <input id="${id}" type="${type}" value="${String(val||'').replace(/"/g,'&quot;')}" placeholder="${placeholder}"
+      style="width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none"
+      onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"/>
+  </div>`
+}
+function lta(label, id, val, rows=3) {
+  return `<div style="margin-bottom:14px">
+    <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">${label} <span style="font-weight:400;text-transform:none">(one per line)</span></label>
+    <textarea id="${id}" rows="${rows}"
+      style="width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical"
+      onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">${(val||[]).join('\n')}</textarea>
+  </div>`
+}
+
+async function loadLanding() {
   const el = document.getElementById('content')
-  el.innerHTML = `<div class="toolbar"><h2>✏️ Landing Page Content</h2><p style="font-size:13px;color:var(--muted);margin-top:4px">Changes go live on the landing page immediately.</p></div><div id="content-wrap"><div style="color:var(--muted);padding:20px">Loading…</div></div>`
+  el.innerHTML = `<div class="toolbar"><h2>🌐 Landing Page Editor</h2>
+    <button class="btn primary" id="lp-save-btn" style="margin-left:auto">💾 Save All Changes</button>
+  </div>
+  <div style="color:var(--muted);font-size:13px;margin:-8px 0 20px">Changes go live on dentapro.org immediately after saving.</div>
+  <div id="lp-wrap"><div style="color:var(--muted);padding:20px">Loading…</div></div>`
+
+  document.getElementById('lp-save-btn').addEventListener('click', saveLanding)
+
   try {
-    const rows = await saFetch('/api/superadmin/content').then(r => r.json())
-    const byCategory = {}
-    rows.forEach(r => { (byCategory[r.category] = byCategory[r.category]||[]).push(r) })
-    const catLabels = { pricing:'💰 Pricing', content:'📝 Page Content', general:'⚙️ General' }
-    let html = '<div style="max-width:680px;padding:0 0 40px">'
-    for (const [cat, items] of Object.entries(byCategory)) {
-      html += `<div style="margin-bottom:28px">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">${catLabels[cat]||cat}</div>`
-      items.forEach(item => {
-        html += `<div style="margin-bottom:12px;display:grid;grid-template-columns:220px 1fr auto;align-items:center;gap:10px">
-          <label style="font-size:13px;color:var(--text-muted)">${item.label}</label>
-          <input class="content-input" data-key="${item.key}" value="${item.value.replace(/"/g,'&quot;')}"
-            style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none"/>
-          <button class="btn ghost content-save" data-key="${item.key}" style="font-size:12px;padding:6px 14px">Save</button>
-        </div>`
-      })
-      html += '</div>'
+    const r = await saFetch('/api/superadmin/landing')
+    _landingCfg = await r.json()
+    const c = _landingCfg
+    const p = c.pricing || [{},{},{}]
+
+    document.getElementById('lp-wrap').innerHTML = `
+    <div style="max-width:860px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+      <!-- Hero -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;grid-column:1/-1">
+        <div style="font-size:13px;font-weight:800;margin-bottom:16px;color:var(--primary)">🦸 Hero Section</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${lf('Badge text','lp-hero-badge',c.hero?.badge)}
+          ${lf('Hero title (use &lt;span&gt; for highlight)','lp-hero-title',c.hero?.title)}
+          ${lf('Subtitle','lp-hero-subtitle',c.hero?.subtitle)}
+          ${lf('Small note below buttons','lp-hero-note',c.hero?.note)}
+        </div>
+      </div>
+
+      <!-- Proof bar -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+        <div style="font-size:13px;font-weight:800;margin-bottom:16px;color:var(--primary)">📊 Social Proof Bar</div>
+        ${[0,1,2,3].map(i => `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            ${lf(`Stat ${i+1} — Number`,'lp-proof-num-'+i,(c.proof||[])[i]?.number||'')}
+            ${lf('Label','lp-proof-lbl-'+i,(c.proof||[])[i]?.label||'')}
+          </div>`).join('')}
+      </div>
+
+      <!-- CTA Banner -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+        <div style="font-size:13px;font-weight:800;margin-bottom:16px;color:var(--primary)">🎯 CTA Banner</div>
+        ${lf('Heading','lp-cta-title',c.cta?.title)}
+        ${lf('Sub-text','lp-cta-sub',c.cta?.sub)}
+        ${lf('Button text','lp-cta-btn',c.cta?.btnText||'Start your free trial')}
+        ${lf('Small note','lp-cta-note',c.cta?.note)}
+      </div>
+
+      <!-- Pricing heading -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;grid-column:1/-1">
+        <div style="font-size:13px;font-weight:800;margin-bottom:16px;color:var(--primary)">💰 Pricing Section</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          ${lf('Section heading','lp-pricing-heading',c.pricingHeading)}
+          ${lf('Section sub','lp-pricing-sub',c.pricingSub)}
+          ${lf('Bottom note','lp-pricing-note',c.pricingNote)}
+        </div>
+      </div>
+
+      ${(p).map((plan, i) => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;${plan.featured?'border-color:var(--primary)':''}">
+        <div style="font-size:13px;font-weight:800;margin-bottom:16px;color:var(--primary)">💳 Plan ${i+1}${plan.featured?' ★':''}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          ${lf('Plan name','lp-p'+i+'-plan',plan.plan)}
+          ${lf('Price (number only)','lp-p'+i+'-price',plan.price)}
+          ${lf('Currency','lp-p'+i+'-currency',plan.currency||'€')}
+          ${lf('Period','lp-p'+i+'-period',plan.period||'/month')}
+        </div>
+        ${lf('Subtitle','lp-p'+i+'-sub',plan.sub)}
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="lp-p${i}-featured" ${plan.featured?'checked':''}> Featured (highlighted card)
+          </label>
+        </div>
+        ${lf('Popular label (if featured)','lp-p'+i+'-popular',plan.popularLabel||'')}
+        ${lta('✓ Features (included)','lp-p'+i+'-features',plan.features,5)}
+        ${lta('— Features (not included)','lp-p'+i+'-featuresno',plan.featuresNo,2)}
+      </div>`).join('')}
+
+    </div>`
+
+  } catch(e) {
+    document.getElementById('lp-wrap').innerHTML = `<div style="color:var(--red);padding:20px">Failed to load: ${e.message}</div>`
+  }
+}
+
+async function saveLanding() {
+  const btn = document.getElementById('lp-save-btn')
+  btn.disabled = true; btn.textContent = 'Saving…'
+  try {
+    const proof = [0,1,2,3].map(i => ({
+      number: document.getElementById('lp-proof-num-'+i)?.value.trim()||'',
+      label:  document.getElementById('lp-proof-lbl-'+i)?.value.trim()||''
+    }))
+    const pricingCount = (_landingCfg?.pricing||[]).length || 3
+    const pricing = Array.from({length: pricingCount}, (_, i) => ({
+      plan:        document.getElementById('lp-p'+i+'-plan')?.value.trim()||'',
+      price:       document.getElementById('lp-p'+i+'-price')?.value.trim()||'',
+      currency:    document.getElementById('lp-p'+i+'-currency')?.value.trim()||'€',
+      period:      document.getElementById('lp-p'+i+'-period')?.value.trim()||'/month',
+      sub:         document.getElementById('lp-p'+i+'-sub')?.value.trim()||'',
+      featured:    document.getElementById('lp-p'+i+'-featured')?.checked||false,
+      popularLabel:document.getElementById('lp-p'+i+'-popular')?.value.trim()||'',
+      features:    (document.getElementById('lp-p'+i+'-features')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean),
+      featuresNo:  (document.getElementById('lp-p'+i+'-featuresno')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean),
+    }))
+    const cfg = {
+      hero: {
+        badge:    document.getElementById('lp-hero-badge')?.value.trim()||'',
+        title:    document.getElementById('lp-hero-title')?.value.trim()||'',
+        subtitle: document.getElementById('lp-hero-subtitle')?.value.trim()||'',
+        note:     document.getElementById('lp-hero-note')?.value.trim()||''
+      },
+      proof,
+      pricing,
+      cta: {
+        title:   document.getElementById('lp-cta-title')?.value.trim()||'',
+        sub:     document.getElementById('lp-cta-sub')?.value.trim()||'',
+        btnText: document.getElementById('lp-cta-btn')?.value.trim()||'',
+        note:    document.getElementById('lp-cta-note')?.value.trim()||''
+      },
+      pricingHeading: document.getElementById('lp-pricing-heading')?.value.trim()||'',
+      pricingSub:     document.getElementById('lp-pricing-sub')?.value.trim()||'',
+      pricingNote:    document.getElementById('lp-pricing-note')?.value.trim()||''
     }
-    html += '</div>'
-    document.getElementById('content-wrap').innerHTML = html
-    document.querySelectorAll('.content-save').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const key   = btn.dataset.key
-        const input = document.querySelector(`.content-input[data-key="${key}"]`)
-        const value = input.value.trim()
-        btn.textContent = '…'
-        try {
-          await saFetch(`/api/superadmin/content/${key}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ value }) })
-          btn.textContent = '✓'
-          btn.style.color = '#3D9E8F'
-          setTimeout(() => { btn.textContent = 'Save'; btn.style.color = '' }, 1500)
-        } catch { btn.textContent = 'Error'; btn.style.color = 'var(--red)' }
-      })
-    })
-  } catch { document.getElementById('content-wrap').innerHTML = '<div style="color:var(--red);padding:20px">Failed to load content settings.</div>' }
+    const res = await saFetch('/api/superadmin/landing', { method:'PUT', body: cfg })
+    if (res.ok) {
+      _landingCfg = cfg
+      toast('Landing page saved ✓')
+    } else { toast('Save failed') }
+  } catch(e) { toast('Error: ' + e.message) }
+  btn.disabled = false; btn.textContent = '💾 Save All Changes'
+}
+
+// ── Leads view ────────────────────────────────────────────────────────────
+async function loadLeads() {
+  const el = document.getElementById('content')
+  el.innerHTML = `<div class="toolbar"><h2>📥 Leads</h2><button class="btn ghost" id="leads-refresh">↻ Refresh</button></div>
+    <div id="leads-wrap"><div style="color:var(--muted);padding:20px">Loading…</div></div>`
+  document.getElementById('leads-refresh').addEventListener('click', loadLeads)
+  try {
+    const res  = await saFetch('/api/superadmin/leads')
+    const rows = await res.json()
+    const wrap = document.getElementById('leads-wrap')
+    if (!rows.length) { wrap.innerHTML = '<div style="color:var(--muted);padding:20px">No leads yet.</div>'; return }
+    wrap.innerHTML = `<table class="tenant-table">
+      <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Mobile</th><th>Interest</th></tr></thead>
+      <tbody>${rows.map(r=>`
+        <tr>
+          <td style="color:var(--muted)">${new Date(r.created_at).toLocaleDateString()}</td>
+          <td>${r.name||'—'}</td>
+          <td><a href="mailto:${r.email}" style="color:var(--primary)">${r.email}</a></td>
+          <td><a href="tel:${r.mobile}" style="color:var(--primary)">${r.mobile}</a></td>
+          <td><span style="background:${r.interest==='demo'?'var(--blue)':'var(--green)'};color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${r.interest||'trial'}</span></td>
+        </tr>`).join('')}
+      </tbody></table>`
+  } catch { document.getElementById('leads-wrap').innerHTML = '<div style="color:var(--red);padding:20px">Failed to load leads.</div>' }
 }
 
 // ── Audit log ─────────────────────────────────────────────────────────────
