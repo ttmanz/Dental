@@ -239,6 +239,7 @@
   <div class="main">
     <div class="sidebar">
       <div class="nav-item active" data-view="practices">🏥 Practices</div>
+      <div class="nav-item" data-view="transfer">🔄 Transfer Patients</div>
       <div class="nav-item" data-view="landing">🌐 Landing Page</div>
       <div class="nav-item" data-view="leads">📥 Leads</div>
       <div class="nav-item" data-view="audit">📋 Audit Log</div>
@@ -323,6 +324,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
 
 function showView(view) {
   if (view === 'practices') loadPractices()
+  if (view === 'transfer')  loadTransfer()
   if (view === 'landing')   loadLanding()
   if (view === 'leads')     loadLeads()
   if (view === 'audit')     loadAudit()
@@ -553,6 +555,158 @@ async function openDrawer(practiceId) {
     </div>`
 
   document.getElementById('drawer-close-btn').addEventListener('click', closeDrawer)
+}
+
+// ── Transfer Patients ─────────────────────────────────────────────────────
+let _transferPatients = []
+let _transferFrom = null
+let _transferTo   = null
+
+async function loadTransfer() {
+  const el = document.getElementById('content')
+  el.innerHTML = `
+  <div class="toolbar"><h2>🔄 Transfer Patients</h2></div>
+  <div style="font-size:13px;color:var(--muted);margin:-8px 0 20px">
+    Move patient records — including clinical history — from one practice to another.
+    Appointments and invoices are <strong>not</strong> transferred (they belong to the originating practice).
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px">
+
+    <!-- Step 1: Source practice -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+      <div style="font-size:13px;font-weight:800;color:var(--primary);margin-bottom:14px">1 · Source practice (FROM)</div>
+      <select id="tr-from-sel" style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px">
+        <option value="">— select practice —</option>
+      </select>
+      <button class="btn primary" id="tr-load-btn" style="width:100%;margin-bottom:16px">Load patients</button>
+      <div id="tr-patient-list" style="max-height:380px;overflow-y:auto"></div>
+      <div id="tr-sel-count" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+    </div>
+
+    <!-- Step 2: Destination + options -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-size:13px;font-weight:800;color:var(--primary)">2 · Destination practice (TO)</div>
+      <select id="tr-to-sel" style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <option value="">— select practice —</option>
+      </select>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">What to transfer</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px">
+          <input type="checkbox" id="tr-opt-demo" checked style="accent-color:var(--primary)"> Patient demographics &amp; contact info
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px">
+          <input type="checkbox" id="tr-opt-history" checked style="accent-color:var(--primary)"> Clinical history (treatments, prescriptions, referrals, X-rays)
+        </label>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          ✗ Appointments and invoices are always left with the original practice
+        </div>
+      </div>
+
+      <div id="tr-status" style="font-size:13px;min-height:20px"></div>
+
+      <button class="btn primary" id="tr-go-btn" disabled style="margin-top:auto;padding:12px;font-size:15px">
+        🔄 Transfer selected patients
+      </button>
+    </div>
+  </div>`
+
+  // Populate practice selectors
+  const res = await saFetch('/api/superadmin/practices?limit=200')
+  const practices = await res.json()
+  const opts = practices.map(p => `<option value="${p.id}">${p.name}</option>`).join('')
+  document.getElementById('tr-from-sel').innerHTML += opts
+  document.getElementById('tr-to-sel').innerHTML   += opts
+
+  document.getElementById('tr-load-btn').addEventListener('click', loadTransferPatients)
+  document.getElementById('tr-go-btn').addEventListener('click', doTransfer)
+}
+
+async function loadTransferPatients() {
+  _transferFrom = document.getElementById('tr-from-sel').value
+  if (!_transferFrom) { alert('Please select a source practice first.'); return }
+  const btn = document.getElementById('tr-load-btn')
+  btn.disabled = true; btn.textContent = 'Loading…'
+  try {
+    const res = await saFetch(`/api/superadmin/practices/${_transferFrom}/patients`)
+    _transferPatients = await res.json()
+    const list = document.getElementById('tr-patient-list')
+    if (!_transferPatients.length) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0">No patients found in this practice.</div>'
+    } else {
+      list.innerHTML = `
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button onclick="selectAllTransfer(true)"  style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;color:var(--mid)">Select all</button>
+          <button onclick="selectAllTransfer(false)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;color:var(--mid)">Clear</button>
+        </div>
+        ${_transferPatients.map(p => `
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:var(--bg);border:1px solid var(--border)">
+            <input type="checkbox" class="tr-patient-cb" data-id="${p.id}" style="accent-color:var(--primary);flex-shrink:0">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:700">${p.first_name} ${p.last_name}</div>
+              <div style="font-size:11px;color:var(--muted)">${p.email||'—'} · ${p.dob ? new Date(p.dob).toLocaleDateString() : ''}</div>
+            </div>
+          </label>`).join('')}`
+      document.querySelectorAll('.tr-patient-cb').forEach(cb => cb.addEventListener('change', updateTransferCount))
+    }
+    updateTransferCount()
+  } catch(e) { document.getElementById('tr-patient-list').innerHTML = `<div style="color:var(--red)">Error: ${e.message}</div>` }
+  btn.disabled = false; btn.textContent = 'Load patients'
+}
+
+function selectAllTransfer(checked) {
+  document.querySelectorAll('.tr-patient-cb').forEach(cb => cb.checked = checked)
+  updateTransferCount()
+}
+
+function updateTransferCount() {
+  const selected = document.querySelectorAll('.tr-patient-cb:checked').length
+  document.getElementById('tr-sel-count').textContent = selected ? `${selected} patient${selected>1?'s':''} selected` : ''
+  document.getElementById('tr-go-btn').disabled = selected === 0
+}
+
+async function doTransfer() {
+  const fromId  = document.getElementById('tr-from-sel').value
+  const toId    = document.getElementById('tr-to-sel').value
+  const patIds  = Array.from(document.querySelectorAll('.tr-patient-cb:checked')).map(cb => cb.dataset.id)
+  const history = document.getElementById('tr-opt-history').checked
+
+  if (!fromId)        { alert('Select source practice.'); return }
+  if (!toId)          { alert('Select destination practice.'); return }
+  if (fromId === toId){ alert('Source and destination must be different.'); return }
+  if (!patIds.length) { alert('Select at least one patient.'); return }
+
+  const fromName = document.getElementById('tr-from-sel').selectedOptions[0].text
+  const toName   = document.getElementById('tr-to-sel').selectedOptions[0].text
+  if (!confirm(`Transfer ${patIds.length} patient${patIds.length>1?'s':''} from "${fromName}" to "${toName}"?\n\nThis cannot be undone.`)) return
+
+  const btn = document.getElementById('tr-go-btn')
+  btn.disabled = true; btn.textContent = 'Transferring…'
+  const status = document.getElementById('tr-status')
+  status.style.color = 'var(--muted)'; status.textContent = 'Working…'
+
+  try {
+    const res  = await saFetch('/api/superadmin/transfer-patients', {
+      method: 'POST',
+      body: { patientIds: patIds, fromPracticeId: fromId, toPracticeId: toId, includeHistory: history }
+    })
+    const data = await res.json()
+    if (res.ok) {
+      status.style.color = 'var(--green)'
+      status.textContent = `✓ ${data.transferred} patient${data.transferred>1?'s':''} transferred successfully`
+      toast(`${data.transferred} patient${data.transferred>1?'s':''} moved to ${toName} ✓`)
+      // Reload the patient list to reflect the move
+      setTimeout(loadTransferPatients, 800)
+    } else {
+      status.style.color = 'var(--red)'
+      status.textContent = '✗ ' + (data.error || 'Transfer failed')
+    }
+  } catch(e) {
+    status.style.color = 'var(--red)'
+    status.textContent = '✗ ' + e.message
+  }
+  btn.disabled = false; btn.textContent = '🔄 Transfer selected patients'
 }
 
 // ── Landing Page editor ───────────────────────────────────────────────────
