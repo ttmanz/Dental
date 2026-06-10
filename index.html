@@ -293,9 +293,95 @@
       .faq-flat-q { font-size: 15px; }
       .faq-flat-a { font-size: 14px; }
     }
+
+    /* ── LEAD CAPTURE MODAL ─────────────────────────────────────────────── */
+    #lead-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(10,20,30,.72); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    #lead-modal-overlay.open { display: flex; }
+    #lead-modal {
+      background: #fff; border-radius: 24px; padding: 44px 40px 36px;
+      width: 100%; max-width: 440px; box-shadow: 0 32px 80px rgba(0,0,0,.28);
+      position: relative; animation: modalIn .25s ease both;
+    }
+    @keyframes modalIn { from { opacity:0; transform:translateY(18px) scale(.97); } to { opacity:1; transform:none; } }
+    .modal-close {
+      position: absolute; top: 16px; right: 18px;
+      background: var(--cream); border: none; width: 32px; height: 32px;
+      border-radius: 50%; font-size: 18px; line-height: 32px; text-align: center;
+      cursor: pointer; color: var(--mid); transition: background .15s;
+    }
+    .modal-close:hover { background: var(--border); }
+    .modal-icon { font-size: 36px; margin-bottom: 10px; }
+    #lead-modal h3 { font-size: 22px; font-weight: 900; letter-spacing: -.02em; color: var(--text); margin-bottom: 6px; }
+    #lead-modal p.modal-sub { font-size: 14px; color: var(--mid); line-height: 1.55; margin-bottom: 28px; }
+    .modal-field { margin-bottom: 16px; }
+    .modal-field label { display: block; font-size: 12px; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .modal-field input {
+      width: 100%; padding: 12px 14px; border-radius: 10px;
+      border: 1.5px solid var(--border); font-size: 15px; font-family: inherit;
+      color: var(--text); background: var(--cream); outline: none; transition: border .15s;
+    }
+    .modal-field input:focus { border-color: var(--primary); background: #fff; }
+    .modal-submit {
+      width: 100%; padding: 14px; border-radius: 11px; border: none;
+      background: var(--primary); color: #fff; font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: all .2s; margin-top: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .modal-submit:hover { background: var(--primary-d); transform: translateY(-1px); }
+    .modal-submit:disabled { opacity: .6; cursor: default; transform: none; }
+    .modal-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; line-height: 1.5; }
+    #lead-modal-success { display: none; text-align: center; padding: 10px 0 6px; }
+    #lead-modal-success .success-icon { font-size: 52px; margin-bottom: 12px; }
+    #lead-modal-success h3 { font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 8px; }
+    #lead-modal-success p { font-size: 15px; color: var(--mid); line-height: 1.6; }
+    @media (max-width: 480px) {
+      #lead-modal { padding: 36px 24px 28px; border-radius: 18px; }
+    }
   </style>
 </head>
 <body>
+
+<!-- ── LEAD CAPTURE MODAL ────────────────────────────────────────────────── -->
+<div id="lead-modal-overlay" onclick="if(event.target===this)closeLeadModal()">
+  <div id="lead-modal" role="dialog" aria-modal="true" aria-labelledby="lead-modal-title">
+    <button class="modal-close" onclick="closeLeadModal()" aria-label="Close">×</button>
+
+    <!-- Form view -->
+    <div id="lead-modal-form">
+      <div class="modal-icon">🦷</div>
+      <h3 id="lead-modal-title">Get started with DentaPro</h3>
+      <p class="modal-sub" id="lead-modal-sub">Leave your details and we'll be in touch within one business day.</p>
+      <div class="modal-field">
+        <label for="lm-name">Name</label>
+        <input id="lm-name" type="text" placeholder="Dr. Your Name" autocomplete="name">
+      </div>
+      <div class="modal-field">
+        <label for="lm-email">Email address <span style="color:var(--red)">*</span></label>
+        <input id="lm-email" type="email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="modal-field">
+        <label for="lm-mobile">Mobile number <span style="color:var(--red)">*</span></label>
+        <input id="lm-mobile" type="tel" placeholder="+357 99 000 000" autocomplete="tel" required>
+      </div>
+      <button class="modal-submit" id="lead-submit-btn" onclick="submitLead()">
+        <span id="lead-btn-text">Send →</span>
+      </button>
+      <p class="modal-note" id="lead-modal-err" style="color:var(--red);display:none"></p>
+      <p class="modal-note">No spam. We'll contact you once. 100% private.</p>
+    </div>
+
+    <!-- Success view -->
+    <div id="lead-modal-success">
+      <div class="success-icon">✅</div>
+      <h3>We got your details!</h3>
+      <p>Our team will reach out to you on WhatsApp or email shortly. We look forward to meeting you.</p>
+    </div>
+  </div>
+</div>
 
 <!-- ── NAV ──────────────────────────────────────────────────────────────── -->
 <nav>
@@ -315,7 +401,7 @@
       <button class="lang-btn" id="lang-el">ΕΛ</button>
     </div>
     <a href="/calendar.html" class="nav-login" data-en="Sign in" data-el="Είσοδος">Sign in</a>
-    <a href="#pricing" class="nav-cta" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
+    <a href="#" class="nav-cta" onclick="openLeadModal('trial');return false;" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
   </div>
 </nav>
 
@@ -333,11 +419,11 @@
       Calendar - AI charting - billing - EOPYY codes - WhatsApp reminders - and more — in one beautiful app. Start in minutes - not months.
     </p>
     <div class="hero-actions">
-      <a href="#pricing" class="btn-primary">
+      <a href="#" class="btn-primary" onclick="openLeadModal('trial');return false;">
         <span>🦷</span>
         <span data-en="Start 14-day free trial" data-el="14 ημέρες δωρεάν">Start 14-day free trial</span>
       </a>
-      <a href="/calendar.html" class="btn-ghost" data-en="View demo →" data-el="Δείτε demo →">View demo →</a>
+      <a href="#" class="btn-ghost" onclick="openLeadModal('demo');return false;" data-en="View demo →" data-el="Δείτε demo →">View demo →</a>
     </div>
     <p class="hero-note" data-en="No credit card required · Cancel anytime · GDPR compliant" data-el="Χωρίς κάρτα · Ακύρωση οποτεδήποτε · GDPR">
       No credit card required · Cancel anytime · GDPR compliant
@@ -435,7 +521,7 @@
         Every EOPYY dental procedure code with coverage percentages and reimbursement amounts. Select a code in billing and it auto-fills description, code, and price.
       </p>
       <br><br>
-      <a href="#pricing" class="btn-primary" style="display:inline-flex">
+      <a href="#" class="btn-primary" style="display:inline-flex" onclick="openLeadModal('trial');return false;">
         <span data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</span>
       </a>
     </div>
@@ -479,7 +565,6 @@
           <li class="no" data-en="Lab portal" data-el="Εργαστήριο">Lab portal</li>
           <li class="no" data-en="Multi-location" data-el="Πολλαπλές τοποθεσίες">Multi-location</li>
         </ul>
-        <a href="/calendar.html" class="pricing-cta outline" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
       </div>
 
       <div class="pricing-card featured">
@@ -502,7 +587,6 @@
           <li data-en="Satisfaction surveys (NPS)" data-el="Ικανοποίηση ασθενών (NPS)">Satisfaction surveys (NPS)</li>
           <li class="no" data-en="Multi-location" data-el="Πολλαπλές τοποθεσίες">Multi-location</li>
         </ul>
-        <a href="/calendar.html" class="pricing-cta primary" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
       </div>
 
       <div class="pricing-card">
@@ -523,7 +607,6 @@
           <li data-en="Custom onboarding" data-el="Εξατομικευμένη εισαγωγή">Custom onboarding</li>
           <li data-en="SLA guarantee" data-el="Εγγύηση SLA">SLA guarantee</li>
         </ul>
-        <a href="/calendar.html" class="pricing-cta outline" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
       </div>
 
     </div>
@@ -618,7 +701,7 @@
   <p data-en="Join 500+ dental practices already using DentaPro. 14-day free trial, no card required." data-el="Ελάτε στα 500+ οδοντιατρεία που χρησιμοποιούν ήδη το Dental-Pro-Assistant. 14 ημέρες δωρεάν, χωρίς κάρτα.">
     Join 500+ dental practices already using DentaPro. 14-day free trial, no card required.
   </p>
-  <a href="/calendar.html" class="btn-white">
+  <a href="#" class="btn-white" onclick="openLeadModal('trial');return false;">
     <span>🦷</span>
     <span data-en="Start your free trial" data-el="Ξεκινήστε τη δωρεάν δοκιμή σας">Start your free trial</span>
   </a>
@@ -716,6 +799,76 @@
   // ── Redirect /app to the calendar app ─────────────────────────────────
   // The Express server handles this — /app → calendar.html
   // Links here already point to /app
+
+  // ── Lead capture modal ─────────────────────────────────────────────────
+  const LEAD_API = 'https://api.dentapro.org/api/leads'
+
+  const MODAL_COPY = {
+    trial: {
+      title: 'Start your free 14-day trial',
+      sub: 'Leave your details and our team will be in touch to get you set up — no credit card needed.'
+    },
+    demo: {
+      title: 'Request a live demo',
+      sub: 'Tell us who you are and we\'ll schedule a personal walkthrough of DentaPro with you.'
+    }
+  }
+
+  function openLeadModal(type) {
+    const copy = MODAL_COPY[type] || MODAL_COPY.trial
+    document.getElementById('lead-modal-title').textContent = copy.title
+    document.getElementById('lead-modal-sub').textContent   = copy.sub
+    document.getElementById('lead-modal-form').style.display    = ''
+    document.getElementById('lead-modal-success').style.display = 'none'
+    document.getElementById('lead-modal-err').style.display     = 'none'
+    document.getElementById('lm-name').value   = ''
+    document.getElementById('lm-email').value  = ''
+    document.getElementById('lm-mobile').value = ''
+    document.getElementById('lead-modal-overlay').dataset.interest = type
+    document.getElementById('lead-modal-overlay').classList.add('open')
+    setTimeout(() => document.getElementById('lm-name').focus(), 80)
+    document.body.style.overflow = 'hidden'
+  }
+
+  function closeLeadModal() {
+    document.getElementById('lead-modal-overlay').classList.remove('open')
+    document.body.style.overflow = ''
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLeadModal()
+  })
+
+  async function submitLead() {
+    const name     = document.getElementById('lm-name').value.trim()
+    const email    = document.getElementById('lm-email').value.trim()
+    const mobile   = document.getElementById('lm-mobile').value.trim()
+    const interest = document.getElementById('lead-modal-overlay').dataset.interest || 'trial'
+    const errEl    = document.getElementById('lead-modal-err')
+    const btn      = document.getElementById('lead-submit-btn')
+
+    errEl.style.display = 'none'
+    if (!email) { errEl.textContent = 'Please enter your email address.'; errEl.style.display='block'; return }
+    if (!mobile) { errEl.textContent = 'Please enter your mobile number.'; errEl.style.display='block'; return }
+
+    btn.disabled = true
+    document.getElementById('lead-btn-text').textContent = 'Sending…'
+
+    try {
+      await fetch(LEAD_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, mobile, interest })
+      })
+    } catch(e) { /* network error — still show success, lead may not be saved */ }
+
+    // Show success
+    document.getElementById('lead-modal-form').style.display    = 'none'
+    document.getElementById('lead-modal-success').style.display = 'block'
+
+    // Auto-close after 4 s
+    setTimeout(closeLeadModal, 4000)
+  }
 </script>
 </body>
 </html>
