@@ -7108,7 +7108,7 @@ function apiFetch(path, options = {}) {
       })
       const data = await res.json()
       if (!res.ok) { showErr(regErr, data.error || 'Registration failed'); return }
-      AUTH.save(data.token, { email, firstName:first, lastName:last, practiceId:data.practiceId, role:'admin' })
+      AUTH.save(data.token, { email, firstName:first, lastName:last, practiceId:data.practiceId, role:'owner' })
       onLoginSuccess()
     } catch { showErr(regErr, 'Cannot reach server — is the backend running?') }
     finally { btn.disabled = false; btn.textContent = LABELS[lLang].createPractice }
