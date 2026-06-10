@@ -87,7 +87,7 @@ async function sendWelcome({ to, name, practiceName, loginUrl }) {
 }
 
 async function sendContactForm({ name, email, subject, message }) {
-  const CONTACT_TO = process.env.CONTACT_EMAIL || 'dentaasst@gmail.com'
+  const CONTACT_TO = process.env.CONTACT_EMAIL || 'tthemis55@gmail.com'
   return sendMail({
     to: CONTACT_TO,
     subject: `[DentaPro Contact] ${subject || 'New enquiry from ' + name}`,
