@@ -5582,7 +5582,10 @@
     <div class="sb-patients">
       <div class="sb-patients-header">
         <span class="sb-patients-title" data-en="PATIENTS" data-el="ΑΣΘΕΝΕΙΣ">PATIENTS</span>
-        <span class="sb-patients-count" id="sb-pt-count">0</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="sb-patients-count" id="sb-pt-count">0</span>
+          <button id="sb-add-patient-btn" title="New Patient" style="width:20px;height:20px;border-radius:50%;border:none;background:var(--primary);color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;">＋</button>
+        </div>
       </div>
       <div class="sb-search-wrap">
         <span class="sb-search-icon">🔍</span>
@@ -8598,6 +8601,7 @@ function closePatientForm() {
 }
 
 document.getElementById('new-patient-btn').addEventListener('click', openPatientForm)
+document.getElementById('sb-add-patient-btn').addEventListener('click', openPatientForm)
 document.getElementById('pm-close').addEventListener('click', closePatientForm)
 document.getElementById('pm-cancel').addEventListener('click', closePatientForm)
 document.getElementById('patient-overlay').addEventListener('click', e => {
