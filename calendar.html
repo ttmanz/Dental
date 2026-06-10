@@ -1007,9 +1007,24 @@
     }
     .sb-patient-arrow { font-size: 10px; color: var(--text-muted); flex-shrink: 0; }
     .sb-patient-row:hover .sb-patient-arrow { color: var(--primary); }
+    .sb-patient-row[draggable="true"] { cursor: grab; }
+    .sb-patient-row[draggable="true"]:active { cursor: grabbing; }
+    .sb-patient-row.pt-dragging { opacity: .35; }
     .sb-patient-empty {
       padding: 14px 10px; text-align: center;
       font-size: 12px; color: var(--text-muted);
+    }
+
+    /* Patient-drag drop targets */
+    .time-cell.pt-drop-target {
+      background: rgba(61,158,143,.18) !important;
+      border-bottom-color: var(--primary) !important;
+    }
+    .time-cell.pt-drop-target::after { display: none !important; }
+    .appt.pt-drop-target {
+      outline: 2.5px solid #fff;
+      box-shadow: 0 0 0 4px var(--primary) !important;
+      z-index: 30; transform: scale(1.02) !important;
     }
 
     /* ── Import overlay ─────────────────────────────────────────────────── */
@@ -7593,6 +7608,9 @@ function makeApptBlock(a, date) {
   // Drag to reschedule
   enableApptDrag(block, a)
 
+  // Accept patient drop → reassign patient
+  enableApptBlockPatientDrop(block, a)
+
   return block
 }
 
@@ -7797,6 +7815,7 @@ function renderDayView() {
       if (isToday) cell.style.background = 'rgba(61,158,143,.025)'
       const _hr = hr
       cell.addEventListener('click', () => openApptForm(new Date(targetDate), _hr, 0, dentistName))
+      enableTimeCellPatientDrop(cell, toISODate(targetDate), _hr, dentistName)
       col.appendChild(cell)
     }
 
@@ -7938,6 +7957,7 @@ function renderWeekView() {
       if (colIsToday) cell.style.background = 'rgba(61,158,143,.025)'
       const cellDate = new Date(date), cellHour = h
       cell.addEventListener('click', () => openApptForm(cellDate, cellHour, 0))
+      enableTimeCellPatientDrop(cell, toISODate(date), cellHour, null)
       col.appendChild(cell)
     }
 
@@ -9353,6 +9373,86 @@ function enableColDrop(col, dateStr) {
   })
 }
 
+// ── Patient drag-to-calendar ──────────────────────────────────────────────
+let _patientDrag = null  // { patient }
+
+// Wire drag on a sidebar patient row
+function enablePatientRowDrag(row, patient) {
+  row.setAttribute('draggable', 'true')
+  row.addEventListener('dragstart', e => {
+    _patientDrag = { patient }
+    e.dataTransfer.effectAllowed = 'copy'
+    e.dataTransfer.setData('text/plain', patient.fullName || '')
+    setTimeout(() => row.classList.add('pt-dragging'), 0)
+  })
+  row.addEventListener('dragend', () => {
+    row.classList.remove('pt-dragging')
+    _patientDrag = null
+    document.querySelectorAll('.appt.pt-drop-target').forEach(b => b.classList.remove('pt-drop-target'))
+    document.querySelectorAll('.time-cell.pt-drop-target').forEach(c => c.classList.remove('pt-drop-target'))
+  })
+}
+
+// Make a time cell accept a patient drop → open New Appointment pre-filled
+function enableTimeCellPatientDrop(cell, dateStr, hr, dentistName) {
+  cell.addEventListener('dragover', e => {
+    if (!_patientDrag) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+    cell.classList.add('pt-drop-target')
+  })
+  cell.addEventListener('dragleave', () => cell.classList.remove('pt-drop-target'))
+  cell.addEventListener('drop', e => {
+    if (!_patientDrag) return
+    e.preventDefault()
+    e.stopPropagation()
+    cell.classList.remove('pt-drop-target')
+    const p = _patientDrag.patient
+    const patName = p.fullName || [p.firstName, p.lastName].filter(Boolean).join(' ') || ''
+    openApptForm(new Date(dateStr + 'T00:00:00'), hr, 0, dentistName || null)
+    // Set patient field after form renders
+    setTimeout(() => {
+      const field = document.getElementById('af-patient')
+      if (field) field.value = patName
+    }, 30)
+  })
+}
+
+// Make an appointment block accept a patient drop → reassign the patient
+function enableApptBlockPatientDrop(block, a) {
+  block.addEventListener('dragover', e => {
+    if (!_patientDrag) return
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
+    block.classList.add('pt-drop-target')
+  })
+  block.addEventListener('dragleave', e => {
+    if (!block.contains(e.relatedTarget)) block.classList.remove('pt-drop-target')
+  })
+  block.addEventListener('drop', e => {
+    if (!_patientDrag) return
+    e.preventDefault()
+    e.stopPropagation()
+    block.classList.remove('pt-drop-target')
+    const p = _patientDrag.patient
+    const patName = p.fullName || [p.firstName, p.lastName].filter(Boolean).join(' ') || ''
+    const oldName = a.patient
+
+    a.patient = patName
+
+    if (a.id && AUTH.token) {
+      apiFetch(`/api/appointments/${a.id}`, {
+        method: 'PATCH',
+        body: { patientId: p.id }
+      }).catch(() => showToast(lang === 'el' ? 'Δεν αποθηκεύτηκε' : 'Could not save — check connection'))
+    }
+
+    showToast(`👤 ${oldName} → ${patName} ✓`)
+    renderCalendar()
+  })
+}
+
 // ── Sidebar Patient List ──────────────────────────────────────────────────
 function renderSidebarPatients(filter) {
   const list    = document.getElementById('sb-pt-list')
@@ -9391,10 +9491,10 @@ function renderSidebarPatients(filter) {
   }).join('')
 
   list.querySelectorAll('.sb-patient-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const pid = row.dataset.pid
-      openPatientChart(pid)
-    })
+    const pid = row.dataset.pid
+    const p   = PATIENTS.find(pt => String(pt.id) === String(pid))
+    row.addEventListener('click', () => openPatientChart(pid))
+    if (p) enablePatientRowDrag(row, p)
   })
 }
 
