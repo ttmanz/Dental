@@ -921,6 +921,74 @@
     .import-patients-btn .np-icon { font-size: 15px; }
     .import-patients-btn .np-label { font-size: 12px; font-weight: 600; flex:1; text-align:left; }
 
+    /* ── Sidebar Patient List ───────────────────────────────────────────── */
+    .sb-patients {
+      margin: 0 10px; border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden; background: var(--white);
+    }
+    .sb-patients-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px 6px; border-bottom: 1px solid var(--border);
+      background: var(--cream);
+    }
+    .sb-patients-title {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    .sb-patients-count {
+      font-size: 10px; font-weight: 600; color: var(--text-muted);
+      background: var(--cream-dark); padding: 1px 6px; border-radius: 20px;
+    }
+    .sb-search-wrap {
+      padding: 6px 8px; border-bottom: 1px solid var(--border);
+    }
+    .sb-search-input {
+      width: 100%; height: 28px; border: 1.5px solid var(--border);
+      border-radius: 6px; padding: 0 8px 0 26px; font-size: 12px;
+      background: var(--cream); color: var(--text); outline: none;
+      font-family: inherit; transition: border-color .15s;
+    }
+    .sb-search-input:focus { border-color: var(--primary); background: #fff; }
+    .sb-search-wrap { position: relative; }
+    .sb-search-icon {
+      position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+      font-size: 11px; color: var(--text-muted); pointer-events: none;
+    }
+    .sb-patient-list {
+      max-height: 220px; overflow-y: auto;
+    }
+    .sb-patient-list::-webkit-scrollbar { width: 3px; }
+    .sb-patient-list::-webkit-scrollbar-track { background: transparent; }
+    .sb-patient-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .sb-patient-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; cursor: pointer; transition: background .12s;
+      border-bottom: 1px solid var(--cream);
+    }
+    .sb-patient-row:last-child { border-bottom: none; }
+    .sb-patient-row:hover { background: var(--cream); }
+    .sb-patient-avatar {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      background: var(--primary-light); color: var(--primary);
+      font-size: 10px; font-weight: 700; display: flex;
+      align-items: center; justify-content: center; text-transform: uppercase;
+    }
+    .sb-patient-info { flex: 1; min-width: 0; }
+    .sb-patient-name {
+      font-size: 12px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sb-patient-sub {
+      font-size: 10px; color: var(--text-muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sb-patient-arrow { font-size: 10px; color: var(--text-muted); flex-shrink: 0; }
+    .sb-patient-row:hover .sb-patient-arrow { color: var(--primary); }
+    .sb-patient-empty {
+      padding: 14px 10px; text-align: center;
+      font-size: 12px; color: var(--text-muted);
+    }
+
     /* ── Import overlay ─────────────────────────────────────────────────── */
     .import-overlay {
       position: fixed; inset: 0; z-index: 800;
@@ -5473,6 +5541,25 @@
       </button>
     </div>
 
+    <!-- Sidebar Patient List -->
+    <div class="sb-patients">
+      <div class="sb-patients-header">
+        <span class="sb-patients-title" data-en="PATIENTS" data-el="ΑΣΘΕΝΕΙΣ">PATIENTS</span>
+        <span class="sb-patients-count" id="sb-pt-count">0</span>
+      </div>
+      <div class="sb-search-wrap">
+        <span class="sb-search-icon">🔍</span>
+        <input class="sb-search-input" id="sb-pt-search" type="text"
+          placeholder="Search patients…"
+          data-en-placeholder="Search patients…"
+          data-el-placeholder="Αναζήτηση ασθενών…"
+          autocomplete="off" spellcheck="false"/>
+      </div>
+      <div class="sb-patient-list" id="sb-pt-list">
+        <div class="sb-patient-empty">Loading…</div>
+      </div>
+    </div>
+
     <!-- Mini calendar -->
     <div class="mini-cal">
       <div class="mini-cal-header">
@@ -7174,6 +7261,7 @@ async function fetchPatients() {
     const patients = Array.isArray(raw) ? raw : (raw.data || [])
     PATIENTS.length = 0
     patients.forEach(p => PATIENTS.push(patientFromApi(p)))
+    if (typeof refreshSidebarPatients === 'function') refreshSidebarPatients()
   } catch(e) { console.warn('fetchPatients failed', e) }
 }
 
@@ -8674,6 +8762,7 @@ document.getElementById('voice-next').addEventListener('click', () => {
           if (existing) Object.assign(existing, mapped)
           else PATIENTS.push(mapped)
           showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
+          if (typeof refreshSidebarPatients === 'function') refreshSidebarPatients()
         }
       })
       .catch(() => showToast('Could not save patient — check connection.'))
@@ -9134,6 +9223,61 @@ document.getElementById('import-file-input').addEventListener('change', e => {
   processImportFile(file)
   e.target.value = ''
 })
+
+// ── Sidebar Patient List ──────────────────────────────────────────────────
+function renderSidebarPatients(filter) {
+  const list    = document.getElementById('sb-pt-list')
+  const countEl = document.getElementById('sb-pt-count')
+  if (!list) return
+
+  const q = (filter || '').trim().toLowerCase()
+  const source = q
+    ? PATIENTS.filter(p => {
+        const name  = (p.fullName || '').toLowerCase()
+        const phone = (p.phone    || '').toLowerCase()
+        const email = (p.email    || '').toLowerCase()
+        return name.includes(q) || phone.includes(q) || email.includes(q)
+      })
+    : [...PATIENTS].sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''))
+
+  countEl.textContent = PATIENTS.length
+
+  if (!source.length) {
+    list.innerHTML = `<div class="sb-patient-empty">${q ? 'No matches' : 'No patients yet'}</div>`
+    return
+  }
+
+  list.innerHTML = source.map(p => {
+    const name    = p.fullName || `${p.firstName||''} ${p.lastName||''}`.trim() || 'Unknown'
+    const initials = name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()
+    const sub     = p.phone || p.email || (p.dob ? `DOB: ${p.dob}` : '')
+    return `<div class="sb-patient-row" data-pid="${p.id}" title="${name}">
+      <div class="sb-patient-avatar">${initials}</div>
+      <div class="sb-patient-info">
+        <div class="sb-patient-name">${name}</div>
+        ${sub ? `<div class="sb-patient-sub">${sub}</div>` : ''}
+      </div>
+      <span class="sb-patient-arrow">›</span>
+    </div>`
+  }).join('')
+
+  list.querySelectorAll('.sb-patient-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const pid = row.dataset.pid
+      openPatientChart(pid)
+    })
+  })
+}
+
+// Wire search input
+document.getElementById('sb-pt-search').addEventListener('input', function() {
+  renderSidebarPatients(this.value)
+})
+
+// Called after PATIENTS array is populated (hooked into existing load flow)
+function refreshSidebarPatients() {
+  renderSidebarPatients(document.getElementById('sb-pt-search')?.value || '')
+}
 
 // ── Contact panel ─────────────────────────────────────────────────────────
 const _cp = document.getElementById('contact-panel')
