@@ -240,6 +240,7 @@
     <div class="sidebar">
       <div class="nav-item active" data-view="practices">🏥 Practices</div>
       <div class="nav-item" data-view="transfer">🔄 Transfer Patients</div>
+      <div class="nav-item" data-view="import">📦 Import Patients</div>
       <div class="nav-item" data-view="landing">🌐 Landing Page</div>
       <div class="nav-item" data-view="leads">📥 Leads</div>
       <div class="nav-item" data-view="audit">📋 Audit Log</div>
@@ -325,6 +326,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
 function showView(view) {
   if (view === 'practices') loadPractices()
   if (view === 'transfer')  loadTransfer()
+  if (view === 'import')    loadImport()
   if (view === 'landing')   loadLanding()
   if (view === 'leads')     loadLeads()
   if (view === 'audit')     loadAudit()
@@ -886,6 +888,413 @@ async function loadLeads() {
         </tr>`).join('')}
       </tbody></table>`
   } catch { document.getElementById('leads-wrap').innerHTML = '<div style="color:var(--red);padding:20px">Failed to load leads.</div>' }
+}
+
+// ── Import Patients ───────────────────────────────────────────────────────
+// Column definitions and auto-detect aliases (mirrors calendar.html)
+const IMP_FIELDS = [
+  { key: '__skip',        label: '— Skip —' },
+  { key: 'fullName',      label: 'Full Name',           aliases: ['full name','patient name','name','patient','fullname','nome','ονομα','ονοματεπωνυμο'] },
+  { key: 'firstName',     label: 'First Name',          aliases: ['first name','firstname','given name','first','prénom','μικρο ονομα','ονομα'] },
+  { key: 'lastName',      label: 'Last Name',           aliases: ['last name','lastname','surname','family name','last','επιθετο','επωνυμο'] },
+  { key: 'dob',           label: 'Date of Birth',       aliases: ['date of birth','dob','birth date','birthdate','birthday','born','ημερομηνια γεννησης','ημ. γεννησης'] },
+  { key: 'phone',         label: 'Phone',               aliases: ['phone','telephone','mobile','cell','phone number','tel','τηλεφωνο','κινητο'] },
+  { key: 'email',         label: 'Email',               aliases: ['email','e-mail','email address','mail','e mail'] },
+  { key: 'address',       label: 'Address',             aliases: ['address','street','full address','διευθυνση'] },
+  { key: 'gender',        label: 'Gender',              aliases: ['gender','sex','φυλο'] },
+  { key: 'insurance',     label: 'Insurance',           aliases: ['insurance','insurer','insurance provider','insurance company','ασφαλιση'] },
+  { key: 'allergies',     label: 'Allergies',           aliases: ['allergies','allergy','allergic to','αλλεργιες'] },
+  { key: 'medications',   label: 'Medications',         aliases: ['medications','medication','drugs','meds','φαρμακα'] },
+  { key: 'conditions',    label: 'Medical Conditions',  aliases: ['conditions','medical conditions','medical history','diagnosis','παθησεις'] },
+  { key: 'emergName',     label: 'Emergency Contact',   aliases: ['emergency contact','emergency name','em contact','emergency','επαφη εκτακτης'] },
+  { key: 'emergPhone',    label: 'Emergency Phone',     aliases: ['emergency phone','emergency contact phone','em phone','τηλ. εκτακτης'] },
+  { key: 'lastVisit',     label: 'Last Visit',          aliases: ['last visit','last dental visit','previous visit','last appointment'] },
+  { key: 'prevWork',      label: 'Previous Dental Work',aliases: ['previous work','dental work','past treatment','past dental'] },
+  { key: 'chiefComplaint',label: 'Reason for Visit',    aliases: ['reason','chief complaint','complaint','reason for visit'] },
+  { key: 'notes',         label: 'Notes',               aliases: ['notes','comments','remarks','σημειωσεις'] },
+]
+
+let _imp = { step:1, rows:[], cols:[], colMap:{}, fileName:'', practiceId:'', practiceName:'' }
+
+function impDetectField(colName) {
+  const n = colName.toLowerCase().trim().replace(/[_\-]/g,' ')
+  for (const f of IMP_FIELDS) {
+    if (!f.aliases) continue
+    if (f.aliases.some(a => n === a || n.includes(a) || a.includes(n))) return f.key
+  }
+  return '__skip'
+}
+
+function impParseCSV(text) {
+  const rows = []; let inQ = false, field = '', row = []
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (inQ) {
+      if (c === '"' && text[i+1] === '"') { field += '"'; i++ }
+      else if (c === '"') inQ = false
+      else field += c
+    } else {
+      if      (c === '"')  inQ = true
+      else if (c === ',')  { row.push(field.trim()); field = '' }
+      else if (c === '\n') { row.push(field.trim()); rows.push(row); row = []; field = '' }
+      else if (c === '\r') { /* skip */ }
+      else field += c
+    }
+  }
+  if (field || row.length) { row.push(field.trim()); rows.push(row) }
+  return rows.filter(r => r.some(c => c !== ''))
+}
+
+function impLoadSheetJS(cb) {
+  if (window.XLSX) { cb(null); return }
+  const s = document.createElement('script')
+  s.src = 'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js'
+  s.onload = () => cb(null)
+  s.onerror = () => cb(new Error('Could not load Excel parser. Please convert to CSV first.'))
+  document.head.appendChild(s)
+}
+
+function impProcessFile(file) {
+  _imp.fileName = file.name
+  const ext = file.name.split('.').pop().toLowerCase()
+  const handleRows = rows2d => {
+    if (rows2d.length < 2) { alert('File appears empty.'); return }
+    _imp.cols = rows2d[0].map(c => String(c).trim())
+    _imp.rows = rows2d.slice(1).map(r => {
+      const obj = {}
+      _imp.cols.forEach((col,i) => { obj[col] = String(r[i]||'').trim() })
+      return obj
+    }).filter(r => Object.values(r).some(v => v))
+    _imp.colMap = {}
+    const used = new Set()
+    _imp.cols.forEach(col => {
+      const key = impDetectField(col)
+      if (key !== '__skip' && used.has(key)) _imp.colMap[col] = '__skip'
+      else { _imp.colMap[col] = key; if (key !== '__skip') used.add(key) }
+    })
+    impGoStep(2)
+  }
+  if (ext === 'csv') {
+    const r = new FileReader()
+    r.onload = e => handleRows(impParseCSV(e.target.result))
+    r.readAsText(file, 'UTF-8')
+  } else {
+    impLoadSheetJS(err => {
+      if (err) { alert(err.message); return }
+      const r = new FileReader()
+      r.onload = e => {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type:'array' })
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        const data = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' })
+        handleRows(data.map(row => row.map(c => String(c===null||c===undefined?'':c))))
+      }
+      r.readAsArrayBuffer(file)
+    })
+  }
+}
+
+function impBuildPatients() {
+  return _imp.rows.map(row => {
+    const p = {}
+    _imp.cols.forEach(col => {
+      const key = _imp.colMap[col]
+      if (!key || key === '__skip') return
+      const val = row[col]
+      if (!val) return
+      if (key === 'firstName') p._firstName = val
+      else if (key === 'lastName') p._lastName = val
+      else p[key] = val
+    })
+    if (!p.fullName && (p._firstName || p._lastName))
+      p.fullName = [p._firstName, p._lastName].filter(Boolean).join(' ')
+    delete p._firstName; delete p._lastName
+    return p
+  }).filter(p => p.fullName || p.phone || p.email)
+}
+
+function impToApiBody(p) {
+  const parts = (p.fullName||'').trim().split(/\s+/)
+  const noteParts = [
+    p.allergies      && `Allergies: ${p.allergies}`,
+    p.medications    && `Medications: ${p.medications}`,
+    p.conditions     && `Conditions: ${p.conditions}`,
+    p.insurance      && `Insurance: ${p.insurance}`,
+    p.emergName      && `Emergency: ${p.emergName}${p.emergPhone?' — '+p.emergPhone:''}`,
+    p.lastVisit      && `Last visit: ${p.lastVisit}`,
+    p.prevWork       && `Previous work: ${p.prevWork}`,
+    p.chiefComplaint && `Chief complaint: ${p.chiefComplaint}`,
+    p.notes          && p.notes,
+  ].filter(Boolean).join('\n') || null
+  return {
+    firstName:     parts[0] || '',
+    lastName:      parts.slice(1).join(' ') || '',
+    phone:         p.phone       || null,
+    email:         p.email       || null,
+    address:       p.address     || null,
+    dateOfBirth:   p.dob         || null,
+    gender:        p.gender      || null,
+    notes:         noteParts,
+    allergies:     p.allergies   || null,
+    medications:   p.medications || null,
+    conditions:    p.conditions  || null,
+    insurance:     p.insurance   || null,
+    emergencyName: p.emergName   || null,
+    emergencyPhone:p.emergPhone  || null,
+    lastVisit:     p.lastVisit   || null,
+    prevWork:      p.prevWork    || null,
+    chiefComplaint:p.chiefComplaint || null,
+  }
+}
+
+function impGoStep(step) {
+  _imp.step = step
+  const panel = document.getElementById('imp-content')
+  if (!panel) return
+
+  if (step === 1) {
+    impRenderStep1()
+  } else if (step === 2) {
+    impRenderStep2()
+  } else if (step === 3) {
+    impRenderStep3()
+  }
+}
+
+function impRenderStep1() {
+  document.getElementById('imp-content').innerHTML = `
+    <div style="margin-bottom:20px">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:8px">Select Practice</label>
+      <select id="imp-practice-sel" style="width:100%;max-width:400px;height:40px;border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-size:14px;background:var(--bg);color:var(--text);font-family:inherit">
+        <option value="">— choose a practice —</option>
+      </select>
+    </div>
+    <div id="imp-drop-zone" style="border:2px dashed var(--border);border-radius:12px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;max-width:520px">
+      <div style="font-size:36px;margin-bottom:12px">📄</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Drop CSV or Excel file here</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Supports .csv · .xlsx · .xls — any column names</div>
+      <button id="imp-browse-btn" style="padding:8px 20px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Browse Files</button>
+      <input type="file" id="imp-file-input" accept=".csv,.xlsx,.xls" style="display:none">
+    </div>
+  `
+  // Populate practice dropdown
+  saFetch('/api/superadmin/practices').then(r=>r.json()).then(list => {
+    const sel = document.getElementById('imp-practice-sel')
+    if (!sel) return
+    ;(Array.isArray(list) ? list : list.practices || []).forEach(p => {
+      const o = document.createElement('option')
+      o.value = p.id; o.textContent = p.name
+      sel.appendChild(o)
+    })
+    if (_imp.practiceId) sel.value = _imp.practiceId
+  }).catch(()=>{})
+
+  const sel = document.getElementById('imp-practice-sel')
+  sel.addEventListener('change', e => {
+    _imp.practiceId = e.target.value
+    _imp.practiceName = e.target.options[e.target.selectedIndex].text
+  })
+
+  const zone = document.getElementById('imp-drop-zone')
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor='var(--primary)'; zone.style.background='rgba(61,158,143,.07)' })
+  zone.addEventListener('dragleave', () => { zone.style.borderColor=''; zone.style.background='' })
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.style.borderColor=''; zone.style.background=''
+    const f = e.dataTransfer.files[0]
+    if (f) {
+      if (!_imp.practiceId) { alert('Please select a practice first.'); return }
+      impProcessFile(f)
+    }
+  })
+  zone.addEventListener('click', () => {
+    if (!_imp.practiceId) { alert('Please select a practice first.'); return }
+    document.getElementById('imp-file-input').click()
+  })
+  document.getElementById('imp-browse-btn').addEventListener('click', e => {
+    e.stopPropagation()
+    if (!_imp.practiceId) { alert('Please select a practice first.'); return }
+    document.getElementById('imp-file-input').click()
+  })
+  document.getElementById('imp-file-input').addEventListener('change', e => {
+    const f = e.target.files[0]
+    if (f) impProcessFile(f)
+  })
+}
+
+function impRenderStep2() {
+  const optHtml = IMP_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('')
+  const mappedCount = Object.values(_imp.colMap).filter(v=>v!=='__skip').length
+  document.getElementById('imp-content').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text)">Map Columns — <span style="color:var(--muted);font-weight:500;font-size:13px">${_imp.fileName}</span></div>
+        <div id="imp-map-info" style="font-size:12px;color:var(--muted);margin-top:3px">${mappedCount} of ${_imp.cols.length} columns mapped · ${_imp.rows.length} patients</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="imp-back2" style="padding:8px 18px;border-radius:8px;border:1.5px solid var(--border);background:none;color:var(--mid);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Back</button>
+        <button id="imp-next2" style="padding:8px 20px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Preview →</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:8px 12px;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;width:30%">Column in File</th>
+            <th style="text-align:left;padding:8px 12px;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;width:30%">Sample Data</th>
+            <th style="text-align:left;padding:8px 12px;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em">Maps To</th>
+          </tr>
+        </thead>
+        <tbody id="imp-mapper-body"></tbody>
+      </table>
+    </div>
+  `
+  const body = document.getElementById('imp-mapper-body')
+  _imp.cols.forEach(col => {
+    const sample = _imp.rows.slice(0,3).map(r=>r[col]).filter(Boolean).join(' · ') || '—'
+    const mapped = _imp.colMap[col] || '__skip'
+    const tr = document.createElement('tr')
+    tr.style.borderBottom = '1px solid var(--border)'
+    tr.innerHTML = `
+      <td style="padding:10px 12px;font-weight:600;color:var(--text)">${col}</td>
+      <td style="padding:10px 12px;color:var(--muted);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${sample}">${sample}</td>
+      <td style="padding:10px 12px">
+        <select data-col="${col}" style="height:32px;border:1.5px solid ${mapped!=='__skip'?'var(--primary)':'var(--border)'};border-radius:6px;padding:0 8px;font-size:12px;background:var(--bg);color:var(--text);font-family:inherit;min-width:160px">
+          ${optHtml}
+        </select>
+      </td>
+    `
+    const sel = tr.querySelector('select')
+    sel.value = mapped
+    sel.addEventListener('change', e => {
+      _imp.colMap[col] = e.target.value
+      e.target.style.borderColor = e.target.value !== '__skip' ? 'var(--primary)' : 'var(--border)'
+      const mc = Object.values(_imp.colMap).filter(v=>v!=='__skip').length
+      document.getElementById('imp-map-info').textContent = `${mc} of ${_imp.cols.length} columns mapped · ${_imp.rows.length} patients`
+    })
+    body.appendChild(tr)
+  })
+
+  document.getElementById('imp-back2').addEventListener('click', () => impGoStep(1))
+  document.getElementById('imp-next2').addEventListener('click', () => {
+    const hasMapped = Object.values(_imp.colMap).some(v=>v!=='__skip')
+    if (!hasMapped) { alert('Please map at least one column.'); return }
+    impGoStep(3)
+  })
+}
+
+function impRenderStep3() {
+  const mapped = impBuildPatients()
+  const preview = mapped.slice(0,6)
+  const fLabel = key => IMP_FIELDS.find(f=>f.key===key)?.label || key
+  const cards = preview.map(p => {
+    const fields = Object.entries(p).filter(([k,v])=>v&&k!=='id'&&k!=='createdAt').slice(0,5)
+      .map(([k,v])=>`<div style="display:flex;gap:6px;font-size:11px"><span style="color:var(--muted);min-width:90px">${fLabel(k)}</span><span style="color:var(--text)">${v}</span></div>`).join('')
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:8px">${p.fullName||'(no name)'}</div>
+      ${fields}
+    </div>`
+  }).join('')
+
+  document.getElementById('imp-content').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text)">Preview — importing into <span style="color:var(--primary)">${_imp.practiceName}</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">${mapped.length} patients · showing first ${Math.min(6,mapped.length)}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="imp-back3" style="padding:8px 18px;border-radius:8px;border:1.5px solid var(--border);background:none;color:var(--mid);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Back</button>
+        <button id="imp-run" style="padding:8px 24px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✅ Import ${mapped.length} Patients</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:20px" id="imp-preview-cards">${cards}</div>
+    <div id="imp-progress" style="display:none">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px" id="imp-prog-label">Importing…</div>
+      <div style="background:var(--border);border-radius:8px;overflow:hidden;height:10px">
+        <div id="imp-prog-bar" style="background:var(--primary);height:100%;width:0%;transition:width .2s"></div>
+      </div>
+    </div>
+    <div id="imp-done" style="display:none"></div>
+  `
+
+  document.getElementById('imp-back3').addEventListener('click', () => impGoStep(2))
+  document.getElementById('imp-run').addEventListener('click', () => impExecute(mapped))
+}
+
+async function impExecute(patients) {
+  document.getElementById('imp-run').disabled = true
+  document.getElementById('imp-back3').style.display = 'none'
+  document.getElementById('imp-preview-cards').style.display = 'none'
+  document.getElementById('imp-progress').style.display = ''
+
+  const total = patients.length
+  const BATCH = 20
+  let imported = 0, updated = 0, failed = 0
+
+  for (let i = 0; i < patients.length; i += BATCH) {
+    const batch = patients.slice(i, i + BATCH).map(impToApiBody)
+    try {
+      const res = await saFetch('/api/superadmin/import-patients', {
+        method: 'POST',
+        body: { tenantId: _imp.practiceId, patients: batch }
+      })
+      const data = await res.json()
+      if (res.ok) {
+        imported += data.imported || 0
+        updated  += data.updated  || 0
+        failed   += data.failed   || 0
+      } else {
+        failed += batch.length
+      }
+    } catch {
+      failed += batch.length
+    }
+    const done = Math.min(i + BATCH, total)
+    const pct  = Math.round((done/total)*100)
+    document.getElementById('imp-prog-bar').style.width   = pct + '%'
+    document.getElementById('imp-prog-label').textContent = `Importing… ${done}/${total} (${pct}%)`
+  }
+
+  document.getElementById('imp-progress').style.display = 'none'
+  document.getElementById('imp-done').style.display = ''
+  document.getElementById('imp-done').innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;text-align:center;max-width:420px;margin:0 auto">
+      <div style="font-size:36px;margin-bottom:12px">🎉</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px">Import Complete!</div>
+      <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px">
+        <div><div style="font-size:28px;font-weight:800;color:var(--green)">${imported}</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">New</div></div>
+        <div><div style="font-size:28px;font-weight:800;color:var(--amber)">${updated}</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Updated</div></div>
+        ${failed ? `<div><div style="font-size:28px;font-weight:800;color:var(--red)">${failed}</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Failed</div></div>` : ''}
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Patients are now live in <strong>${_imp.practiceName}</strong></div>
+      <button onclick="loadImport()" style="padding:8px 20px;border-radius:8px;border:1.5px solid var(--border);background:none;color:var(--mid);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Import Another File</button>
+    </div>
+  `
+}
+
+async function loadImport() {
+  _imp = { step:1, rows:[], cols:[], colMap:{}, fileName:'', practiceId: _imp.practiceId || '', practiceName: _imp.practiceName || '' }
+  const content = document.getElementById('content')
+  content.innerHTML = `
+    <div class="toolbar">
+      <h2>📦 Import Patients</h2>
+      <span style="font-size:12px;color:var(--muted)">Upload a CSV or Excel file to bulk-import patients into any practice</span>
+    </div>
+    <div style="padding:24px">
+      <!-- Step indicator -->
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:28px;max-width:480px">
+        ${[['1','Select Practice & File'],['2','Map Columns'],['3','Preview & Import']].map(([n,lbl],i)=>`
+          <div style="display:flex;align-items:center;gap:0;flex:1">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div id="imp-step-${n}" style="width:28px;height:28px;border-radius:50%;background:${n==='1'?'var(--primary)':'var(--border)'};color:${n==='1'?'#fff':'var(--muted)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;transition:all .2s">${n}</div>
+              <div style="font-size:10px;color:var(--muted);white-space:nowrap">${lbl}</div>
+            </div>
+            ${i<2?`<div id="imp-line-${n}" style="flex:1;height:2px;background:var(--border);margin:0 4px;margin-bottom:16px;transition:background .2s"></div>`:''}
+          </div>
+        `).join('')}
+      </div>
+      <div id="imp-content"></div>
+    </div>
+  `
+  impGoStep(1)
 }
 
 // ── Audit log ─────────────────────────────────────────────────────────────

@@ -224,4 +224,85 @@ router.patch('/content/:key', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Server error' }) }
 })
 
+// ── Superadmin: bulk import patients into a practice ─────────────────────
+router.post('/import-patients', requireSuperAdmin, async (req, res) => {
+  const { tenantId, patients } = req.body
+  if (!tenantId) return res.status(400).json({ error: 'tenantId required' })
+  if (!Array.isArray(patients) || !patients.length) return res.status(400).json({ error: 'patients array required' })
+
+  // Confirm practice exists
+  const { rows: pRows } = await queryRaw('SELECT id, name FROM practices WHERE id = $1', [tenantId])
+  if (!pRows[0]) return res.status(404).json({ error: 'Practice not found' })
+
+  let imported = 0, updated = 0, failed = 0
+  const errors = []
+
+  for (const p of patients) {
+    try {
+      const fn = (p.firstName || '').trim()
+      const ln = (p.lastName  || '').trim()
+      if (!fn && !ln) { failed++; continue }
+
+      // Check for duplicate by name within this practice
+      const { rows: existing } = await queryRaw(
+        `SELECT id FROM patients WHERE practice_id = $1
+           AND lower(trim(first_name)) = lower($2)
+           AND lower(trim(last_name))  = lower($3) LIMIT 1`,
+        [tenantId, fn, ln]
+      )
+
+      if (existing[0]) {
+        // Update existing patient
+        await queryRaw(
+          `UPDATE patients SET
+             phone = COALESCE($3, phone), email = COALESCE($4, email),
+             address = COALESCE($5, address), date_of_birth = COALESCE($6, date_of_birth),
+             gender = COALESCE($7, gender), notes = COALESCE($8, notes),
+             allergies = COALESCE($9, allergies), medications = COALESCE($10, medications),
+             conditions = COALESCE($11, conditions), insurance = COALESCE($12, insurance),
+             emergency_name = COALESCE($13, emergency_name), emergency_phone = COALESCE($14, emergency_phone),
+             updated_at = NOW()
+           WHERE id = $1 AND practice_id = $2`,
+          [existing[0].id, tenantId,
+           p.phone || null, p.email || null, p.address || null, p.dateOfBirth || null,
+           p.gender || null, p.notes || null,
+           p.allergies || null, p.medications || null, p.conditions || null, p.insurance || null,
+           p.emergencyName || null, p.emergencyPhone || null]
+        )
+        updated++
+      } else {
+        // Insert new patient
+        await queryRaw(
+          `INSERT INTO patients
+             (practice_id, first_name, last_name, date_of_birth, gender, phone, email,
+              address, notes, allergies, medications, conditions,
+              emergency_name, emergency_phone, insurance,
+              last_visit, chief_complaint, prev_dental_work, created_by)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,
+             (SELECT id FROM users WHERE practice_id=$1 AND role='admin' LIMIT 1))`,
+          [tenantId, fn, ln,
+           p.dateOfBirth || null, p.gender || null,
+           p.phone || null, p.email || null, p.address || null, p.notes || null,
+           p.allergies || null, p.medications || null, p.conditions || null,
+           p.emergencyName || null, p.emergencyPhone || null, p.insurance || null,
+           p.lastVisit || null, p.chiefComplaint || null, p.prevWork || null]
+        )
+        imported++
+      }
+    } catch (err) {
+      console.error('[import-patients]', err.message)
+      failed++
+      errors.push({ name: `${p.firstName} ${p.lastName}`, error: err.message })
+    }
+  }
+
+  await queryRaw(
+    `INSERT INTO platform_audit (actor_email, action, target_id, target_type, detail)
+     VALUES ($1, 'import_patients', $2, 'practice', $3)`,
+    [req.admin.email, tenantId, JSON.stringify({ imported, updated, failed, total: patients.length })]
+  )
+
+  res.json({ ok: true, imported, updated, failed, total: patients.length, errors })
+})
+
 module.exports = router
