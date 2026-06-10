@@ -264,11 +264,11 @@
       .proof-bar { padding: 20px 24px; }
       .pricing-section { padding: 64px 24px; }
 
-      /* ── Mobile nav: center logo, hide right side ── */
-      nav { justify-content: center; padding: 0 16px; }
+      /* ── Mobile nav: logo left, EN/EL + Sign In right ── */
+      nav { justify-content: space-between; padding: 0 12px; }
       .nav-links { display: none !important; }
-      .nav-right { display: none !important; }
-      .nav-logo { margin: 0 auto; }
+      .nav-right { display: flex !important; gap: 8px; }
+      .nav-logo { margin: 0; }
 
       /* ── Hide image logo text (baked into hero-bg.png top-left) ── */
       .hero-bg { background-position: center 35%; }
@@ -401,7 +401,6 @@
       <button class="lang-btn" id="lang-el">ΕΛ</button>
     </div>
     <a href="/calendar.html" class="nav-login" data-en="Sign in" data-el="Είσοδος">Sign in</a>
-    <a href="#" class="nav-cta" onclick="openLeadModal('trial');return false;" data-en="Start free trial" data-el="Δωρεάν δοκιμή">Start free trial</a>
   </div>
 </nav>
 
