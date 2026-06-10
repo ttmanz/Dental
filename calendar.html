@@ -5585,20 +5585,25 @@
 
       <!-- Patients section -->
       <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--white);">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--cream);border-bottom:1px solid var(--border);">
+        <div id="sb-pt-header" style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--cream);border-bottom:1px solid var(--border);cursor:pointer;" onclick="(function(){var b=document.getElementById('sb-pt-body');var a=document.getElementById('sb-pt-arrow');var open=b.style.display!=='none';b.style.display=open?'none':'';a.style.transform=open?'rotate(-90deg)':'rotate(0deg)'})()">
           <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;">
             <span>👤</span><span>Patients</span>
             <span id="sb-pt-count" style="background:var(--primary);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;">0</span>
           </div>
-          <button id="sb-add-patient-btn" title="Add New Patient" style="width:22px;height:22px;border-radius:6px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">＋</button>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <span id="sb-pt-arrow" style="font-size:10px;color:var(--text-muted);transition:transform .2s;">▼</span>
+            <button id="sb-add-patient-btn" title="Add New Patient" onclick="event.stopPropagation();openPatientForm()" style="width:22px;height:22px;border-radius:6px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">＋</button>
+          </div>
         </div>
-        <div style="padding:5px 7px;border-bottom:1px solid var(--border);position:relative;">
-          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none;">🔍</span>
-          <input id="sb-pt-search" type="text" placeholder="Search patients…" autocomplete="off" spellcheck="false"
-            style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;padding:0 6px 0 24px;font-size:11px;background:var(--cream);color:var(--text);outline:none;font-family:inherit;box-sizing:border-box;"/>
-        </div>
-        <div id="sb-pt-list" style="max-height:200px;overflow-y:auto;">
-          <div style="padding:12px;text-align:center;font-size:12px;color:var(--text-muted);">Loading…</div>
+        <div id="sb-pt-body">
+          <div style="padding:5px 7px;border-bottom:1px solid var(--border);position:relative;">
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none;">🔍</span>
+            <input id="sb-pt-search" type="text" placeholder="Search patients…" autocomplete="off" spellcheck="false"
+              style="width:100%;height:26px;border:1px solid var(--border);border-radius:6px;padding:0 6px 0 24px;font-size:11px;background:var(--cream);color:var(--text);outline:none;font-family:inherit;box-sizing:border-box;"/>
+          </div>
+          <div id="sb-pt-list" style="max-height:200px;overflow-y:auto;">
+            <div style="padding:12px;text-align:center;font-size:12px;color:var(--text-muted);">Loading…</div>
+          </div>
         </div>
       </div>
     </div>
