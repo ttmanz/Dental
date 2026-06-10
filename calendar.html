@@ -1867,8 +1867,8 @@
       border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;
       font-family:inherit; transition:all .15s; white-space:nowrap;
     }
-    .rem-action-btn.wa   { border:1px solid #25D366; background:#F0FDF4; color:#166534; }
-    .rem-action-btn.wa:hover { background:#25D366; color:#fff; }
+    .rem-action-btn.call   { border:1px solid #3B82F6; background:#EFF6FF; color:#1D4ED8; }
+    .rem-action-btn.call:hover { background:#3B82F6; color:#fff; }
     .rem-action-btn.email{ border:1px solid var(--primary); background:var(--primary-light); color:var(--primary); }
     .rem-action-btn.done { border:1px solid var(--border); background:var(--cream-dark); color:var(--text-muted); }
     .rem-action-btn.sent { border:1px solid #6EE7B7; background:#D1FAE5; color:#065F46; cursor:default; }
@@ -4194,10 +4194,6 @@
       <div class="rem-stat" data-tab="templates">
         <div class="rem-stat-lbl" data-en="Templates" data-el="Πρότυπα">Templates</div>
         <div class="rem-stat-val" style="font-size:14px;margin-top:4px">✏️</div>
-      </div>
-      <div class="rem-stat" data-tab="whatsapp" id="rem-stat-wa-tab">
-        <div class="rem-stat-lbl">WhatsApp</div>
-        <div class="rem-stat-val green" id="rem-stat-wa">💬</div>
       </div>
     </div>
 
@@ -11874,21 +11870,20 @@ General rules (non-session):
         <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">
           ${appts.length} appointment${appts.length!==1?'s':''} · next 48 hours
         </div>
-        <button id="rem-bulk-btn" style="padding:7px 14px;border-radius:8px;border:1px solid #25D366;background:#F0FDF4;color:#166534;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
-          📲 ${lang==='el'?'Αποστολή σε Όλους (WhatsApp)':'Remind All via WhatsApp'}
+        <button id="rem-bulk-btn" style="padding:7px 14px;border-radius:8px;border:1px solid #3B82F6;background:#EFF6FF;color:#1D4ED8;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+          📋 ${lang==='el'?'Λίστα Κλήσεων':'Call List'}
         </button>`
       content.innerHTML = ''
       content.appendChild(bulk)
 
-      document.getElementById('rem-bulk-btn').addEventListener('click', async () => {
-        for (const appt of appts) {
-          if (!appt.phone) continue
-          const msg = buildMessage(appt)
-          const url = `https://wa.me/${formatPhone(appt.phone)}?text=${encodeURIComponent(msg)}`
-          window.open(url, '_blank', 'noopener')
-          await new Promise(r => setTimeout(r, 400)) // brief pause between opens
-        }
-        await markBulkSent(appts)
+      document.getElementById('rem-bulk-btn').addEventListener('click', () => {
+        const lines = appts.filter(a => a.phone).map((a, i) => {
+          const [h, m] = (a.start_time||'00:00').split(':')
+          return `${i+1}. ${a.patient_name} — 📞 ${a.phone} — ${h}:${m}`
+        }).join('\n')
+        const win = window.open('', '_blank', 'width=480,height=520')
+        win.document.write(`<html><head><title>Call List</title><style>body{font-family:sans-serif;padding:24px;line-height:2;font-size:14px}h2{margin-bottom:16px}pre{white-space:pre-wrap}</style></head><body><h2>📞 Call List — Next 48 Hours</h2><pre>${lines}</pre><br><button onclick="window.print()">🖨 Print</button></body></html>`)
+        win.document.close()
       })
 
       appts.forEach(appt => {
@@ -11914,22 +11909,22 @@ General rules (non-session):
             <div class="rem-appt-phone">${appt.phone||'No phone'} ${appt.email ? '· '+appt.email : ''}</div>
           </div>
           <div class="rem-appt-actions" id="rem-actions-${appt.appointment_id}">
-            ${appt.phone ? `<button class="rem-action-btn wa" data-appt='${JSON.stringify({...appt, appointment_id:appt.appointment_id})}'>
-              <span>💬</span> WhatsApp</button>` : ''}
+            ${appt.phone ? `<button class="rem-action-btn call" data-phone="${appt.phone}" data-appt-id="${appt.appointment_id}">
+              📞 Call</button>` : ''}
             ${appt.email ? `<button class="rem-action-btn email" data-appt-id="${appt.appointment_id}">
               ✉ Email</button>` : ''}
             ${sent ? '<span class="rem-action-btn sent">✓ Sent</span>'
                    : `<button class="rem-action-btn done" data-mark="${appt.appointment_id}">Mark Sent</button>`}
           </div>`
 
-        // WhatsApp button
-        row.querySelector('.rem-action-btn.wa')?.addEventListener('click', async (e) => {
-          const a    = JSON.parse(e.currentTarget.dataset.appt)
-          const msg  = buildMessage(a)
-          const url  = `https://wa.me/${formatPhone(a.phone)}?text=${encodeURIComponent(msg)}`
-          window.open(url, '_blank', 'noopener')
-          await markReminderSent(a.appointment_id, 'whatsapp', msg)
-          showToast(lang==='el'?'Υπενθύμιση WhatsApp στάλθηκε ✓':'WhatsApp opened ✓')
+        // Call button
+        row.querySelector('.rem-action-btn.call')?.addEventListener('click', async (e) => {
+          const btn   = e.currentTarget
+          const phone = btn.dataset.phone
+          const apptId = btn.dataset.apptId
+          window.location.href = `tel:${phone}`
+          await markReminderSent(apptId, 'phone', '')
+          showToast(lang==='el'?'Κλήση εκκινήθηκε ✓':'Calling ' + phone + ' ✓')
           renderUpcoming()
         })
 
@@ -11944,7 +11939,7 @@ General rules (non-session):
 
         // Mark sent manually
         row.querySelector('[data-mark]')?.addEventListener('click', async () => {
-          await markReminderSent(appt.appointment_id, 'whatsapp', '')
+          await markReminderSent(appt.appointment_id, 'phone', '')
           renderUpcoming()
         })
 
