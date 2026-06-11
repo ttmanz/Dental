@@ -8680,6 +8680,7 @@ document.getElementById('pm-save').addEventListener('click', () => {
         } else {
           PATIENTS.push(mapped)
         }
+        renderSidebarPatients()
         showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
         if (typeof auditLog === 'function') auditLog(existing ? 'patient updated' : 'patient created', `${mapped.firstName||''} ${mapped.lastName||''}`.trim(), existing ? 'Record updated' : 'New patient registered')
       }
