@@ -8674,15 +8674,11 @@ document.getElementById('pm-save').addEventListener('click', () => {
     .then(res => {
       const data = res?.data || res   // handle both { success, data:{} } and plain {}
       if (data?.id) {
-        const mapped = patientFromApi(data)
-        if (existing) {
-          Object.assign(existing, mapped)
-        } else {
-          PATIENTS.push(mapped)
-        }
-        renderSidebarPatients()
         showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
-        if (typeof auditLog === 'function') auditLog(existing ? 'patient updated' : 'patient created', `${mapped.firstName||''} ${mapped.lastName||''}`.trim(), existing ? 'Record updated' : 'New patient registered')
+        if (typeof auditLog === 'function') auditLog(existing ? 'patient updated' : 'patient created', `${data.first_name||''} ${data.last_name||''}`.trim(), existing ? 'Record updated' : 'New patient registered')
+        fetchPatients()  // re-fetch from server — always up to date
+      } else {
+        showToast(res?.error || 'Could not save patient.')
       }
     })
     .catch(() => showToast('Could not save patient — check connection.'))
@@ -8825,11 +8821,10 @@ document.getElementById('voice-next').addEventListener('click', () => {
       .then(res => {
         const data = res?.data || res
         if (data?.id) {
-          const mapped = patientFromApi(data)
-          if (existing) Object.assign(existing, mapped)
-          else PATIENTS.push(mapped)
           showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
-          if (typeof refreshSidebarPatients === 'function') refreshSidebarPatients()
+          fetchPatients()  // re-fetch from server — always up to date
+        } else {
+          showToast(res?.error || 'Could not save patient.')
         }
       })
       .catch(() => showToast('Could not save patient — check connection.'))
