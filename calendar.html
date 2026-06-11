@@ -7130,6 +7130,7 @@ function apiFetch(path, options = {}) {
     overlay.classList.add('hidden')
     if (typeof initAppData === 'function') initAppData()
     if (typeof window._syncPanelData === 'function') window._syncPanelData()
+    setTimeout(() => { if (typeof window.refreshReminderBadge === 'function') window.refreshReminderBadge() }, 1500)
   }
 
   window.doLogout = function() {
@@ -9908,6 +9909,9 @@ setTimeout(() => {
 // Refresh current-time line every minute
 setInterval(renderCalendar, 60000)
 
+// Refresh unread message badge every 60s
+setInterval(() => { if (typeof window.refreshReminderBadge === 'function') window.refreshReminderBadge() }, 60000)
+
 // ── AI Chair-Side Assistant ────────────────────────────────────────────────
 ;(function initAI() {
 
@@ -12031,7 +12035,9 @@ General rules (non-session):
           </div>` : ''}`
 
         if (!msg.is_read) {
-          apiFetch(`/api/reminders/messages/${msg.id}`, { method:'PATCH', body:{ isRead:true }}).catch(()=>{})
+          apiFetch(`/api/reminders/messages/${msg.id}`, { method:'PATCH', body:{ isRead:true }})
+            .then(() => { if (typeof window.refreshReminderBadge === 'function') window.refreshReminderBadge() })
+            .catch(()=>{})
         }
         if (!msg.reply_body) {
           row.querySelector(`#rrf-${msg.id}`)?.classList.add('open')
