@@ -1,26 +1,17 @@
-const jwt = require('jsonwebtoken')
-
-function requireAuth(req, res, next) {
-  const header = req.headers.authorization
-  if (!header || !header.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing token' })
-  }
+const jwt = require('jsonwebtoken');
+const { AppError } = require('../utils/errors');
+const protect = (req, res, next) => {
+  const h = req.headers.authorization;
+  if (!h || !h.startsWith('Bearer ')) return next(new AppError('No token', 401));
   try {
-    const payload = jwt.verify(header.slice(7), process.env.JWT_SECRET)
-    req.user = payload          // { userId, practiceId, role, email }
-    next()
-  } catch {
-    res.status(401).json({ error: 'Invalid or expired token' })
+    const payload = jwt.verify(h.split(' ')[1], process.env.JWT_SECRET);
+    // Support both tenantId and practiceId in JWT payload
+    if (!payload.tenantId && payload.practiceId) payload.tenantId = payload.practiceId;
+    req.user = payload;
+    next();
   }
-}
-
-function requireRole(...roles) {
-  return (req, res, next) => {
-    if (!roles.includes(req.user?.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions' })
-    }
-    next()
-  }
-}
-
-module.exports = { requireAuth, requireRole }
+  catch { next(new AppError('Invalid token', 401)); }
+};
+const requireRole = (...roles) => (req, res, next) =>
+  roles.includes(req.user.role) ? next() : next(new AppError('Insufficient permissions', 403));
+module.exports = { protect, requireRole };
