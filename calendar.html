@@ -8504,15 +8504,18 @@ document.getElementById('af-save').addEventListener('click', () => {
 
   const startTime = `${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')}`
 
-  if (_afEditingAppt && _afEditingAppt.id) {
+  const editingAppt = _afEditingAppt  // capture before closeApptForm clears it
+  closeApptForm()
+
+  if (editingAppt && editingAppt.id) {
     // ── EDIT mode — PATCH existing appointment ──────────────────────────────
-    apiFetch(`/api/appointments/${_afEditingAppt.id}`, {
+    apiFetch(`/api/appointments/${editingAppt.id}`, {
       method: 'PATCH',
       body: { patientId, dentistId, appointmentDate: dateVal, startTime,
               durationMinutes: dur, type: typeKey, notes, status }
     }).then(res => res.json()).then(data => {
       if (data.id) {
-        Object.assign(_afEditingAppt, apptFromApi({ ...data, patient_name: patient, dentist_name: dentist }))
+        Object.assign(editingAppt, apptFromApi({ ...data, patient_name: patient, dentist_name: dentist }))
         renderCalendar()
         showToast(lang === 'el' ? 'Αποθηκεύτηκε ✓' : 'Saved ✓')
         if (typeof auditLog === 'function') auditLog('appointment updated', patient, `${dateVal} ${startTime} type:${typeKey}`)
@@ -8531,8 +8534,6 @@ document.getElementById('af-save').addEventListener('click', () => {
       }
     }).catch(() => showToast('Could not save appointment — check connection.'))
   }
-
-  closeApptForm()
 })
 
 // ── New Patient form ─────────────────────────────────────────────────────
