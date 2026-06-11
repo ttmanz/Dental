@@ -11,8 +11,8 @@
   <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-  <meta name="apple-mobile-web-app-title" content="My Portal"/>
-  <link rel="apple-touch-icon" href="icon.png"/>
+  <meta name="apple-mobile-web-app-title" content="Dental Portal"/>
+  <link rel="apple-touch-icon" href="/portal-icon.svg"/>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
@@ -1055,6 +1055,67 @@ else showLogin()
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {})
 }
+
+// ── Install prompt (Add to Home Screen) ──────────────────────────────────
+;(function() {
+  const DISMISSED_KEY = 'portal_install_dismissed'
+  let deferredPrompt = null
+
+  // Android / Chrome — capture the install event
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault()
+    deferredPrompt = e
+    if (!localStorage.getItem(DISMISSED_KEY)) showBanner()
+  })
+
+  function showBanner() {
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone
+    if (isStandalone) return  // already installed
+
+    const banner = document.createElement('div')
+    banner.id = 'install-banner'
+    banner.style.cssText = `
+      position:fixed;bottom:0;left:0;right:0;z-index:9999;
+      background:#fff;border-top:1px solid #e5e0d8;
+      padding:14px 16px 20px;box-shadow:0 -4px 20px rgba(0,0,0,.12);
+      display:flex;align-items:center;gap:12px;
+      animation:slideUp .3s ease;
+    `
+    banner.innerHTML = `
+      <style>@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+      <img src="/portal-icon.svg" style="width:48px;height:48px;border-radius:12px;flex-shrink:0"/>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:#2C2A27">Add to Home Screen</div>
+        <div style="font-size:12px;color:#9C9890;margin-top:2px">${isIOS ? 'Tap Share → Add to Home Screen' : 'Install for quick access to your dental portal'}</div>
+      </div>
+      ${!isIOS ? '<button id="install-btn" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:none;background:#3D9E8F;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Install</button>' : ''}
+      <button id="install-dismiss" style="flex-shrink:0;width:28px;height:28px;border-radius:50%;border:none;background:#f0ece6;color:#9C9890;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">✕</button>
+    `
+    document.body.appendChild(banner)
+
+    document.getElementById('install-dismiss')?.addEventListener('click', () => {
+      banner.remove()
+      localStorage.setItem(DISMISSED_KEY, '1')
+    })
+
+    document.getElementById('install-btn')?.addEventListener('click', async () => {
+      if (!deferredPrompt) return
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') localStorage.setItem(DISMISSED_KEY, '1')
+      deferredPrompt = null
+      banner.remove()
+    })
+  }
+
+  // iOS doesn't fire beforeinstallprompt — show manual instructions after a delay
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone
+  if (isIOS && !isStandalone && !localStorage.getItem(DISMISSED_KEY)) {
+    setTimeout(showBanner, 3000)
+  }
+})()
 </script>
 </body>
 </html>
