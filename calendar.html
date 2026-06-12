@@ -12591,12 +12591,11 @@ General rules (non-session):
   })
 
   // ── Email invoice to patient ──────────────────────────────────────────────
-  document.getElementById('bill-email-patient-btn').addEventListener('click', () => {
+  document.getElementById('bill-email-patient-btn').addEventListener('click', async () => {
     if (!_billCurrent) return
     const inv = _billCurrent
-    if (!inv.patient_email) { showToast('No email address on file for this patient.'); return }
+    if (!inv.patient_id) { showToast('No patient linked to this invoice.'); return }
     const pracName  = document.querySelector('.sb-name')?.textContent?.trim() || 'Our Dental Practice'
-    const portalUrl = `${location.origin}/portal.html?practice=${AUTH.user?.practiceId||''}`
     const subtotal  = (inv.items||[]).reduce((s,i)=>s+i.quantity*i.unit_price*(1-(i.discount_pct||0)/100),0)
     const ins       = parseFloat(inv.insurance_amount||0)
     const disc      = parseFloat(inv.discount_amount||0)
@@ -12607,25 +12606,39 @@ General rules (non-session):
     const dueDate   = (inv.due_date||inv.due_at) ? fmtDate(inv.due_date||inv.due_at) : null
 
     const items = (inv.items||[]).map(i =>
-      `  · ${i.description}${i.procedure_code?` (${i.procedure_code})`:''}  ${i.quantity} × €${fmtAmt(i.unit_price)}${(i.discount_pct||0)>0?` −${i.discount_pct}%`:''} = €${fmtAmt(i.quantity*i.unit_price*(1-(i.discount_pct||0)/100))}`
+      `• ${i.description}${i.procedure_code?` (${i.procedure_code})`:''}  ${i.quantity} × €${fmtAmt(i.unit_price)}${(i.discount_pct||0)>0?` −${i.discount_pct}%`:''} = €${fmtAmt(i.quantity*i.unit_price*(1-(i.discount_pct||0)/100))}`
     ).join('\n')
 
-    const subject = encodeURIComponent(`Invoice ${inv.invoice_number} from ${pracName}`)
-    const body = encodeURIComponent(
-      `Dear ${inv.patient_name},\n\nPlease find below your invoice from ${pracName}.\n\n` +
-      `Invoice No: ${inv.invoice_number}\nDate: ${invDate}${dueDate?`\nDue: ${dueDate}`:''}\n\n` +
+    const body =
+      `📄 Invoice ${inv.invoice_number} from ${pracName}\n\n` +
+      `Date: ${invDate}${dueDate?`\nDue: ${dueDate}`:''}\n\n` +
       `SERVICES\n${items}\n\n` +
-      `Subtotal:       €${fmtAmt(subtotal)}\n` +
-      (ins  > 0 ? `Insurance:      −€${fmtAmt(ins)}\n` : '') +
-      (disc > 0 ? `Discount:       −€${fmtAmt(disc)}\n` : '') +
-      `Your Total:     €${fmtAmt(patOwes)}\n` +
-      `Paid:           €${fmtAmt(paid)}\n` +
-      `Balance Due:    €${fmtAmt(balance)}\n\n` +
-      (balance < 0.01 ? 'Thank you — this invoice is fully paid.\n\n' : 'Please contact us to arrange payment at your earliest convenience.\n\n') +
-      `You can view your appointments and invoices online at:\n${portalUrl}\n\n` +
-      `If you have any questions, please don't hesitate to contact us.\n\nKind regards,\n${pracName}`
-    )
-    window.open(`mailto:${inv.patient_email}?subject=${subject}&body=${body}`)
+      `Subtotal:    €${fmtAmt(subtotal)}\n` +
+      (ins  > 0 ? `Insurance:   −€${fmtAmt(ins)}\n` : '') +
+      (disc > 0 ? `Discount:    −€${fmtAmt(disc)}\n` : '') +
+      `Your Total:  €${fmtAmt(patOwes)}\n` +
+      `Paid:        €${fmtAmt(paid)}\n` +
+      `Balance Due: €${fmtAmt(balance)}\n\n` +
+      (balance < 0.01
+        ? '✅ Thank you — this invoice is fully paid.'
+        : '⚠️ Please contact us to arrange payment at your earliest convenience.')
+
+    try {
+      const res = await fetch(`${window.API_BASE}/api/portal/staff-reply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-staff-token': 'Bearer ' + AUTH.token
+        },
+        body: JSON.stringify({ patientId: inv.patient_id, body })
+      })
+      if (res.ok) {
+        showToast('Invoice sent to patient portal ✓')
+      } else {
+        const err = await res.json().catch(()=>({}))
+        showToast(err.error || 'Could not send — check patient has a portal account.')
+      }
+    } catch { showToast('Network error — invoice not sent.') }
   })
 
   // ── "Create Invoice" shortcut from appointment modal ─────────────────────
