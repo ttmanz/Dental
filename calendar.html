@@ -12619,8 +12619,10 @@ General rules (non-session):
       `Your Total:  €${fmtAmt(patOwes)}\n` +
       `Paid:        €${fmtAmt(paid)}\n` +
       `Balance Due: €${fmtAmt(balance)}\n\n` +
-      (balance < 0.01
+      (balance < 0.01 && paid > 0
         ? '✅ Thank you — this invoice is fully paid.'
+        : balance < 0.01 && patOwes < 0.01
+        ? '⚠️ Please contact us if you have any questions about this invoice.'
         : '⚠️ Please contact us to arrange payment at your earliest convenience.')
 
     try {

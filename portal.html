@@ -432,7 +432,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         </div>
         <div class="inv-row1" style="margin-bottom:6px">
           <span class="inv-total">€${fmt(patOwes)}</span>
-          <span class="inv-balance ${balance < 0.01 ? 'clear' : 'owed'}">${balance < 0.01 ? '✓ Paid in full' : `Balance: €${fmt(balance)}`}</span>
+          <span class="inv-balance ${balance < 0.01 && paid > 0 ? 'clear' : balance < 0.01 && patOwes < 0.01 ? '' : 'owed'}">${balance < 0.01 && paid > 0 ? '✓ Paid in full' : balance < 0.01 && patOwes < 0.01 ? '' : `Balance Due: €${fmt(balance)}`}</span>
         </div>
         <div class="inv-row2">
           <span class="inv-date">📅 ${fmtDate(inv.invoice_date)}</span>
