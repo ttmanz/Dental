@@ -15061,7 +15061,36 @@ ${practiceName}
     document.getElementById('sup-sup-name').focus()
   }
 
-  window.openSupplierHub = function(preSupplierId) {
+  async function refreshFromAPI() {
+    try {
+      const [supRes, ordRes] = await Promise.all([
+        apiFetch('/api/suppliers'),
+        apiFetch('/api/suppliers/orders')
+      ])
+      if (supRes.ok) {
+        const d = await supRes.json()
+        SUPPLIERS = (d.data||[]).map(s => ({
+          id: s.id, name: s.name, category: s.category||'', contact: s.contact||'',
+          phone: s.phone||'', email: s.email||'', website: '',
+          avgTurnaroundDays: s.avg_turnaround_days||3, notes: s.notes||'', _synced: true
+        }))
+        saveSuppliers()
+      }
+      if (ordRes.ok) {
+        const d = await ordRes.json()
+        ORDERS = (d.data||[]).map(o => ({
+          id: o.id, supplierId: o.supplier_id||'', supplierName: o.supplier_name||'',
+          items: o.items||[], cost: parseFloat(o.cost||0),
+          status: o.status||'draft', dateOrdered: o.ordered_at||'', notes: o.notes||'', _synced: true
+        }))
+        saveOrders()
+      }
+    } catch(e) { console.warn('Suppliers refresh failed:', e) }
+  }
+
+  window.openSupplierHub = async function(preSupplierId) {
+    document.getElementById('sup-overlay').classList.add('open')
+    await refreshFromAPI()
     updateSupStats()
     renderSuppliers()
     renderOrders()
@@ -15072,7 +15101,6 @@ ${practiceName}
       document.getElementById('sup-order-date').value = new Date().toISOString().slice(0,10)
       document.getElementById('sup-order-form').classList.add('open')
     }
-    document.getElementById('sup-overlay').classList.add('open')
   }
 
   function switchSupTab(tab) {
@@ -15107,7 +15135,7 @@ ${practiceName}
     supEditingSupplierId = null
   })
 
-  document.getElementById('sup-sup-save-btn').addEventListener('click', () => {
+  document.getElementById('sup-sup-save-btn').addEventListener('click', async () => {
     const name = document.getElementById('sup-sup-name').value.trim()
     if (!name) { document.getElementById('sup-sup-name').focus(); return }
     const data = {
@@ -15119,17 +15147,39 @@ ${practiceName}
       website : document.getElementById('sup-sup-website').value.trim(),
       notes   : document.getElementById('sup-sup-notes').value.trim(),
     }
-    if (supEditingSupplierId) {
-      const idx = SUPPLIERS.findIndex(s=>s.id===supEditingSupplierId)
-      if (idx>=0) SUPPLIERS[idx] = { ...SUPPLIERS[idx], ...data }
-    } else {
-      SUPPLIERS.push({ id: genId(), ...data })
-    }
-    saveSuppliers()
+    try {
+      if (supEditingSupplierId) {
+        const res = await apiFetch(`/api/suppliers/${supEditingSupplierId}`, {
+          method: 'PATCH',
+          body: { name: data.name, category: data.category, contact: data.contact,
+                  phone: data.phone, email: data.email, notes: data.notes }
+        })
+        const d = await res.json()
+        if (d.data) {
+          const idx = SUPPLIERS.findIndex(s=>s.id===supEditingSupplierId)
+          if (idx>=0) SUPPLIERS[idx] = { ...SUPPLIERS[idx], ...data, _synced: true }
+          saveSuppliers()
+        }
+      } else {
+        const res = await apiFetch('/api/suppliers', {
+          method: 'POST',
+          body: { name: data.name, category: data.category, contact: data.contact,
+                  phone: data.phone, email: data.email,
+                  avg_turnaround_days: data.avgTurnaroundDays||3, notes: data.notes }
+        })
+        const d = await res.json()
+        if (d.data && d.data.id) {
+          SUPPLIERS.push({ ...data, id: d.data.id, _synced: true })
+          saveSuppliers()
+        } else {
+          showToast('Could not save supplier.'); return
+        }
+      }
+    } catch { showToast('Network error — supplier not saved.'); return }
     document.getElementById('sup-sup-form').classList.remove('open')
     supEditingSupplierId = null
     updateSupStats(); renderSuppliers(); populateSupplierDropdown()
-    if (typeof showToast === 'function') showToast('Supplier saved ✓')
+    showToast('Supplier saved ✓')
   })
 
   document.getElementById('sup-sup-list').addEventListener('click', e => {
@@ -15171,24 +15221,36 @@ ${practiceName}
     document.getElementById('sup-order-form').classList.remove('open')
   })
 
-  document.getElementById('sup-order-save-btn').addEventListener('click', () => {
-    const supplierId = document.getElementById('sup-order-supplier').value
+  document.getElementById('sup-order-save-btn').addEventListener('click', async () => {
+    const supplierId  = document.getElementById('sup-order-supplier').value
     const dateOrdered = document.getElementById('sup-order-date').value
     if (!supplierId || !dateOrdered) return
-    ORDERS.push({
-      id: genId(), supplierId,
+    const orderData = {
+      supplierId,
       dateOrdered,
       deliveryDate: document.getElementById('sup-order-delivery').value,
       items   : document.getElementById('sup-order-items').value.trim(),
       cost    : document.getElementById('sup-order-cost').value,
       notes   : document.getElementById('sup-order-notes').value.trim(),
-      status  : 'pending'
-    })
-    saveOrders()
+      status  : 'ordered'
+    }
+    try {
+      const res = await apiFetch('/api/suppliers/orders', {
+        method: 'POST',
+        body: { supplier_id: supplierId, items: orderData.items,
+                cost: parseFloat(orderData.cost)||0, status: 'ordered',
+                ordered_at: dateOrdered, notes: orderData.notes }
+      })
+      const d = await res.json()
+      if (d.data && d.data.id) {
+        ORDERS.push({ ...orderData, id: d.data.id, _synced: true })
+        saveOrders()
+      } else { showToast('Could not save order.'); return }
+    } catch { showToast('Network error — order not saved.'); return }
     ;['sup-order-items','sup-order-cost','sup-order-notes','sup-order-delivery'].forEach(id=>{document.getElementById(id).value=''})
     document.getElementById('sup-order-form').classList.remove('open')
     updateSupStats(); renderOrders()
-    if (typeof showToast === 'function') showToast('Order placed ✓')
+    showToast('Order placed ✓')
   })
 
   document.getElementById('sup-order-list').addEventListener('click', e => {
