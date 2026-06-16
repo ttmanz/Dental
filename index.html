@@ -367,6 +367,12 @@
         <label for="lm-mobile">Mobile number <span style="color:var(--red)">*</span></label>
         <input id="lm-mobile" type="tel" placeholder="+357 99 000 000" autocomplete="tel" required>
       </div>
+      <div class="modal-field" style="margin-bottom:8px">
+        <label style="display:flex;align-items:flex-start;gap:10px;font-size:12px;font-weight:400;color:#5C5854;cursor:pointer;text-transform:none;letter-spacing:0">
+          <input type="checkbox" id="lm-consent" style="margin-top:2px;flex-shrink:0;accent-color:var(--primary);width:14px;height:14px">
+          <span>I agree to the <a href="/privacy.html" target="_blank" style="color:var(--primary)">Privacy Policy</a>. We'll use your details to contact you about DentaPro only.</span>
+        </label>
+      </div>
       <button class="modal-submit" id="lead-submit-btn" onclick="submitLead()">
         <span id="lead-btn-text">Send →</span>
       </button>
@@ -843,9 +849,10 @@
     document.getElementById('lead-modal-form').style.display    = ''
     document.getElementById('lead-modal-success').style.display = 'none'
     document.getElementById('lead-modal-err').style.display     = 'none'
-    document.getElementById('lm-name').value   = ''
-    document.getElementById('lm-email').value  = ''
-    document.getElementById('lm-mobile').value = ''
+    document.getElementById('lm-name').value      = ''
+    document.getElementById('lm-email').value     = ''
+    document.getElementById('lm-mobile').value    = ''
+    document.getElementById('lm-consent').checked = false
     document.getElementById('lead-modal-overlay').dataset.interest = type
     document.getElementById('lead-modal-overlay').classList.add('open')
     setTimeout(() => document.getElementById('lm-name').focus(), 80)
@@ -869,9 +876,11 @@
     const errEl    = document.getElementById('lead-modal-err')
     const btn      = document.getElementById('lead-submit-btn')
 
+    const consent  = document.getElementById('lm-consent').checked
     errEl.style.display = 'none'
     if (!email) { errEl.textContent = 'Please enter your email address.'; errEl.style.display='block'; return }
     if (!mobile) { errEl.textContent = 'Please enter your mobile number.'; errEl.style.display='block'; return }
+    if (!consent) { errEl.textContent = 'Please accept the Privacy Policy to continue.'; errEl.style.display='block'; return }
 
     btn.disabled = true
     document.getElementById('lead-btn-text').textContent = 'Sending…'

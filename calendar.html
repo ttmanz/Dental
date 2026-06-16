@@ -5483,6 +5483,12 @@
           <label id="lbl-create-pwd">Password</label>
           <div class="pw-wrap"><input type="password" id="reg-password" /><button type="button" class="pw-eye" onclick="togglePwd(this)" tabindex="-1">👁</button></div>
         </div>
+        <div class="lf" style="margin-top:4px">
+          <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;font-weight:400;color:var(--text-mid);cursor:pointer;text-transform:none;letter-spacing:0">
+            <input type="checkbox" id="reg-consent" style="margin-top:3px;flex-shrink:0;accent-color:var(--primary);width:15px;height:15px">
+            <span>I have read and agree to the <a href="https://dentapro.org/terms.html" target="_blank" style="color:var(--primary)">Terms of Service</a>, <a href="https://dentapro.org/privacy.html" target="_blank" style="color:var(--primary)">Privacy Policy</a>, and <a href="https://dentapro.org/dpa.html" target="_blank" style="color:var(--primary)">Data Processing Agreement</a>.</span>
+          </label>
+        </div>
         <button class="login-btn" id="reg-submit-btn">Create Practice</button>
         <div class="login-foot">
           <a href="#" id="goto-login">&#8592; Back to sign in</a>
@@ -7117,8 +7123,10 @@ function apiFetch(path, options = {}) {
     const last     = document.getElementById('reg-last').value.trim()
     const email    = document.getElementById('reg-email').value.trim()
     const pwd      = document.getElementById('reg-password').value
+    const consent = document.getElementById('reg-consent').checked
     clearErr(regErr)
     if (!practice || !first || !last || !email || !pwd) { showErr(regErr, 'All fields are required.'); return }
+    if (!consent) { showErr(regErr, 'You must accept the Terms of Service, Privacy Policy, and Data Processing Agreement.'); return }
     const btn = document.getElementById('reg-submit-btn')
     btn.disabled = true; btn.textContent = '…'
     try {
