@@ -284,6 +284,53 @@
     }
     .loader { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Privacy notice modal ───────────────────────────────────────────── */
+    #privacy-notice-overlay {
+      display: none; position: fixed; inset: 0; z-index: 99990;
+      background: rgba(10,20,18,.75); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    #privacy-notice-overlay.open { display: flex; }
+    #privacy-notice-card {
+      background: var(--white); border-radius: 20px; width: 100%; max-width: 420px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.35); overflow: hidden;
+    }
+    .pn-header {
+      background: linear-gradient(135deg, var(--primary) 0%, #2D8B7A 100%);
+      padding: 24px 28px 20px; color: #fff;
+    }
+    .pn-icon { font-size: 28px; margin-bottom: 8px; }
+    .pn-header h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .pn-header p { font-size: 13px; opacity: .85; line-height: 1.4; }
+    .pn-body { padding: 24px 28px 28px; }
+    .pn-point { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+    .pn-point-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .pn-point-text { font-size: 13px; color: var(--text-mid); line-height: 1.5; }
+    .pn-point-text strong { color: var(--text); }
+    .pn-link { font-size: 12px; color: var(--primary); text-decoration: none; }
+    .pn-link:hover { text-decoration: underline; }
+    .pn-btn {
+      width: 100%; height: 46px; border-radius: 11px; border: none;
+      background: var(--primary); color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; font-family: inherit; margin-top: 8px; transition: background .15s;
+    }
+    .pn-btn:hover { background: #2D8B7A; }
+
+    /* ── Cookie banner ──────────────────────────────────────────────────── */
+    #cookie-banner {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 99980;
+      background: #2C2A27; color: rgba(255,255,255,.85); font-size: 13px;
+      padding: 14px 20px; align-items: center; justify-content: space-between;
+      gap: 14px; flex-wrap: wrap;
+    }
+    #cookie-banner.show { display: flex; }
+    #cookie-banner a { color: #5ECFBF; }
+    #cookie-dismiss {
+      background: var(--primary); color: #fff; border: none; padding: 8px 18px;
+      border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; font-family: inherit;
+    }
   </style>
 </head>
 <body>
@@ -683,6 +730,7 @@ async function showPortal() {
   document.getElementById('portal-page').style.display  = 'block'
   document.getElementById('portal-welcome').textContent = t('welcome').replace('{name}', _patient.firstName)
   document.getElementById('portal-sub').textContent     = t('sub')
+  showPrivacyNotice()
 }
 
 // ── Load portal data ──────────────────────────────────────────────────────
@@ -1117,6 +1165,69 @@ if ('serviceWorker' in navigator) {
     setTimeout(showBanner, 3000)
   }
 })()
+</script>
+
+<!-- ── Privacy notice modal ─────────────────────────────────────────────── -->
+<div id="privacy-notice-overlay">
+  <div id="privacy-notice-card">
+    <div class="pn-header">
+      <div class="pn-icon">🔒</div>
+      <h3 id="pn-title">Your Data &amp; Privacy</h3>
+      <p id="pn-sub">A quick note before you access your records.</p>
+    </div>
+    <div class="pn-body">
+      <div class="pn-point">
+        <div class="pn-point-icon">🏥</div>
+        <div class="pn-point-text"><strong id="pn-practice">Your dental practice</strong> is responsible for your health records and has authorised your access to this portal.</div>
+      </div>
+      <div class="pn-point">
+        <div class="pn-point-icon">🛡️</div>
+        <div class="pn-point-text"><strong>Your data is stored securely</strong> on encrypted EU servers (AWS Ireland). Only you and your dental team can access your records.</div>
+      </div>
+      <div class="pn-point">
+        <div class="pn-point-icon">📋</div>
+        <div class="pn-point-text">This portal shows your <strong>appointments, invoices, prescriptions, and treatment plans</strong>. Messages you send are visible to clinic staff.</div>
+      </div>
+      <div class="pn-point">
+        <div class="pn-point-icon">✉️</div>
+        <div class="pn-point-text">To request a copy or deletion of your data, contact your clinic or email <a href="mailto:privacy@dentapro.org" class="pn-link">privacy@dentapro.org</a>.</div>
+      </div>
+      <a href="https://dentapro.org/privacy.html" target="_blank" class="pn-link" style="display:block;margin-bottom:16px">Read the full Privacy Policy →</a>
+      <button class="pn-btn" id="pn-accept-btn">I Understand</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Cookie banner ─────────────────────────────────────────────────────── -->
+<div id="cookie-banner">
+  <span>We use essential browser storage for login sessions and preferences only — no tracking or advertising. <a href="https://dentapro.org/privacy.html#8" target="_blank">Learn more</a></span>
+  <button id="cookie-dismiss">Got it</button>
+</div>
+
+<script>
+// ── Privacy notice ────────────────────────────────────────────────────────
+function showPrivacyNotice() {
+  if (!_patient?.id) return
+  if (localStorage.getItem('portal_privacy_' + _patient.id)) return
+  const overlay = document.getElementById('privacy-notice-overlay')
+  const nameEl  = document.getElementById('pn-practice')
+  if (nameEl && _patient.practiceName) nameEl.textContent = _patient.practiceName
+  overlay.classList.add('open')
+}
+
+document.getElementById('pn-accept-btn').addEventListener('click', () => {
+  if (_patient?.id) localStorage.setItem('portal_privacy_' + _patient.id, '1')
+  document.getElementById('privacy-notice-overlay').classList.remove('open')
+})
+
+// ── Cookie banner ─────────────────────────────────────────────────────────
+if (!localStorage.getItem('dp_cookie_ok')) {
+  document.getElementById('cookie-banner').classList.add('show')
+}
+document.getElementById('cookie-dismiss').addEventListener('click', () => {
+  localStorage.setItem('dp_cookie_ok', '1')
+  document.getElementById('cookie-banner').classList.remove('show')
+})
 </script>
 </body>
 </html>
