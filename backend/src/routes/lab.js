@@ -1,55 +1,60 @@
 const router = require('express').Router()
-const { query } = require('../db')
-const { requireAuth, requireRole } = require('../middleware/auth')
+const { getTenantClient } = require('../db')
+const { requireRole } = require('../middleware/auth')
 
-router.use(requireAuth)
-const pid = req => req.user.practiceId || req.user.tenantId
+const pid = req => req.user.tenantId || req.user.practiceId
 
 // ── Order number generator ────────────────────────────────────────────────
-async function nextOrderNumber(practiceId) {
+async function nextOrderNumber(c) {
   const year = new Date().getFullYear()
-  const { rows } = await query(practiceId,
+  const { rows } = await c.query(
     `SELECT COUNT(*) AS n FROM lab_orders WHERE EXTRACT(YEAR FROM created_at)=$1`, [year])
   return `LAB-${year}-${(parseInt(rows[0].n) + 1).toString().padStart(4, '0')}`
 }
 
 // GET /api/lab/stats
 router.get('/stats', async (req, res) => {
+  const c = await getTenantClient(pid(req))
   try {
-    const { rows: [r] } = await query(pid(req), `
+    const { rows: [r] } = await c.query(`
       SELECT
-        COUNT(*) FILTER (WHERE status IN ('sent','in_progress'))                        AS pending,
+        COUNT(*) FILTER (WHERE status IN ('sent','in_progress'))                          AS pending,
         COUNT(*) FILTER (WHERE status IN ('sent','in_progress') AND due_date < CURRENT_DATE) AS overdue,
-        COUNT(*) FILTER (WHERE status = 'shipped')                                     AS shipped,
+        COUNT(*) FILTER (WHERE status = 'shipped')                                        AS shipped,
         COUNT(*) FILTER (WHERE status = 'received'
-                           AND received_at >= date_trunc('week',CURRENT_DATE))         AS received_this_week,
+                           AND received_at >= date_trunc('week',CURRENT_DATE))            AS received_this_week,
         COUNT(*) FILTER (WHERE status = 'fitted'
-                           AND fitted_at >= date_trunc('month',CURRENT_DATE))          AS fitted_this_month
+                           AND fitted_at >= date_trunc('month',CURRENT_DATE))             AS fitted_this_month
       FROM lab_orders`)
     res.json(r)
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+  finally { c.release() }
 })
 
 // GET /api/lab/labs
 router.get('/labs', async (req, res) => {
+  const c = await getTenantClient(pid(req))
   try {
-    const { rows } = await query(pid(req), `SELECT * FROM labs WHERE is_active=TRUE ORDER BY name`)
+    const { rows } = await c.query(`SELECT * FROM labs WHERE is_active=TRUE ORDER BY name`)
     res.json(rows)
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+  finally { c.release() }
 })
 
 // POST /api/lab/labs
 router.post('/labs', requireRole('owner', 'admin', 'dentist'), async (req, res) => {
   const { name, contactName, phone, email, address, avgTurnaroundDays, notes } = req.body
   if (!name) return res.status(400).json({ error: 'name required' })
+  const c = await getTenantClient(pid(req))
   try {
-    const { rows } = await query(pid(req), `
+    const { rows } = await c.query(`
       INSERT INTO labs (tenant_id, name, contact_name, phone, email, address, avg_turnaround_days, notes)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
       [pid(req), name, contactName || null, phone || null, email || null,
        address || null, avgTurnaroundDays || 7, notes || null])
     res.status(201).json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+  finally { c.release() }
 })
 
 // PATCH /api/lab/labs/:id
@@ -63,12 +68,14 @@ router.patch('/labs/:id', requireRole('owner', 'admin', 'dentist'), async (req, 
   }
   if (!sets.length) return res.status(400).json({ error: 'Nothing to update' })
   vals.push(req.params.id)
+  const c = await getTenantClient(pid(req))
   try {
-    const { rows } = await query(pid(req),
+    const { rows } = await c.query(
       `UPDATE labs SET ${sets.join(',')} WHERE id=$${vals.length} RETURNING *`, vals)
     if (!rows[0]) return res.status(404).json({ error: 'Not found' })
     res.json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+  finally { c.release() }
 })
 
 // GET /api/lab/orders?status=&patientId=
@@ -78,8 +85,9 @@ router.get('/orders', async (req, res) => {
   if (status)    { conds.push(`lo.status=$${vals.length + 1}`);     vals.push(status) }
   if (patientId) { conds.push(`lo.patient_id=$${vals.length + 1}`); vals.push(patientId) }
   const where = conds.length ? 'AND ' + conds.join(' AND ') : ''
+  const c = await getTenantClient(pid(req))
   try {
-    const { rows } = await query(pid(req), `
+    const { rows } = await c.query(`
       SELECT lo.*,
              p.first_name||' '||p.last_name AS patient_name,
              l.name AS lab_name,
@@ -98,6 +106,7 @@ router.get('/orders', async (req, res) => {
       [...vals, parseInt(limit), parseInt(offset)])
     res.json(rows)
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+  finally { c.release() }
 })
 
 // POST /api/lab/orders
@@ -105,9 +114,10 @@ router.post('/orders', async (req, res) => {
   const { patientId, appointmentId, labId, orderType, toothNumbers,
           shade, material, instructions, dueDate } = req.body
   if (!patientId) return res.status(400).json({ error: 'patientId required' })
+  const c = await getTenantClient(pid(req))
   try {
-    const num = await nextOrderNumber(pid(req))
-    const { rows } = await query(pid(req), `
+    const num = await nextOrderNumber(c)
+    const { rows } = await c.query(`
       INSERT INTO lab_orders
         (tenant_id, patient_id, appointment_id, lab_id, order_number,
          order_type, tooth_numbers, shade, material, instructions, due_date, created_by)
@@ -117,6 +127,7 @@ router.post('/orders', async (req, res) => {
        material || null, instructions || null, dueDate || null, req.user.userId])
     res.status(201).json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+  finally { c.release() }
 })
 
 // PATCH /api/lab/orders/:id
@@ -135,24 +146,28 @@ router.patch('/orders/:id', async (req, res) => {
   if (req.body.status === 'fitted'   && !req.body.fittedAt)   { sets.push(`fitted_at=NOW()`) }
   if (!sets.length) return res.status(400).json({ error: 'Nothing to update' })
   vals.push(req.params.id)
+  const c = await getTenantClient(pid(req))
   try {
-    const { rows } = await query(pid(req),
+    const { rows } = await c.query(
       `UPDATE lab_orders SET ${sets.join(',')} WHERE id=$${vals.length} RETURNING *`, vals)
     if (!rows[0]) return res.status(404).json({ error: 'Not found' })
     res.json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+  finally { c.release() }
 })
 
 // DELETE /api/lab/orders/:id (draft only)
 router.delete('/orders/:id', requireRole('owner', 'admin'), async (req, res) => {
+  const c = await getTenantClient(pid(req))
   try {
-    const { rows: [chk] } = await query(pid(req),
+    const { rows: [chk] } = await c.query(
       `SELECT status FROM lab_orders WHERE id=$1`, [req.params.id])
     if (!chk) return res.status(404).json({ error: 'Not found' })
     if (chk.status !== 'draft') return res.status(400).json({ error: 'Only draft orders can be deleted' })
-    await query(pid(req), 'DELETE FROM lab_orders WHERE id=$1', [req.params.id])
+    await c.query('DELETE FROM lab_orders WHERE id=$1', [req.params.id])
     res.status(204).end()
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
+  finally { c.release() }
 })
 
 module.exports = router

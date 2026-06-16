@@ -1,27 +1,33 @@
 const { Pool } = require('pg')
 
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? { connectionString: process.env.DATABASE_URL, ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false, max: 20, idleTimeoutMillis: 30000 }
-    : { host: process.env.DB_HOST, port: parseInt(process.env.DB_PORT || '5432', 10), database: process.env.DB_NAME, user: process.env.DB_USER, password: process.env.DB_PASSWORD, max: 20, idleTimeoutMillis: 30000 }
-)
+// Admin pool — bypasses RLS, used for auth routes only
+const adminPool = new Pool({
+  host: process.env.DB_HOST, port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME,
+  user: process.env.DB_ADMIN_USER || 'dentapro_admin',
+  password: process.env.DB_ADMIN_PASSWORD,
+  ssl: { rejectUnauthorized: false }, max: 5, idleTimeoutMillis: 30000
+})
 
-// Wraps a query so RLS always has the practice context set.
-// Usage: db.query(practiceId, sql, params)
-async function query(practiceId, sql, params) {
-  const client = await pool.connect()
-  try {
-    await client.query(`SET LOCAL app.current_practice_id = '${practiceId}'`)
-    const result = await client.query(sql, params)
-    return result
-  } finally {
-    client.release()
-  }
+// App pool — dentapro_app role, subject to RLS
+const appPool = new Pool({
+  host: process.env.DB_HOST, port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME, user: process.env.DB_USER, password: process.env.DB_PASSWORD,
+  ssl: { rejectUnauthorized: false }, max: 20, idleTimeoutMillis: 30000
+})
+
+adminPool.on('error', (err) => console.error('Admin pool error', err))
+appPool.on('error',  (err) => console.error('App pool error', err))
+
+// Admin pool — no RLS (use for auth, cross-tenant lookups only)
+async function queryRaw(text, params) { return adminPool.query(text, params) }
+const query = queryRaw   // alias used by auth routes
+
+// Tenant-isolated client — sets app.tenant_id so RLS filters rows
+async function getTenantClient(tenantId) {
+  const client = await appPool.connect()
+  await client.query(`SET app.tenant_id = '${tenantId}'`)
+  return client
 }
 
-// For queries that don't need RLS (auth, practice lookup)
-async function queryRaw(sql, params) {
-  return pool.query(sql, params)
-}
-
-module.exports = { query, queryRaw }
+module.exports = { query, queryRaw, getTenantClient }
