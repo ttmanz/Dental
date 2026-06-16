@@ -5,7 +5,6 @@ const { requireAuth } = require('../middleware/auth')
 router.use(requireAuth)
 const pid = req => req.user.practiceId
 
-// ── Upcoming — appointments in next 48h needing a reminder ───────────────
 // GET /api/reminders/upcoming?hours=48
 router.get('/upcoming', async (req, res) => {
   const hours = parseInt(req.query.hours) || 48
@@ -32,7 +31,6 @@ router.get('/upcoming', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
-// ── List reminders ────────────────────────────────────────────────────────
 // GET /api/reminders?status=pending&from=&to=&patientId=
 router.get('/', async (req, res) => {
   const { status, from, to, patientId, limit = 100, offset = 0 } = req.query
@@ -41,7 +39,7 @@ router.get('/', async (req, res) => {
   if (from)      { conds.push(`r.scheduled_at>=$${vals.length+1}`); vals.push(from) }
   if (to)        { conds.push(`r.scheduled_at<=$${vals.length+1}`); vals.push(to) }
   if (patientId) { conds.push(`r.patient_id=$${vals.length+1}`);    vals.push(patientId) }
-  const where = conds.length ? 'AND '+conds.join(' AND ') : ''
+  const where = conds.length ? 'AND ' + conds.join(' AND ') : ''
   try {
     const { rows } = await query(pid(req), `
       SELECT r.*,
@@ -59,7 +57,6 @@ router.get('/', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
-// ── Create reminder ───────────────────────────────────────────────────────
 // POST /api/reminders/:appointmentId
 router.post('/:appointmentId', async (req, res) => {
   const { channel, message, scheduledAt } = req.body
@@ -68,26 +65,24 @@ router.post('/:appointmentId', async (req, res) => {
     const { rows: [appt] } = await query(pid(req),
       `SELECT patient_id FROM appointments WHERE id=$1`, [req.params.appointmentId])
     if (!appt) return res.status(404).json({ error: 'Appointment not found' })
-
     const { rows } = await query(pid(req), `
       INSERT INTO reminders
         (practice_id, appointment_id, patient_id, channel, message, scheduled_at, created_by)
       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
       [pid(req), req.params.appointmentId, appt.patient_id,
-       channel||'whatsapp', message,
+       channel || 'whatsapp', message,
        scheduledAt || new Date().toISOString(), req.user.userId])
     res.status(201).json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
-// ── Mark sent ─────────────────────────────────────────────────────────────
 // PATCH /api/reminders/:id/sent
 router.patch('/:id/sent', async (req, res) => {
   try {
     const { rows } = await query(pid(req),
       `UPDATE reminders SET status='sent', sent_at=NOW(), reference=$1
        WHERE id=$2 RETURNING *`,
-      [req.body.reference||null, req.params.id])
+      [req.body.reference || null, req.params.id])
     if (!rows[0]) return res.status(404).json({ error: 'Not found' })
     res.json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
@@ -103,7 +98,6 @@ router.patch('/:id/cancel', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
-// ── Stats ─────────────────────────────────────────────────────────────────
 // GET /api/reminders/stats
 router.get('/stats', async (req, res) => {
   try {
@@ -112,41 +106,55 @@ router.get('/stats', async (req, res) => {
         COUNT(*) FILTER (WHERE status='pending')                                              AS pending,
         COUNT(*) FILTER (WHERE status='sent' AND sent_at >= CURRENT_DATE)                    AS sent_today,
         COUNT(*) FILTER (WHERE status='sent' AND sent_at >= date_trunc('week',CURRENT_DATE)) AS sent_this_week,
-        (SELECT COUNT(*) FROM patient_messages WHERE practice_id=current_practice_id() AND is_read=FALSE) AS unread_messages
+        (SELECT COUNT(*) FROM portal_messages
+         WHERE from_patient=TRUE AND read_at IS NULL)                                        AS unread_messages
       FROM reminders`)
     res.json(s)
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
-
-// ── Patient messages ──────────────────────────────────────────────────────
 
 // GET /api/reminders/messages
 router.get('/messages', async (req, res) => {
   const { unreadOnly } = req.query
   try {
     const { rows } = await query(pid(req), `
-      SELECT pm.*, p.first_name||' '||p.last_name AS patient_name, p.phone
-      FROM patient_messages pm JOIN patients p ON p.id=pm.patient_id
-      WHERE ($1::boolean IS NULL OR pm.is_read = NOT $1::boolean)
+      SELECT pm.id, pm.patient_id, pm.body, pm.created_at,
+             pm.read_at IS NOT NULL AS is_read,
+             COALESCE(p.first_name||' '||p.last_name, 'Patient') AS patient_name,
+             p.phone
+      FROM portal_messages pm
+      LEFT JOIN patients p ON p.id=pm.patient_id
+      WHERE pm.from_patient=TRUE
+        AND ($1::boolean IS NULL OR (pm.read_at IS NULL) = $1::boolean)
       ORDER BY pm.created_at DESC LIMIT 100`,
       [unreadOnly === 'true' ? true : null])
     res.json(rows)
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
-// PATCH /api/reminders/messages/:id/read + reply
+// PATCH /api/reminders/messages/:id
 router.patch('/messages/:id', async (req, res) => {
   const { isRead, replyBody } = req.body
-  const sets = []; const vals = []
-  if (isRead     !== undefined) { sets.push(`is_read=$${vals.length+1}`);   vals.push(isRead) }
-  if (replyBody  !== undefined) { sets.push(`reply_body=$${vals.length+1}`); vals.push(replyBody); sets.push(`replied_at=NOW()`) }
-  if (!sets.length) return res.status(400).json({ error: 'Nothing to update' })
-  vals.push(req.params.id)
   try {
-    const { rows } = await query(pid(req),
-      `UPDATE patient_messages SET ${sets.join(',')} WHERE id=$${vals.length} RETURNING *`, vals)
-    if (!rows[0]) return res.status(404).json({ error: 'Not found' })
-    res.json(rows[0])
+    let row
+    if (isRead !== undefined) {
+      const { rows } = await query(pid(req),
+        `UPDATE portal_messages SET read_at=${isRead ? 'NOW()' : 'NULL'} WHERE id=$1 RETURNING *`,
+        [req.params.id])
+      if (!rows[0]) return res.status(404).json({ error: 'Not found' })
+      row = rows[0]
+    }
+    if (replyBody) {
+      const { rows: [orig] } = await query(pid(req),
+        `SELECT patient_id FROM portal_messages WHERE id=$1`, [req.params.id])
+      if (orig) {
+        await query(pid(req), `
+          INSERT INTO portal_messages (tenant_id, patient_id, body, from_patient)
+          VALUES ($1,$2,$3,FALSE)`,
+          [pid(req), orig.patient_id, replyBody])
+      }
+    }
+    res.json(row || { ok: true })
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 

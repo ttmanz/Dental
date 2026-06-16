@@ -21,9 +21,6 @@ app.use('/api/auth/totp', totpModule.router)
 
 // Patch login route to support 2FA challenge
 const authRouter = require('./routes/auth')
-// Inject TOTP helpers so auth.js can call them
-authRouter._totpEnqueue  = totpModule.enqueueMFA
-authRouter._totpVerify   = totpModule.verifyTOTP
 app.use('/api/auth', authRouter)
 
 app.use('/api/patients',          require('./routes/patients'))
@@ -92,7 +89,7 @@ app.use(express.static(ROOT))
 
 app.use((err, req, res, _next) => {
   console.error(err)
-  res.status(500).json({ error: 'Internal server error' })
+  res.status(err.status || 500).json({ error: err.message || 'Internal server error' })
 })
 
 const PORT = process.env.PORT || 3001

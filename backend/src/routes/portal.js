@@ -1,6 +1,5 @@
 // Patient portal routes — authenticated by patient JWT (not staff JWT)
 const router  = require('express').Router()
-const crypto  = require('crypto')
 const jwt     = require('jsonwebtoken')
 const { queryRaw, query } = require('../db')
 
@@ -145,8 +144,8 @@ router.post('/messages', requirePatient, async (req, res) => {
   if (!body?.trim()) return res.status(400).json({ error: 'Message body required' })
   try {
     const { rows } = await query(ppid(req), `
-      INSERT INTO patient_messages (practice_id, patient_id, body)
-      VALUES ($1,$2,$3) RETURNING *`,
+      INSERT INTO portal_messages (tenant_id, patient_id, body, from_patient)
+      VALUES ($1,$2,$3,TRUE) RETURNING *`,
       [ppid(req), puid(req), body.trim()])
     res.status(201).json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
@@ -215,8 +214,8 @@ router.post('/request-appointment', requirePatient, async (req, res) => {
   ].filter(Boolean)
   try {
     await query(ppid(req), `
-      INSERT INTO patient_messages (practice_id, patient_id, body)
-      VALUES ($1, $2, $3)`,
+      INSERT INTO portal_messages (tenant_id, patient_id, body, from_patient)
+      VALUES ($1,$2,$3,TRUE)`,
       [ppid(req), puid(req), lines.join('\n')])
     res.status(201).json({ ok: true })
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
@@ -264,11 +263,11 @@ router.post('/intake', requirePatient, async (req, res) => {
       await queryRaw(`UPDATE patients SET ${updates.join(',')} WHERE id=$${vals.length}`, vals)
     }
 
-    // Notify clinic via patient message
-    await queryRaw(
-      `INSERT INTO patient_messages (practice_id, patient_id, body)
-       VALUES ($1,$2,'📋 Patient has completed their intake health form. Records have been updated.')`,
-      [req.patient.practiceId, puid(req)]
+    // Notify clinic via portal message
+    await query(ppid(req),
+      `INSERT INTO portal_messages (tenant_id, patient_id, body, from_patient)
+       VALUES ($1,$2,'📋 Patient has completed their intake health form. Records have been updated.',TRUE)`,
+      [ppid(req), puid(req)]
     )
 
     res.status(201).json({ ok: true })

@@ -14,4 +14,5 @@ const protect = (req, res, next) => {
 };
 const requireRole = (...roles) => (req, res, next) =>
   roles.includes(req.user.role) ? next() : next(new AppError('Insufficient permissions', 403));
-module.exports = { protect, requireRole };
+const requireAuth = protect
+module.exports = { protect, requireAuth, requireRole };

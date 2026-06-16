@@ -48,7 +48,6 @@ router.get('/:id', async (req, res) => {
               p.first_name || ' ' || p.last_name AS patient_name,
               p.amka AS patient_amka,
               p.date_of_birth AS patient_dob,
-              p.date_of_birth AS patient_dob,
               u.first_name || ' ' || u.last_name AS doctor_name,
               u.license_number AS doctor_license,
               pr.name AS practice_name,
