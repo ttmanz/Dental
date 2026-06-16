@@ -9886,7 +9886,7 @@ function openPatientChart(patientNameOrId) {
             <span style="color:var(--text)">${v}</span>
           </div>`).join('')
       } else {
-        const portalUrl = `${window.location.origin}/portal.html?practice=${AUTH.user?.practiceId}`
+        const portalUrl = `https://dentapro.org/patient-portal.html?practiceId=${AUTH.user?.practiceId}`
         intakeBadge.innerHTML = `<span style="background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700">${lang==='el'?'Εκκρεμεί':'Pending'}</span>`
         intakeBody.innerHTML  = `<div style="font-size:12px;color:var(--text-muted);margin-top:6px">
           ${lang==='el'?'Ο ασθενής δεν έχει συμπληρώσει τη φόρμα υγείας.':'Patient has not completed their health intake form.'}
@@ -14110,7 +14110,7 @@ window.auditLog = (function() {
     renderDashActivity()
 
     // ── Patient portal link + QR ─────────────────────────────────────────
-    const portalUrl = `${window.location.origin}/portal.html?practice=${AUTH.user?.practiceId}`
+    const portalUrl = `https://dentapro.org/patient-portal.html?practiceId=${AUTH.user?.practiceId}`
     const urlEl     = document.getElementById('dash-portal-url')
     if (urlEl) urlEl.textContent = portalUrl
     renderPortalQR(portalUrl)

@@ -474,9 +474,10 @@ let _patient      = null
 let _practiceId   = null
 let _practiceInfo = null
 
-// Read practice ID from URL query: ?practice=UUID
+// Read practice ID from URL query: ?practiceId=UUID (or legacy ?practice=UUID)
 ;(() => {
-  const p = new URLSearchParams(window.location.search).get('practice')
+  const params = new URLSearchParams(window.location.search)
+  const p = params.get('practiceId') || params.get('practice')
   if (p) { _practiceId = p; document.getElementById('practice-id-input').value = p }
 })()
 
