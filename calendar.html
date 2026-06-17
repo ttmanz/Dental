@@ -389,6 +389,11 @@
     }
     .appt-name:hover { text-decoration: underline; text-decoration-color: rgba(255,255,255,.65); }
     .appt-type { font-size: 9px; font-weight: 500; color: rgba(255,255,255,.82); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appt-newpt-tag {
+      display: inline-block; margin-top: 2px; padding: 1px 5px; border-radius: 4px;
+      background: rgba(255,255,255,.92); color: #b45309; font-size: 8px; font-weight: 800;
+      letter-spacing: .04em; line-height: 1.4; white-space: nowrap; vertical-align: middle;
+    }
     .appt-time { font-size: 9px; font-weight: 600; color: rgba(255,255,255,.7); margin-top: 2px; }
 
     /* Confirm dot (right) */
@@ -472,6 +477,21 @@
       letter-spacing: .04em; text-transform: uppercase; color: #fff; margin-bottom: 8px;
     }
     .modal-patient { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+    .modal-newpt-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      flex-wrap: wrap; margin: 4px 0 14px; padding: 10px 12px; border-radius: 10px;
+      background: #fff7ed; border: 1px solid #fdba74;
+    }
+    .modal-newpt-text { font-size: 12px; color: #9a3412; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .modal-newpt-chip {
+      background: #ea580c; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .04em;
+      padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+    }
+    .modal-newpt-btn {
+      border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;
+      background: #ea580c; color: #fff; font-size: 12px; font-weight: 700; white-space: nowrap;
+    }
+    .modal-newpt-btn:hover { background: #c2410c; }
     .modal-close {
       width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
       background: var(--white); cursor: pointer; font-size: 16px; color: var(--text-muted);
@@ -669,6 +689,45 @@
       opacity: 0; pointer-events: none; transition: opacity .2s;
     }
     .af-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ── Quick-add new patient ─────────────────────────────────────────────── */
+    .qa-overlay {
+      position: fixed; inset: 0; z-index: 560;
+      background: rgba(20,18,15,.50); backdrop-filter: blur(5px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .qa-overlay.open { opacity: 1; pointer-events: all; }
+    .qa-modal {
+      background: var(--white); border-radius: 18px; overflow: hidden;
+      width: min(440px, 94vw); box-shadow: 0 20px 70px rgba(20,18,15,.22);
+      transform: translateY(14px) scale(.97);
+      transition: transform .22s cubic-bezier(.175,.885,.32,1.2);
+    }
+    .qa-overlay.open .qa-modal { transform: none; }
+    .qa-header { padding: 20px 24px 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .qa-title { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+    .qa-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+    .qa-close {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--white); color: var(--text-muted); cursor: pointer; font-size: 15px; flex-shrink: 0;
+    }
+    .qa-close:hover { background: var(--cream); }
+    .qa-body { padding: 18px 24px 4px; }
+    .qa-field { margin-bottom: 14px; }
+    .qa-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: .06em; margin-bottom: 6px; }
+    .qa-input {
+      width: 100%; box-sizing: border-box; height: 42px; padding: 0 12px;
+      border: 1px solid var(--border); border-radius: 10px; font-size: 14px;
+      background: var(--cream); color: var(--text); outline: none; font-family: inherit;
+    }
+    .qa-input:focus { border-color: var(--primary); background: var(--white); }
+    .qa-footer { padding: 8px 24px 22px; display: flex; gap: 10px; justify-content: flex-end; }
+    .qa-btn { border: none; border-radius: 10px; padding: 11px 18px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .qa-btn.cancel { background: var(--cream); color: var(--text-muted); border: 1px solid var(--border); }
+    .qa-btn.cancel:hover { background: var(--border); }
+    .qa-btn.primary { background: var(--primary); color: #fff; }
+    .qa-btn.primary:hover { filter: brightness(.95); }
     .af-modal {
       background: var(--white); border-radius: 18px; overflow: hidden;
       width: min(540px, 94vw);
@@ -5617,7 +5676,7 @@
           </div>
           <div style="display:flex;align-items:center;gap:4px;">
             <span id="sb-pt-arrow" style="font-size:10px;color:var(--text-muted);transition:transform .2s;transform:rotate(-90deg);">▼</span>
-            <button id="sb-add-patient-btn" title="Add New Patient" onclick="event.stopPropagation();openPatientForm()" style="width:22px;height:22px;border-radius:6px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">＋</button>
+            <button id="sb-add-patient-btn" title="Quick-add new patient (name + phone)" onclick="event.stopPropagation();openQuickAddPatient()" style="width:22px;height:22px;border-radius:6px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">＋</button>
           </div>
         </div>
         <div id="sb-pt-body" style="display:none">
@@ -5789,6 +5848,14 @@
       </div>
       <button class="modal-close" id="modal-close">✕</button>
     </div>
+    <!-- New-patient banner — only for provisional patients -->
+    <div class="modal-newpt-banner" id="modal-newpt-banner" style="display:none">
+      <div class="modal-newpt-text">
+        <span class="modal-newpt-chip" data-en="NEW PATIENT" data-el="ΝΕΟΣ ΑΣΘΕΝΗΣ">NEW PATIENT</span>
+        <span data-en="Name & phone only — complete the form on their first visit." data-el="Μόνο όνομα & τηλέφωνο — συμπληρώστε τη φόρμα στην πρώτη επίσκεψη.">Name &amp; phone only — complete the form on their first visit.</span>
+      </div>
+      <button class="modal-newpt-btn" id="modal-register-btn" data-en="📝 Complete Registration" data-el="📝 Ολοκλήρωση Εγγραφής">📝 Complete Registration</button>
+    </div>
     <div class="modal-detail">
       <div class="modal-detail-icon">📅</div>
       <div>
@@ -5918,6 +5985,33 @@
     <div class="af-footer">
       <button class="af-btn secondary" id="af-cancel">Cancel</button>
       <button class="af-btn primary" id="af-save">Save Appointment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Quick-Add New Patient (name + phone only) ─────────────────────────── -->
+<div class="qa-overlay" id="qa-overlay">
+  <div class="qa-modal">
+    <div class="qa-header">
+      <div>
+        <div class="qa-title" data-en="New Patient" data-el="Νέος Ασθενής">New Patient</div>
+        <div class="qa-subtitle" data-en="Name &amp; phone only. Book their appointment now — they complete the full form at their first visit." data-el="Μόνο όνομα &amp; τηλέφωνο. Κλείστε ραντεβού τώρα — συμπληρώνουν τη φόρμα στην πρώτη επίσκεψη.">Name &amp; phone only. Book their appointment now — they complete the full form at their first visit.</div>
+      </div>
+      <button class="qa-close" id="qa-close">✕</button>
+    </div>
+    <div class="qa-body">
+      <div class="qa-field">
+        <label class="qa-label" for="qa-name" data-en="FULL NAME" data-el="ΟΝΟΜΑΤΕΠΩΝΥΜΟ">FULL NAME</label>
+        <input class="qa-input" id="qa-name" type="text" placeholder="First Last" autocomplete="off"/>
+      </div>
+      <div class="qa-field">
+        <label class="qa-label" for="qa-phone" data-en="PHONE" data-el="ΤΗΛΕΦΩΝΟ">PHONE</label>
+        <input class="qa-input" id="qa-phone" type="tel" placeholder="+30 ..." autocomplete="off"/>
+      </div>
+    </div>
+    <div class="qa-footer">
+      <button class="qa-btn cancel" id="qa-cancel" data-en="Cancel" data-el="Άκυρο">Cancel</button>
+      <button class="qa-btn primary" id="qa-save" data-en="Add &amp; Book Appointment" data-el="Προσθήκη &amp; Ραντεβού">Add &amp; Book Appointment</button>
     </div>
   </div>
 </div>
@@ -7233,10 +7327,14 @@ const APPTS = []
 let PATIENTS = []
 
 // ── API ↔ frontend data mappers ──────────────────────────────────────────
+// Quick-add patients with a single-word name store last_name='-' (DB requires it).
+// Strip that placeholder for display/matching so the name reads cleanly.
+function cleanPatientName(s) { return (s || '').replace(/\s+-\s*$/, '').trim() }
+
 function patientFromApi(p) {
   return {
     id:           p.id,
-    fullName:     `${p.first_name} ${p.last_name}`,
+    fullName:     cleanPatientName(`${p.first_name} ${p.last_name}`),
     firstName:    p.first_name || '',
     lastName:     p.last_name  || '',
     dob:          p.dob || p.date_of_birth || '',
@@ -7260,6 +7358,7 @@ function patientFromApi(p) {
     lastVisit:    p.last_visit || p.lastVisit || '',
     chiefComplaint: p.chief_complaint || p.chiefComplaint || '',
     prevWork:     p.prev_dental_work || p.prevWork || '',
+    isProvisional: p.is_provisional === true,
     createdAt:    p.created_at,
   }
 }
@@ -7282,7 +7381,7 @@ function apptFromApi(a) {
   }
   return {
     id:      a.id,
-    patient: a.patient_name,
+    patient: cleanPatientName(a.patient_name),
     type:    a.type || a.title || 'appointment',
     dentist: a.dentist_name,
     date, hour, min, dur,
@@ -7575,6 +7674,13 @@ function makeApptBlock(a, date) {
   typeEl.textContent = typeLbl
 
   content.appendChild(nameEl)
+  // ── "New patient" tag — provisional patient (name + phone only, not yet registered)
+  if (patientRec?.isProvisional) {
+    const newTag = document.createElement('span')
+    newTag.className = 'appt-newpt-tag'
+    newTag.textContent = lang === 'el' ? 'ΝΕΟΣ ΑΣΘΕΝΗΣ' : 'NEW PATIENT'
+    content.appendChild(newTag)
+  }
   content.appendChild(typeEl)
   if (height > 42) {
     const timeEl = document.createElement('div')
@@ -8224,6 +8330,14 @@ function openModal(a, date) {
   badge.style.background = TYPE_COLORS[a.type] || '#888'
   document.getElementById('modal-patient').textContent = a.patient
 
+  // New-patient banner — show "Complete Registration" for provisional patients
+  const newptRec    = findPatientByName(a.patient)
+  const newptBanner = document.getElementById('modal-newpt-banner')
+  if (newptBanner) {
+    newptBanner.style.display = newptRec?.isProvisional ? '' : 'none'
+    newptBanner._patient = newptRec?.isProvisional ? newptRec : null
+  }
+
   const days   = lang === 'en' ? ['Mon','Tue','Wed','Thu','Fri','Sat'] : ['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ']
   const months = lang === 'en' ? MONTHS_SHORT_EN : MONTHS_SHORT_EL
   document.getElementById('modal-datetime').textContent =
@@ -8263,6 +8377,12 @@ document.getElementById('modal-close').addEventListener('click', () =>
   document.getElementById('modal-overlay').classList.remove('open'))
 document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open')
+})
+// Complete Registration — turn a provisional patient into a full record
+document.getElementById('modal-register-btn').addEventListener('click', () => {
+  const p = document.getElementById('modal-newpt-banner')._patient
+  document.getElementById('modal-overlay').classList.remove('open')
+  if (p) openPatientForm(p)
 })
 
 // ── Colour palette for new dentists / types ───────────────────────────────
@@ -8739,9 +8859,12 @@ const PATIENT_QS = [
 
 // Patient data store
 let patientData = {}
+// When completing a provisional patient's registration, the record id to PATCH
+let _pmEditingId = null
 
-function openPatientForm() {
+function openPatientForm(prefill) {
   patientData = {}
+  _pmEditingId = (prefill && prefill.id) ? prefill.id : null
   document.querySelectorAll('.pm-input, .pm-textarea, .pm-select').forEach(el => { el.value = '' })
   document.querySelectorAll('input[type=radio]').forEach(el => { el.checked = false })
   // Reset photo widget
@@ -8751,6 +8874,14 @@ function openPatientForm() {
   if (oldImg) oldImg.remove()
   document.getElementById('pf-photo-initials').textContent = '?'
   document.getElementById('pf-photo-initials').style.display = ''
+  // Pre-fill name + phone when finishing a "new patient" started from quick-add
+  if (prefill) {
+    const nm = prefill.fullName || `${prefill.firstName||''} ${prefill.lastName||''}`.trim()
+    document.getElementById('pf-name').value  = nm
+    document.getElementById('pf-phone').value = prefill.phone || ''
+    patientData.fullName = nm
+    patientData.phone    = prefill.phone || ''
+  }
   switchPmMode('write')
   voiceQIdx = 0
   renderVoiceQuestion()
@@ -8761,8 +8892,65 @@ function closePatientForm() {
   stopRecognition()
 }
 
-document.getElementById('new-patient-btn').addEventListener('click', openPatientForm)
-document.getElementById('sb-add-patient-btn').addEventListener('click', openPatientForm)
+// Bottom sidebar button → full registration form. Top (patients-tab) button is
+// wired inline to openQuickAddPatient(). Wrap so the click Event isn't passed as prefill.
+document.getElementById('new-patient-btn').addEventListener('click', () => openPatientForm())
+
+// ── Quick-add new patient (name + phone only → provisional, then book appt) ──
+function openQuickAddPatient() {
+  document.getElementById('qa-name').value  = ''
+  document.getElementById('qa-phone').value = ''
+  document.getElementById('qa-overlay').classList.add('open')
+  setTimeout(() => document.getElementById('qa-name').focus(), 120)
+}
+function closeQuickAddPatient() {
+  document.getElementById('qa-overlay').classList.remove('open')
+}
+function saveQuickAddPatient() {
+  const name  = document.getElementById('qa-name').value.trim()
+  const phone = document.getElementById('qa-phone').value.trim()
+  if (!name)  { document.getElementById('qa-name').focus();  return }
+  if (!phone) { document.getElementById('qa-phone').focus(); return }
+
+  const parts     = name.split(/\s+/)
+  const firstName = parts[0] || name
+  const lastName  = parts.slice(1).join(' ') || '-'   // last_name is NOT NULL in DB
+
+  document.getElementById('qa-save').disabled = true
+  apiFetch('/api/patients', {
+    method: 'POST',
+    body: { firstName, lastName, phone, mobile: phone, isProvisional: true }
+  })
+    .then(res => res.json())
+    .then(res => {
+      const data = res?.data || res
+      if (data?.id) {
+        // Keep in PATIENTS so the appointment form resolves the name, but it stays
+        // out of the registry list/count (renderSidebarPatients filters provisional).
+        PATIENTS.push(patientFromApi(data))
+        if (typeof refreshSidebarPatients === 'function') refreshSidebarPatients()
+        if (typeof auditLog === 'function') auditLog('patient created', name, 'New patient (quick-add — name + phone)')
+        closeQuickAddPatient()
+        showToast(lang === 'el' ? 'Νέος ασθενής ✓ — κλείστε ραντεβού' : 'New patient ✓ — book their appointment')
+        // Jump straight into booking an appointment for this new patient
+        openApptForm(new Date())
+        setTimeout(() => { document.getElementById('af-patient').value = name }, 80)
+      } else {
+        showToast(res?.error || (lang === 'el' ? 'Αποτυχία αποθήκευσης.' : 'Could not save patient.'))
+      }
+    })
+    .catch(() => showToast(lang === 'el' ? 'Σφάλμα σύνδεσης.' : 'Could not save — check connection.'))
+    .finally(() => { document.getElementById('qa-save').disabled = false })
+}
+document.getElementById('qa-close').addEventListener('click', closeQuickAddPatient)
+document.getElementById('qa-cancel').addEventListener('click', closeQuickAddPatient)
+document.getElementById('qa-save').addEventListener('click', saveQuickAddPatient)
+document.getElementById('qa-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeQuickAddPatient()
+})
+document.getElementById('qa-phone').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveQuickAddPatient()
+})
 
 document.getElementById('pm-close').addEventListener('click', closePatientForm)
 document.getElementById('pm-cancel').addEventListener('click', closePatientForm)
@@ -8815,9 +9003,14 @@ document.getElementById('pm-save').addEventListener('click', () => {
     prevWork:         patientData.prevWork       || null,
     chiefComplaint:   patientData.chiefComplaint || null,
     insurance:        patientData.insurance      || null,
+    // Completing the full form registers the patient — clears any provisional flag
+    isProvisional:    false,
   }
 
-  const existing = findPatientByName(patientData.fullName)
+  // Prefer the explicit record being completed (provisional → registered),
+  // otherwise fall back to a name match so re-saving updates instead of duplicating.
+  const existing = (_pmEditingId ? PATIENTS.find(p => String(p.id) === String(_pmEditingId)) : null)
+                 || findPatientByName(patientData.fullName)
   const url    = existing ? `/api/patients/${existing.id}` : '/api/patients'
   const method = existing ? 'PATCH' : 'POST'
 
@@ -8828,7 +9021,8 @@ document.getElementById('pm-save').addEventListener('click', () => {
       if (data?.id) {
         showToast(lang === 'el' ? 'Ασθενής αποθηκεύτηκε ✓' : 'Patient saved ✓')
         if (typeof auditLog === 'function') auditLog(existing ? 'patient updated' : 'patient created', `${data.first_name||''} ${data.last_name||''}`.trim(), existing ? 'Record updated' : 'New patient registered')
-        fetchPatients()  // re-fetch from server — always up to date
+        // re-fetch from server, then redraw the calendar so any "NEW PATIENT" tag clears
+        fetchPatients().then(() => { if (typeof renderCalendar === 'function') renderCalendar() })
       } else {
         showToast(res?.error || 'Could not save patient.')
       }
@@ -9620,17 +9814,22 @@ function renderSidebarPatients(filter) {
   const countEl = document.getElementById('sb-pt-count')
   if (!list) return
 
+  // Provisional ("new") patients — added with name + phone only — are kept in
+  // PATIENTS so appointments resolve, but excluded from the registry list/count
+  // until they complete the full form.
+  const registered = PATIENTS.filter(p => !p.isProvisional)
+
   const q = (filter || '').trim().toLowerCase()
   const source = q
-    ? PATIENTS.filter(p => {
+    ? registered.filter(p => {
         const name  = (p.fullName || '').toLowerCase()
         const phone = (p.phone    || '').toLowerCase()
         const email = (p.email    || '').toLowerCase()
         return name.includes(q) || phone.includes(q) || email.includes(q)
       })
-    : [...PATIENTS].sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''))
+    : [...registered].sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''))
 
-  countEl.textContent = PATIENTS.length
+  countEl.textContent = registered.length
 
   if (!source.length) {
     list.innerHTML = `<div class="sb-patient-empty">${q ? 'No matches' : 'No patients yet'}</div>`
