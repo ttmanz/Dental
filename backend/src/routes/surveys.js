@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { query, queryRaw } = require('../db')
+const { query } = require('../db')
 const { requireAuth } = require('../middleware/auth')
 
 router.use(requireAuth)
@@ -20,7 +20,7 @@ router.post('/templates', async (req, res) => {
   if (!name) return res.status(400).json({ error: 'name required' })
   try {
     const { rows } = await query(pid(req),
-      `INSERT INTO survey_templates (practice_id, name, questions, auto_send, delay_hours, channel)
+      `INSERT INTO survey_templates (tenant_id, name, questions, auto_send, delay_hours, channel)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
       [pid(req), name, JSON.stringify(questions||[]), autoSend, delayHours, channel])
     res.status(201).json(rows[0])
@@ -49,7 +49,7 @@ router.patch('/templates/:id', async (req, res) => {
 // GET /api/surveys/responses?limit=100
 router.get('/responses', async (req, res) => {
   const { limit = 100, patientId } = req.query
-  const conds = ['sr.practice_id = current_practice_id()']
+  const conds = []
   const vals  = []
   if (patientId) { conds.push(`sr.patient_id = $${vals.length+1}`); vals.push(patientId) }
   vals.push(limit)
@@ -60,7 +60,7 @@ router.get('/responses', async (req, res) => {
               p.phone AS patient_phone
        FROM survey_responses sr
        LEFT JOIN patients p ON p.id = sr.patient_id
-       WHERE ${conds.join(' AND ')}
+       ${conds.length ? 'WHERE ' + conds.join(' AND ') : ''}
        ORDER BY sr.created_at DESC LIMIT $${vals.length}`, vals)
     res.json(rows)
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
@@ -78,7 +78,7 @@ router.get('/stats', async (req, res) => {
          COUNT(*) FILTER (WHERE nps_score BETWEEN 7 AND 8)             AS passives,
          COUNT(*) FILTER (WHERE nps_score <= 6 AND nps_score IS NOT NULL) AS detractors,
          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') AS last_30_days
-       FROM survey_responses WHERE practice_id = current_practice_id()`)
+       FROM survey_responses`)
     const r = rows[0]
     const total = parseInt(r.promoters)+parseInt(r.passives)+parseInt(r.detractors)
     const nps   = total > 0
@@ -94,18 +94,12 @@ router.post('/responses', async (req, res) => {
   try {
     const { rows } = await query(pid(req),
       `INSERT INTO survey_responses
-         (practice_id, template_id, patient_id, appointment_id, nps_score, answers, channel, responded_at)
+         (tenant_id, template_id, patient_id, appointment_id, nps_score, answers, channel, responded_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7, NOW()) RETURNING *`,
       [pid(req), templateId||null, patientId||null, appointmentId||null,
        npsScore??null, JSON.stringify(answers||{}), channel||null])
     res.status(201).json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
-})
-
-// Public webhook — patient submits survey via link (no auth)
-router.post('/submit/:token', async (req, res) => {
-  // Token encodes practiceId + responseId; simplified here
-  res.json({ ok: true, message: 'Thank you for your feedback!' })
 })
 
 module.exports = router

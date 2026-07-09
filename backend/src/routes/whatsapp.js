@@ -51,13 +51,13 @@ router.post('/webhook', async (req, res) => {
 
       // Find patient by phone
       const { rows: [patient] } = await queryRaw(
-        `SELECT id FROM patients WHERE practice_id = $1 AND phone = $2 LIMIT 1`,
+        `SELECT id FROM patients WHERE tenant_id = $1 AND phone = $2 LIMIT 1`,
         [practiceId, phone]
       )
 
       await queryRaw(
         `INSERT INTO whatsapp_messages
-           (practice_id, patient_id, wa_message_id, direction, phone, body, status, wa_timestamp)
+           (tenant_id, patient_id, wa_message_id, direction, phone, body, status, wa_timestamp)
          VALUES ($1,$2,$3,'inbound',$4,$5,'delivered',$6)
          ON CONFLICT (wa_message_id) DO NOTHING`,
         [practiceId, patient?.id||null, waId, phone, body, ts]
@@ -87,8 +87,7 @@ router.get('/conversations', async (req, res) => {
          COUNT(*) FILTER (WHERE wm2.direction='inbound' AND wm2.read_by_staff=FALSE AND wm2.phone=wm.phone) AS unread
        FROM whatsapp_messages wm
        LEFT JOIN patients p ON p.id = wm.patient_id
-       LEFT JOIN whatsapp_messages wm2 ON wm2.practice_id = wm.practice_id AND wm2.phone = wm.phone
-       WHERE wm.practice_id = current_practice_id()
+       LEFT JOIN whatsapp_messages wm2 ON wm2.tenant_id = wm.tenant_id AND wm2.phone = wm.phone
        GROUP BY wm.phone, wm.body, wm.direction, wm.created_at, wm.patient_id, p.first_name, p.last_name
        ORDER BY wm.phone, wm.created_at DESC`)
     res.json(rows)
@@ -129,7 +128,7 @@ router.post('/send', async (req, res) => {
 
     const { rows } = await query(pid(req),
       `INSERT INTO whatsapp_messages
-         (practice_id, patient_id, wa_message_id, direction, phone, body, status, sent_by)
+         (tenant_id, patient_id, wa_message_id, direction, phone, body, status, sent_by)
        VALUES ($1,$2,$3,'outbound',$4,$5,'sent',$6) RETURNING *`,
       [pid(req), patientId||null, waId||null, phone, body, req.user.userId])
 

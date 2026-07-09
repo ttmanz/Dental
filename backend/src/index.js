@@ -3,7 +3,6 @@ const http    = require('http')
 const express = require('express')
 const cors    = require('cors')
 const path    = require('path')
-const jwt     = require('jsonwebtoken')
 
 const app    = express()
 const server = http.createServer(app)

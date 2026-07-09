@@ -9,10 +9,7 @@ const pid = req => req.user.practiceId
 router.get('/', async (req, res) => {
   try {
     const { rows } = await query(pid(req),
-      `SELECT id, name, color, sort_order
-       FROM appointment_types
-       WHERE practice_id = current_practice_id()
-       ORDER BY sort_order, name`)
+      `SELECT id, name, color, sort_order FROM appointment_types ORDER BY sort_order, name`)
     res.json(rows)
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
@@ -23,12 +20,12 @@ router.post('/', async (req, res) => {
   if (!name?.trim()) return res.status(400).json({ error: 'name required' })
   try {
     const { rows: [existing] } = await query(pid(req),
-      `SELECT COUNT(*) AS n FROM appointment_types WHERE practice_id = current_practice_id()`)
+      `SELECT COUNT(*) AS n FROM appointment_types`)
     const sortOrder = parseInt(existing?.n || 0)
     const { rows } = await query(pid(req),
-      `INSERT INTO appointment_types (practice_id, name, color, sort_order)
+      `INSERT INTO appointment_types (tenant_id, name, color, sort_order)
        VALUES ($1, $2, $3, $4)
-       ON CONFLICT (practice_id, name) DO UPDATE SET color = EXCLUDED.color
+       ON CONFLICT (tenant_id, name) DO UPDATE SET color = EXCLUDED.color
        RETURNING id, name, color, sort_order`,
       [pid(req), name.trim(), color || '#3D9E8F', sortOrder])
     res.status(201).json(rows[0])
@@ -39,8 +36,7 @@ router.post('/', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { rowCount } = await query(pid(req),
-      `DELETE FROM appointment_types WHERE id = $1 AND practice_id = current_practice_id()`,
-      [req.params.id])
+      `DELETE FROM appointment_types WHERE id = $1`, [req.params.id])
     if (!rowCount) return res.status(404).json({ error: 'Not found' })
     res.status(204).end()
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }

@@ -1,10 +1,10 @@
 const router  = require('express').Router()
 const crypto  = require('crypto')
 const jwt     = require('jsonwebtoken')
-const { queryRaw, query } = require('../db')
+const { queryRaw } = require('../db')
 const { requireAuth } = require('../middleware/auth')
 
-// ── Pure-Node TOTP (no external library) ─────────────────────────────────
+// ── Pure-Node TOTP ────────────────────────────────────────────────────────
 const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
 
 function base32Decode(s) {
@@ -37,7 +37,6 @@ function totpCode(secret, window = 0) {
 }
 
 function verifyTOTP(secret, token) {
-  // Accept ±1 window (covers clock skew up to 30 s)
   return [-1, 0, 1].some(w => totpCode(secret, w) === String(token).trim())
 }
 
@@ -45,8 +44,7 @@ function generateSecret() {
   return base32Encode(crypto.randomBytes(20))
 }
 
-// ── MFA token map (server-side, lives in memory between login and verify) ─
-// In production this should be Redis; here a Map with 5-min TTL is fine.
+// ── MFA pending sessions (in-memory, 5-min TTL) ───────────────────────────
 const MFA_PENDING = new Map()
 setInterval(() => {
   const cutoff = Date.now() - 5 * 60_000
@@ -60,8 +58,9 @@ router.post('/verify', async (req, res) => {
   const pending = MFA_PENDING.get(mfaToken)
   if (!pending) return res.status(400).json({ error: 'Invalid or expired MFA session' })
 
-  const { rows } = await queryRaw('SELECT totp_secret FROM users WHERE id = $1', [pending.userId])
-  const secret   = rows[0]?.totp_secret
+  const { rows } = await queryRaw(
+    'SELECT secret FROM totp_secrets WHERE user_id = $1 AND enabled = TRUE', [pending.userId])
+  const secret = rows[0]?.secret
   if (!secret || !verifyTOTP(secret, code)) {
     return res.status(401).json({ error: 'Invalid code' })
   }
@@ -77,51 +76,54 @@ router.post('/verify', async (req, res) => {
 })
 
 // Export so login route can enqueue pending sessions
-module.exports.enqueueMFA  = (mfaToken, data) => MFA_PENDING.set(mfaToken, { ...data, ts: Date.now() })
-module.exports.verifyTOTP  = verifyTOTP
+module.exports                = router
+module.exports.enqueueMFA     = (mfaToken, data) => MFA_PENDING.set(mfaToken, { ...data, ts: Date.now() })
+module.exports.verifyTOTP     = verifyTOTP
 module.exports.generateSecret = generateSecret
-module.exports.totpCode    = totpCode
-module.exports.router      = router
 
-// ── Authenticated routes below ─────────────────────────────────────────────
+// ── Authenticated routes ───────────────────────────────────────────────────
 router.use(requireAuth)
 
-// POST /api/auth/totp/setup  — generate a new secret, return QR url
+// POST /api/auth/totp/setup — generate new secret, store pending
 router.post('/setup', async (req, res) => {
   const secret  = generateSecret()
-  const user    = req.user
-  const email   = encodeURIComponent(user.email)
+  const email   = encodeURIComponent(req.user.email)
   const issuer  = encodeURIComponent('DentalAssistantPro')
   const otpauth = `otpauth://totp/${issuer}:${email}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`
-  // Store secret temporarily (not yet active — activated after confirmation)
-  await queryRaw('UPDATE users SET totp_secret_pending = $1 WHERE id = $2', [secret, user.userId])
+  await queryRaw(
+    `INSERT INTO totp_secrets (user_id, secret, enabled) VALUES ($1, $2, FALSE)
+     ON CONFLICT (user_id) DO UPDATE SET secret = $2, enabled = FALSE`,
+    [req.user.userId, secret])
   res.json({ secret, otpauthUrl: otpauth })
 })
 
-// POST /api/auth/totp/enable  { code }  — confirm code, activate 2FA
+// POST /api/auth/totp/enable  { code } — confirm code, activate 2FA
 router.post('/enable', async (req, res) => {
   const { code } = req.body
-  const { rows } = await queryRaw('SELECT totp_secret_pending FROM users WHERE id = $1', [req.user.userId])
-  const secret   = rows[0]?.totp_secret_pending
+  const { rows } = await queryRaw(
+    'SELECT secret FROM totp_secrets WHERE user_id = $1 AND enabled = FALSE', [req.user.userId])
+  const secret = rows[0]?.secret
   if (!secret) return res.status(400).json({ error: 'No pending 2FA setup' })
   if (!verifyTOTP(secret, code)) return res.status(401).json({ error: 'Invalid code — check your authenticator app' })
-  await queryRaw('UPDATE users SET totp_secret = totp_secret_pending, totp_secret_pending = NULL, totp_enabled = TRUE WHERE id = $1', [req.user.userId])
+  await queryRaw('UPDATE totp_secrets SET enabled = TRUE WHERE user_id = $1', [req.user.userId])
   res.json({ ok: true, message: '2FA enabled' })
 })
 
-// POST /api/auth/totp/disable  { code }  — verify then disable
+// POST /api/auth/totp/disable  { code }
 router.post('/disable', async (req, res) => {
   const { code } = req.body
-  const { rows } = await queryRaw('SELECT totp_secret FROM users WHERE id = $1', [req.user.userId])
-  const secret   = rows[0]?.totp_secret
+  const { rows } = await queryRaw(
+    'SELECT secret FROM totp_secrets WHERE user_id = $1 AND enabled = TRUE', [req.user.userId])
+  const secret = rows[0]?.secret
   if (!secret) return res.status(400).json({ error: '2FA is not enabled' })
   if (!verifyTOTP(secret, code)) return res.status(401).json({ error: 'Invalid code' })
-  await queryRaw('UPDATE users SET totp_secret = NULL, totp_enabled = FALSE WHERE id = $1', [req.user.userId])
+  await queryRaw('DELETE FROM totp_secrets WHERE user_id = $1', [req.user.userId])
   res.json({ ok: true, message: '2FA disabled' })
 })
 
 // GET /api/auth/totp/status
 router.get('/status', async (req, res) => {
-  const { rows } = await queryRaw('SELECT totp_enabled FROM users WHERE id = $1', [req.user.userId])
-  res.json({ enabled: rows[0]?.totp_enabled || false })
+  const { rows } = await queryRaw(
+    'SELECT enabled FROM totp_secrets WHERE user_id = $1', [req.user.userId])
+  res.json({ enabled: rows[0]?.enabled || false })
 })

@@ -1,7 +1,7 @@
 const router  = require('express').Router()
 const bcrypt  = require('bcryptjs')
 const jwt     = require('jsonwebtoken')
-const { query } = require('../db')
+const { queryRaw } = require('../db')
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
@@ -11,7 +11,7 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const { rows } = await query(
+    const { rows } = await queryRaw(
       `SELECT u.*, t.name AS practice_name
        FROM users u
        JOIN tenants t ON t.id = u.tenant_id
@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' })
     }
 
-    await query(
+    await queryRaw(
       'UPDATE users SET last_login_at = NOW() WHERE id = $1',
       [user.id]
     )
@@ -54,22 +54,23 @@ router.post('/login', async (req, res) => {
 
 // POST /api/auth/register-practice  (first-time setup — creates tenant + owner user)
 router.post('/register-practice', async (req, res) => {
-  const { practiceName, country, locale, email, password, firstName, lastName } = req.body
+  const { practiceName, country, email, password, firstName, lastName } = req.body
   if (!practiceName || !email || !password || !firstName || !lastName) {
     return res.status(400).json({ error: 'All fields required' })
   }
 
   try {
     const hash = await bcrypt.hash(password, 12)
+    const slug = practiceName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-') + '-' + Date.now().toString(36)
 
-    const { rows: [tenant] } = await query(
-      `INSERT INTO tenants (name, country) VALUES ($1, $2) RETURNING id`,
-      [practiceName.trim(), (country || 'GR').toUpperCase()]
+    const { rows: [tenant] } = await queryRaw(
+      `INSERT INTO tenants (name, slug, email, country) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [practiceName.trim(), slug, email.toLowerCase().trim(), (country || 'GR').toUpperCase()]
     )
 
-    const { rows: [user] } = await query(
+    const { rows: [user] } = await queryRaw(
       `INSERT INTO users (tenant_id, email, password_hash, role, first_name, last_name)
-       VALUES ($1, $2, $3, 'owner', $4, $5) RETURNING id`,
+       VALUES ($1, $2, $3, 'admin', $4, $5) RETURNING id`,
       [tenant.id, email.toLowerCase().trim(), hash, firstName.trim(), lastName.trim()]
     )
 
@@ -78,7 +79,7 @@ router.post('/register-practice', async (req, res) => {
     require('../email').sendWelcome({ to: email, name: firstName.trim(), practiceName: practiceName.trim(), loginUrl: appUrl }).catch(() => {})
 
     const token = jwt.sign(
-      { userId: user.id, practiceId: tenant.id, role: 'owner', email },
+      { userId: user.id, practiceId: tenant.id, role: 'admin', email },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
     )
@@ -93,7 +94,7 @@ router.post('/register-practice', async (req, res) => {
 // GET /api/auth/demo  — auto-login to the demo practice (no password)
 router.get('/demo', async (req, res) => {
   try {
-    const { rows } = await query(
+    const { rows } = await queryRaw(
       `SELECT u.*, t.name AS practice_name
        FROM users u JOIN tenants t ON t.id = u.tenant_id
        WHERE u.email = 'demo@dentapro.org'

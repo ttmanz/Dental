@@ -23,7 +23,7 @@ router.post('/templates', requireRole('admin','dentist'), async (req, res) => {
   try {
     const { rows } = await query(pid(req),
       `INSERT INTO consent_templates
-         (practice_id, title_en, title_el, body_en, body_el, fields, category, sort_order)
+         (tenant_id, title_en, title_el, body_en, body_el, fields, category, sort_order)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
       [pid(req), titleEn, titleEl||titleEn, bodyEn, bodyEl||bodyEn,
        JSON.stringify(fields||[]), category||'general', sortOrder||0])
@@ -88,12 +88,12 @@ router.post('/:patientId', async (req, res) => {
 
     const { rows } = await query(pid(req),
       `INSERT INTO consent_records
-         (practice_id, patient_id, template_id, title, body, form_data, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+         (tenant_id, patient_id, template_id, title, body, form_data)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
       [pid(req), req.params.patientId, templateId,
-       tmpl.title_en,  // will be overridden client-side based on lang
+       tmpl.title_en,
        tmpl.body_en,
-       JSON.stringify(formData||{}), req.user.userId])
+       JSON.stringify(formData||{})])
     res.status(201).json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })

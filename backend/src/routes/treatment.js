@@ -15,14 +15,13 @@ router.post('/sessions', async (req, res) => {
   try {
     // Only one active session per practice at a time
     await query(pid(req),
-      `UPDATE treatment_sessions SET status='abandoned', ended_at=NOW()
-       WHERE practice_id=current_practice_id() AND status='active'`)
+      `UPDATE treatment_sessions SET status='abandoned', ended_at=NOW() WHERE status='active'`)
 
     const { rows } = await query(pid(req),
       `INSERT INTO treatment_sessions
-         (practice_id, appointment_id, patient_id, dentist_id, created_by)
-       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [pid(req), appointmentId, patientId, dentistId, req.user.userId]
+         (tenant_id, appointment_id, patient_id, dentist_id)
+       VALUES ($1,$2,$3,$4) RETURNING *`,
+      [pid(req), appointmentId, patientId, dentistId]
     )
 
     await query(pid(req),
@@ -62,10 +61,10 @@ router.post('/sessions/:id/notes', async (req, res) => {
 
     const { rows } = await query(pid(req),
       `INSERT INTO treatment_notes
-         (practice_id, session_id, patient_id, note_text, source, tooth_numbers, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+         (tenant_id, session_id, patient_id, note_text, source, tooth_numbers)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
       [pid(req), req.params.id, session.patient_id, noteText,
-       source || 'voice', toothNumbers || null, req.user.userId]
+       source || 'voice', toothNumbers || null]
     )
     res.status(201).json(rows[0])
   } catch (err) {

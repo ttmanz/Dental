@@ -19,11 +19,22 @@ const appPool = new Pool({
 adminPool.on('error', (err) => console.error('Admin pool error', err))
 appPool.on('error',  (err) => console.error('App pool error', err))
 
-// Admin pool — no RLS (use for auth, cross-tenant lookups only)
+// Admin pool — bypasses RLS; use for auth, superadmin, cross-tenant lookups only
 async function queryRaw(text, params) { return adminPool.query(text, params) }
-const query = queryRaw   // alias used by auth routes
 
-// Tenant-isolated client — sets app.tenant_id so RLS filters rows
+// App pool — sets tenant context so RLS filters to the requesting practice
+async function query(tenantId, sql, params) {
+  const client = await appPool.connect()
+  try {
+    await client.query(`SET app.tenant_id = '${tenantId}'`)
+    return client.query(sql, params)
+  } finally {
+    await client.query('RESET app.tenant_id').catch(() => {})
+    client.release()
+  }
+}
+
+// Returns an already-configured client for multi-query transactions
 async function getTenantClient(tenantId) {
   const client = await appPool.connect()
   await client.query(`SET app.tenant_id = '${tenantId}'`)

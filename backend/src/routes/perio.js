@@ -33,7 +33,7 @@ router.post('/:patientId', async (req, res) => {
   const { examDate, readings, notes } = req.body
   try {
     const { rows } = await query(pid(req),
-      `INSERT INTO perio_exams (practice_id, patient_id, examiner_id, exam_date, readings, notes)
+      `INSERT INTO perio_exams (tenant_id, patient_id, examiner_id, exam_date, readings, notes)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
       [pid(req), req.params.patientId, req.user.userId,
        examDate || new Date().toISOString().slice(0,10),

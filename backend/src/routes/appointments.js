@@ -10,27 +10,28 @@ const pid = req => req.user.practiceId
 // GET /api/appointments?date=2026-06-05&from=2026-06-01&to=2026-06-30&dentistId=uuid
 router.get('/', async (req, res) => {
   const { date, from, to, dentistId, status } = req.query
-  const conditions = ['a.practice_id = current_practice_id()']
+  const conditions = []
   const vals = []
 
-  if (date) { conditions.push(`a.appointment_date = $${vals.length+1}`); vals.push(date) }
-  if (from) { conditions.push(`a.appointment_date >= $${vals.length+1}`); vals.push(from) }
-  if (to)   { conditions.push(`a.appointment_date <= $${vals.length+1}`); vals.push(to) }
+  if (date)      { conditions.push(`a.starts_at::date = $${vals.length+1}`); vals.push(date) }
+  if (from)      { conditions.push(`a.starts_at >= $${vals.length+1}`); vals.push(from) }
+  if (to)        { conditions.push(`a.starts_at <= $${vals.length+1}`); vals.push(to) }
   if (dentistId) { conditions.push(`a.dentist_id = $${vals.length+1}`); vals.push(dentistId) }
   if (status)    { conditions.push(`a.status = $${vals.length+1}`); vals.push(status) }
+
+  const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''
 
   try {
     const { rows } = await query(pid(req),
       `SELECT a.*,
               p.first_name || ' ' || p.last_name AS patient_name,
               p.phone AS patient_phone,
-              d.display_name AS dentist_name,
-              d.color AS dentist_color
+              u.first_name || ' ' || u.last_name AS dentist_name
        FROM appointments a
        JOIN patients p ON p.id = a.patient_id
-       JOIN dentists d  ON d.id = a.dentist_id
-       WHERE ${conditions.join(' AND ')}
-       ORDER BY a.appointment_date, a.start_time`,
+       LEFT JOIN users u ON u.id = a.dentist_id
+       ${where}
+       ORDER BY a.starts_at`,
       vals
     )
     res.json(rows)
@@ -45,13 +46,10 @@ router.get('/:id', async (req, res) => {
     const { rows } = await query(pid(req),
       `SELECT a.*,
               p.first_name || ' ' || p.last_name AS patient_name,
-              d.display_name AS dentist_name,
-              d.color AS dentist_color,
-              (SELECT json_agg(n ORDER BY n.created_at)
-               FROM appointment_notes n WHERE n.appointment_id = a.id) AS notes
+              u.first_name || ' ' || u.last_name AS dentist_name
        FROM appointments a
        JOIN patients p ON p.id = a.patient_id
-       JOIN dentists d  ON d.id = a.dentist_id
+       LEFT JOIN users u ON u.id = a.dentist_id
        WHERE a.id = $1`,
       [req.params.id]
     )
@@ -64,22 +62,30 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/appointments
 router.post('/', async (req, res) => {
-  const { patientId, dentistId, appointmentDate, startTime, durationMinutes, type, notes, colorOverride } = req.body
-  if (!patientId || !dentistId || !appointmentDate || !startTime) {
-    return res.status(400).json({ error: 'patientId, dentistId, appointmentDate, startTime required' })
+  const { patientId, dentistId, startsAt, endsAt,
+          appointmentDate, startTime, durationMinutes,
+          title, type, notes, color } = req.body
+  if (!patientId) return res.status(400).json({ error: 'patientId required' })
+
+  // Accept either ISO starts_at/ends_at or legacy date+time+duration
+  let start = startsAt
+  let end   = endsAt
+  if (!start && appointmentDate && startTime) {
+    start = `${appointmentDate}T${startTime}`
+    const mins = parseInt(durationMinutes || 30)
+    end = new Date(new Date(start).getTime() + mins * 60000).toISOString()
   }
+  if (!start) return res.status(400).json({ error: 'startsAt (or appointmentDate+startTime) required' })
+
   try {
     const { rows } = await query(pid(req),
-      `INSERT INTO appointments
-         (practice_id, patient_id, dentist_id, appointment_date, start_time,
-          duration_minutes, type, notes, color_override, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      `INSERT INTO appointments (tenant_id, patient_id, dentist_id, title, notes, starts_at, ends_at, status, color)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'scheduled',$8)
        RETURNING *`,
-      [pid(req), patientId, dentistId, appointmentDate, startTime,
-       durationMinutes || 30, type || 'consultation', notes || null,
-       colorOverride || null, req.user.userId]
+      [pid(req), patientId, dentistId || null, title || type || 'Appointment',
+       notes || null, start, end || null, color || null]
     )
-    broadcast('appointment:created', { id: rows[0].id, date: rows[0].appointment_date }, pid(req))
+    broadcast('appointment:created', { id: rows[0].id, startsAt: rows[0].starts_at }, pid(req))
     res.status(201).json(rows[0])
   } catch (err) {
     console.error(err); res.status(500).json({ error: 'Server error' })
@@ -88,11 +94,10 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/appointments/:id
 router.patch('/:id', async (req, res) => {
-  const allowed = ['patient_id','dentist_id','appointment_date','start_time',
-                   'duration_minutes','type','status','notes','color_override','confirmation_sent']
-  const map = { patientId:'patient_id', dentistId:'dentist_id', appointmentDate:'appointment_date',
-                startTime:'start_time', durationMinutes:'duration_minutes',
-                colorOverride:'color_override', confirmationSent:'confirmation_sent' }
+  const allowed = ['patient_id','dentist_id','starts_at','ends_at','title','status','notes','color']
+  const map = { patientId:'patient_id', dentistId:'dentist_id',
+                startsAt:'starts_at', endsAt:'ends_at',
+                appointmentDate:'starts_at', colorOverride:'color' }
   const sets = []; const vals = []
   for (const [k, v] of Object.entries(req.body)) {
     const col = map[k] || k
@@ -104,7 +109,7 @@ router.patch('/:id', async (req, res) => {
     const { rows } = await query(pid(req),
       `UPDATE appointments SET ${sets.join(', ')} WHERE id = $${vals.length} RETURNING *`, vals)
     if (!rows[0]) return res.status(404).json({ error: 'Not found' })
-    broadcast('appointment:updated', { id: rows[0].id, date: rows[0].appointment_date, status: rows[0].status }, pid(req))
+    broadcast('appointment:updated', { id: rows[0].id, startsAt: rows[0].starts_at, status: rows[0].status }, pid(req))
     res.json(rows[0])
   } catch (err) {
     console.error(err); res.status(500).json({ error: 'Server error' })
@@ -119,22 +124,6 @@ router.delete('/:id', async (req, res) => {
     if (!rowCount) return res.status(404).json({ error: 'Not found' })
     broadcast('appointment:deleted', { id: req.params.id }, pid(req))
     res.status(204).end()
-  } catch (err) {
-    console.error(err); res.status(500).json({ error: 'Server error' })
-  }
-})
-
-// POST /api/appointments/:id/notes
-router.post('/:id/notes', async (req, res) => {
-  const { noteText, source, toothNumbers } = req.body
-  if (!noteText) return res.status(400).json({ error: 'noteText required' })
-  try {
-    const { rows } = await query(pid(req),
-      `INSERT INTO appointment_notes (practice_id, appointment_id, note_text, source, tooth_numbers, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [pid(req), req.params.id, noteText, source || 'manual', toothNumbers || null, req.user.userId]
-    )
-    res.status(201).json(rows[0])
   } catch (err) {
     console.error(err); res.status(500).json({ error: 'Server error' })
   }

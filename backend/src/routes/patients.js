@@ -13,17 +13,17 @@ router.get('/', async (req, res) => {
   try {
     const search = q ? `%${q}%` : null
     const { rows } = await query(pid(req),
-      `SELECT id, first_name, last_name, date_of_birth, gender,
-              phone, email, address, notes, amka, photo_url,
+      `SELECT id, first_name, last_name, dob, gender,
+              phone, mobile, email, address, city, notes, amka, photo_url,
               allergies, medications, conditions,
               emergency_name, emergency_phone, insurance,
               smoker, pregnant, anxiety,
               last_visit, chief_complaint, prev_dental_work,
-              created_at
+              is_provisional, active, created_at
        FROM patients
        WHERE ($1::text IS NULL
               OR first_name ILIKE $1 OR last_name ILIKE $1
-              OR phone ILIKE $1 OR email ILIKE $1)
+              OR phone ILIKE $1 OR email ILIKE $1 OR amka ILIKE $1)
        ORDER BY last_name, first_name
        LIMIT $2 OFFSET $3`,
       [search, parseInt(limit), parseInt(offset)]
@@ -39,7 +39,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(pid(req),
       `SELECT p.*,
-              (SELECT json_agg(a ORDER BY a.appointment_date DESC, a.start_time DESC)
+              (SELECT json_agg(a ORDER BY a.starts_at DESC)
                FROM appointments a
                WHERE a.patient_id = p.id) AS appointments
        FROM patients p WHERE p.id = $1`,
@@ -54,26 +54,26 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/patients
 router.post('/', async (req, res) => {
-  const { firstName, lastName, dateOfBirth, gender, phone, email, address, notes, amka, photoUrl,
+  const { firstName, lastName, dob, dateOfBirth, gender, phone, mobile, email, address, city, notes, amka, photoUrl,
           allergies, medications, conditions, emergencyName, emergencyPhone, insurance,
-          smoker, pregnant, anxiety, lastVisit, chiefComplaint, prevDentalWork } = req.body
+          smoker, pregnant, anxiety, lastVisit, chiefComplaint, prevDentalWork, isProvisional } = req.body
   if (!firstName || !lastName) return res.status(400).json({ error: 'firstName and lastName required' })
   try {
     const { rows } = await query(pid(req),
       `INSERT INTO patients
-         (practice_id, first_name, last_name, date_of_birth, gender, phone, email, address, notes, amka, photo_url,
+         (tenant_id, first_name, last_name, dob, gender, phone, mobile, email, address, city, notes, amka, photo_url,
           allergies, medications, conditions, emergency_name, emergency_phone, insurance,
-          smoker, pregnant, anxiety, last_visit, chief_complaint, prev_dental_work, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+          smoker, pregnant, anxiety, last_visit, chief_complaint, prev_dental_work, is_provisional)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)
        RETURNING *`,
-      [pid(req), firstName, lastName, dateOfBirth || null, gender || null,
-       phone || null, email || null, address || null, notes || null,
+      [pid(req), firstName, lastName, dob || dateOfBirth || null, gender || null,
+       phone || null, mobile || null, email || null, address || null, city || null, notes || null,
        amka || null, photoUrl || null,
        allergies || null, medications || null, conditions || null,
        emergencyName || null, emergencyPhone || null, insurance || null,
-       smoker || null, pregnant ?? null, anxiety || null,
+       smoker ?? null, pregnant ?? null, anxiety || null,
        lastVisit || null, chiefComplaint || null, prevDentalWork || null,
-       req.user.userId]
+       isProvisional || false]
     )
     broadcast('patient:created', { id: rows[0].id }, pid(req))
     res.status(201).json(rows[0])
@@ -84,12 +84,13 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/patients/:id
 router.patch('/:id', async (req, res) => {
-  const fields = ['first_name','last_name','date_of_birth','gender','phone','email','address','notes','amka','photo_url',
+  const fields = ['first_name','last_name','dob','gender','phone','mobile','email','address','city','notes','amka','photo_url',
                   'allergies','medications','conditions','emergency_name','emergency_phone','insurance',
-                  'smoker','pregnant','anxiety','last_visit','chief_complaint','prev_dental_work']
-  const map    = { firstName:'first_name', lastName:'last_name', dateOfBirth:'date_of_birth',
+                  'smoker','pregnant','anxiety','last_visit','chief_complaint','prev_dental_work','active','is_provisional']
+  const map    = { firstName:'first_name', lastName:'last_name', dateOfBirth:'dob', dob:'dob',
                    photoUrl:'photo_url', emergencyName:'emergency_name', emergencyPhone:'emergency_phone',
-                   lastVisit:'last_visit', chiefComplaint:'chief_complaint', prevDentalWork:'prev_dental_work' }
+                   lastVisit:'last_visit', chiefComplaint:'chief_complaint', prevDentalWork:'prev_dental_work',
+                   isProvisional:'is_provisional' }
   const sets = []; const vals = []
   for (const [k, v] of Object.entries(req.body)) {
     const col = map[k] || k
@@ -119,15 +120,6 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     console.error(err); res.status(500).json({ error: 'Server error' })
   }
-})
-
-// GET /api/patients/:id/intake — read submitted intake form
-router.get('/:id/intake', async (req, res) => {
-  try {
-    const { rows: [sub] } = await query(pid(req),
-      `SELECT * FROM intake_submissions WHERE patient_id=$1`, [req.params.id])
-    res.json(sub || null)
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
 module.exports = router

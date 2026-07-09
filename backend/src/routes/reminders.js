@@ -1,7 +1,8 @@
 const router = require('express').Router()
 const { getTenantClient } = require('../db')
-const { requireRole } = require('../middleware/auth')
+const { requireAuth, requireRole } = require('../middleware/auth')
 
+router.use(requireAuth)
 const pid = req => req.user.tenantId || req.user.practiceId
 
 // GET /api/reminders/upcoming?hours=48

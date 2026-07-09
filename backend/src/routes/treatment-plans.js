@@ -22,7 +22,7 @@ router.post('/catalog', requireRole('admin','dentist'), async (req, res) => {
   if (!code || !nameEn) return res.status(400).json({ error: 'code and nameEn required' })
   try {
     const { rows } = await query(pid(req),
-      `INSERT INTO procedures_catalog (practice_id, code, name_en, name_el, category, default_cost, sort_order)
+      `INSERT INTO procedures_catalog (tenant_id, code, name_en, name_el, category, default_cost, sort_order)
        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
       [pid(req), code, nameEn, nameEl || nameEn, category || 'restorative', defaultCost || 0, sortOrder || 0])
     res.status(201).json(rows[0])
@@ -85,9 +85,9 @@ router.post('/', async (req, res) => {
   if (!patientId) return res.status(400).json({ error: 'patientId required' })
   try {
     const { rows } = await query(pid(req),
-      `INSERT INTO treatment_plans (practice_id, patient_id, title, notes, created_by)
-       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [pid(req), patientId, title || 'Treatment Plan', notes || null, req.user.userId])
+      `INSERT INTO treatment_plans (tenant_id, patient_id, title, notes)
+       VALUES ($1,$2,$3,$4) RETURNING *`,
+      [pid(req), patientId, title || 'Treatment Plan', notes || null])
     res.status(201).json(rows[0])
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
@@ -143,7 +143,7 @@ router.post('/:id/items', async (req, res) => {
   try {
     const { rows } = await query(pid(req),
       `INSERT INTO treatment_plan_items
-         (practice_id, plan_id, procedure_code, procedure_name, tooth_numbers, surfaces, phase, cost, notes, sort_order)
+         (tenant_id, plan_id, procedure_code, procedure_name, tooth_numbers, surfaces, phase, cost, notes, sort_order)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
       [pid(req), req.params.id, procedureCode, procedureName,
        toothNumbers || null, surfaces || null,
