@@ -1,5 +1,14 @@
 const { Pool } = require('pg')
 
+// tenantId is interpolated directly into a SET statement (Postgres doesn't
+// support parameterized SET), so it must be validated as a UUID first.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+function assertTenantId(tenantId) {
+  if (typeof tenantId !== 'string' || !UUID_RE.test(tenantId)) {
+    throw new Error('Invalid tenantId')
+  }
+}
+
 // Admin pool — bypasses RLS, used for auth routes only
 const adminPool = new Pool({
   host: process.env.DB_HOST, port: parseInt(process.env.DB_PORT || '5432'),
@@ -24,6 +33,7 @@ async function queryRaw(text, params) { return adminPool.query(text, params) }
 
 // App pool — sets tenant context so RLS filters to the requesting practice
 async function query(tenantId, sql, params) {
+  assertTenantId(tenantId)
   const client = await appPool.connect()
   try {
     await client.query(`SET app.tenant_id = '${tenantId}'`)
@@ -36,6 +46,7 @@ async function query(tenantId, sql, params) {
 
 // Returns an already-configured client for multi-query transactions
 async function getTenantClient(tenantId) {
+  assertTenantId(tenantId)
   const client = await appPool.connect()
   await client.query(`SET app.tenant_id = '${tenantId}'`)
   return client
