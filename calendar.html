@@ -11,18 +11,51 @@
   <script>
   (function(){
     if (!/[?&]debug=1\b/.test(location.search)) return
-    var t0 = performance.now(), log = [], box
+    var t0 = performance.now(), log = [], wrap, content, pinBtn, stickBottom = true
+    function fallbackCopy(text){
+      var ta = document.createElement('textarea')
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'
+      document.body.appendChild(ta); ta.select()
+      try { document.execCommand('copy') } catch(e){}
+      document.body.removeChild(ta)
+    }
+    function ensureBox(){
+      if (wrap) return
+      wrap = document.createElement('div')
+      wrap.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:50vh;display:flex;' +
+        'flex-direction:column;background:rgba(0,0,0,.92);z-index:2147483647;font:11px/1.4 monospace;'
+      var bar = document.createElement('div')
+      bar.style.cssText = 'display:flex;gap:8px;padding:6px 8px;border-bottom:1px solid #333;flex-shrink:0;'
+      var copyBtn = document.createElement('button')
+      copyBtn.textContent = 'Copy log'
+      copyBtn.style.cssText = 'font:11px monospace;padding:5px 12px;background:#0f0;color:#000;border:none;border-radius:4px;'
+      copyBtn.onclick = function(){
+        var text = log.join('\n')
+        var done = function(){ copyBtn.textContent = 'Copied!'; setTimeout(function(){ copyBtn.textContent = 'Copy log' }, 1500) }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text); done() })
+        } else { fallbackCopy(text); done() }
+      }
+      pinBtn = document.createElement('button')
+      pinBtn.textContent = 'Pinned to bottom ▼'
+      pinBtn.style.cssText = 'font:11px monospace;padding:5px 12px;background:#333;color:#0f0;border:none;border-radius:4px;'
+      pinBtn.onclick = function(){ stickBottom = true; pinBtn.textContent = 'Pinned to bottom ▼'; content.scrollTop = content.scrollHeight }
+      bar.appendChild(copyBtn); bar.appendChild(pinBtn)
+      content = document.createElement('div')
+      content.style.cssText = 'overflow:auto;padding:8px;color:#0f0;white-space:pre-wrap;flex:1;'
+      content.addEventListener('scroll', function(){
+        var atBottom = content.scrollHeight - content.scrollTop - content.clientHeight < 20
+        stickBottom = atBottom
+        pinBtn.textContent = atBottom ? 'Pinned to bottom ▼' : 'Scroll paused — tap to jump down'
+      })
+      wrap.appendChild(bar); wrap.appendChild(content)
+      ;(document.body || document.documentElement).appendChild(wrap)
+    }
     function push(msg){
       log.push('[+' + (performance.now()-t0).toFixed(0) + 'ms] ' + msg)
-      if (!box) {
-        box = document.createElement('div')
-        box.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:42vh;overflow:auto;' +
-          'background:rgba(0,0,0,.88);color:#0f0;font:11px/1.4 monospace;padding:8px;' +
-          'z-index:2147483647;white-space:pre-wrap;pointer-events:auto;'
-        ;(document.body || document.documentElement).appendChild(box)
-      }
-      box.textContent = log.slice(-250).join('\n')
-      box.scrollTop = box.scrollHeight
+      ensureBox()
+      content.textContent = log.slice(-500).join('\n')
+      if (stickBottom) content.scrollTop = content.scrollHeight
     }
     push('debug overlay attached, script parse start')
     window.addEventListener('error', function(e){ push('ERROR: ' + e.message + ' @ ' + e.filename + ':' + e.lineno) })
