@@ -4075,9 +4075,13 @@
 
       /* Icon-only topbar buttons (Lab/Rx/Analytics/Suppliers/Billing) —
          keeps them reachable instead of hiding them; on phone widths
-         (below) they're hidden entirely since there's no room even for icons. */
+         (below) they're hidden entirely since there's no room even for icons.
+         Sized as proper touch targets (44px) since there's room to spare. */
       .topbar-right .add-appt-btn span:last-child { display: none; }
-      .topbar-right .add-appt-btn { min-width: 36px; padding: 0 8px; justify-content: center; }
+      .topbar-right .add-appt-btn {
+        min-width: 44px; height: 44px; padding: 0 12px;
+        justify-content: center; font-size: 19px;
+      }
 
       /* Bottom nav bar for quick access */
       .bottom-nav {
