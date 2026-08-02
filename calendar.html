@@ -8,6 +8,64 @@
   <meta name="apple-mobile-web-app-title" content="DentalPro"/>
   <meta name="theme-color" id="meta-theme-color" content="#3D9E8F"/>
   <title>Dental Assistant Pro — Calendar</title>
+  <script>
+  (function(){
+    if (!/[?&]debug=1\b/.test(location.search)) return
+    var t0 = performance.now(), log = [], box
+    function push(msg){
+      log.push('[+' + (performance.now()-t0).toFixed(0) + 'ms] ' + msg)
+      if (!box) {
+        box = document.createElement('div')
+        box.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:42vh;overflow:auto;' +
+          'background:rgba(0,0,0,.88);color:#0f0;font:11px/1.4 monospace;padding:8px;' +
+          'z-index:2147483647;white-space:pre-wrap;pointer-events:auto;'
+        ;(document.body || document.documentElement).appendChild(box)
+      }
+      box.textContent = log.slice(-250).join('\n')
+      box.scrollTop = box.scrollHeight
+    }
+    push('debug overlay attached, script parse start')
+    window.addEventListener('error', function(e){ push('ERROR: ' + e.message + ' @ ' + e.filename + ':' + e.lineno) })
+    window.addEventListener('unhandledrejection', function(e){ push('UNHANDLED PROMISE: ' + (e.reason && e.reason.message || e.reason)) })
+    document.addEventListener('DOMContentLoaded', function(){ push('DOMContentLoaded') })
+    window.addEventListener('load', function(){ push('window load') })
+    document.addEventListener('click', function(e){
+      var t = e.target.closest && e.target.closest('#user-avatar, #reminders-nav-btn, button, a')
+      if (t) push('CLICK on ' + (t.id || t.className || t.tagName))
+    }, true)
+    if ('PerformanceObserver' in window) {
+      try {
+        new PerformanceObserver(function(list){
+          list.getEntries().forEach(function(e){ push('LONG TASK: ' + e.duration.toFixed(0) + 'ms') })
+        }).observe({entryTypes: ['longtask']})
+      } catch(e){}
+    }
+    window.addEventListener('load', function(){
+      new MutationObserver(function(muts){
+        muts.forEach(function(m){
+          m.addedNodes && m.addedNodes.forEach(function(n){
+            if (n.nodeType === 1) push('body child added: ' + (n.id || n.className || n.tagName))
+          })
+        })
+      }).observe(document.body, {childList:true})
+    })
+    var origFetch = window.fetch
+    window.fetch = function(url, opts){
+      var start = performance.now()
+      var label = (typeof url === 'string' ? url : (url && url.url) || 'unknown')
+      push('FETCH start ' + label)
+      return origFetch.apply(this, arguments).then(function(res){
+        push('FETCH done ' + label + ' status=' + res.status + ' (' + (performance.now()-start).toFixed(0) + 'ms)')
+        return res
+      }, function(err){
+        push('FETCH FAIL ' + label + ' ' + err.message + ' (' + (performance.now()-start).toFixed(0) + 'ms)')
+        throw err
+      })
+    }
+    setInterval(function(){ push('heartbeat') }, 2000)
+    window.__dbgPush = push
+  })()
+  </script>
   <link rel="manifest" href="/manifest.json"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
