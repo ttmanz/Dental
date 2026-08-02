@@ -4073,9 +4073,11 @@
       .nav-date { font-size: 14px; min-width: 120px; }
       .today-btn, .view-toggle { display: none; }
 
-      /* Hide non-essential topbar buttons */
-      #reminders-nav-btn, #referral-nav-btn, #supplier-nav-btn,
-      #lab-nav-btn, #ops-nav-btn { display: none !important; }
+      /* Icon-only topbar buttons (Lab/Rx/Analytics/Suppliers/Billing) —
+         keeps them reachable instead of hiding them; on phone widths
+         (below) they're hidden entirely since there's no room even for icons. */
+      .topbar-right .add-appt-btn span:last-child { display: none; }
+      .topbar-right .add-appt-btn { min-width: 36px; padding: 0 8px; justify-content: center; }
 
       /* Bottom nav bar for quick access */
       .bottom-nav {
@@ -4118,6 +4120,14 @@
       /* Larger tap targets everywhere */
       .nav-btn, .mini-nav { width: 40px; height: 40px; }
       .dentist-item, .legend-item { padding: 10px 12px; }
+    }
+
+    /* Phone only — even icon-only topbar buttons don't fit; hide the
+       least-used ones entirely (still reachable once bigger screens
+       show them, or via the sidebar drawer's own buttons where relevant). */
+    @media (max-width: 768px) and (pointer: coarse) {
+      #reminders-nav-btn, #referral-nav-btn, #supplier-nav-btn,
+      #lab-nav-btn, #ops-nav-btn { display: none !important; }
     }
 
     /* Touch device hover optimisation */
