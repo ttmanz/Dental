@@ -4038,8 +4038,10 @@
       .rpt-summary-grid { grid-template-columns: 1fr 1fr; }
     }
 
-    /* Phone / small tablet portrait  (≤ 768 px) */
-    @media (max-width: 768px) {
+    /* Phone / tablet — any touchscreen up to 1280px wide.
+       pointer:coarse keeps this from firing on a resized mouse-driven
+       desktop/laptop window at a similar width. */
+    @media (max-width: 1280px) and (pointer: coarse) {
       :root { --sidebar-w: 0px; --topbar-h: 56px; }
       body { overflow: hidden auto; }
 
@@ -16127,9 +16129,10 @@ window._dentalSync = new DentalSync()
   const backdrop  = document.getElementById('sidebar-backdrop')
   const bottomNav = document.getElementById('bottom-nav')
 
-  // Show hamburger only on small screens
+  // Show hamburger on any touchscreen up to 1280px wide — must match the
+  // CSS breakpoint above so the drawer/bottom-nav stay in sync with layout.
   function checkMobile() {
-    const mobile = window.innerWidth <= 768
+    const mobile = window.innerWidth <= 1280 && window.matchMedia('(pointer: coarse)').matches
     if (hamburger) hamburger.style.display = mobile ? 'flex' : 'none'
     if (bottomNav) bottomNav.style.display = mobile ? 'flex' : 'none'
   }
