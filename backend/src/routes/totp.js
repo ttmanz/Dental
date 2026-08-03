@@ -54,25 +54,27 @@ setInterval(() => {
 // ── Public: complete login when 2FA is required ────────────────────────────
 // POST /api/auth/totp/verify  { mfaToken, code }
 router.post('/verify', async (req, res) => {
-  const { mfaToken, code } = req.body
-  const pending = MFA_PENDING.get(mfaToken)
-  if (!pending) return res.status(400).json({ error: 'Invalid or expired MFA session' })
+  try {
+    const { mfaToken, code } = req.body
+    const pending = MFA_PENDING.get(mfaToken)
+    if (!pending) return res.status(400).json({ error: 'Invalid or expired MFA session' })
 
-  const { rows } = await queryRaw(
-    'SELECT secret FROM totp_secrets WHERE user_id = $1 AND enabled = TRUE', [pending.userId])
-  const secret = rows[0]?.secret
-  if (!secret || !verifyTOTP(secret, code)) {
-    return res.status(401).json({ error: 'Invalid code' })
-  }
+    const { rows } = await queryRaw(
+      'SELECT secret FROM totp_secrets WHERE user_id = $1 AND enabled = TRUE', [pending.userId])
+    const secret = rows[0]?.secret
+    if (!secret || !verifyTOTP(secret, code)) {
+      return res.status(401).json({ error: 'Invalid code' })
+    }
 
-  MFA_PENDING.delete(mfaToken)
+    MFA_PENDING.delete(mfaToken)
 
-  const token = jwt.sign(
-    { userId: pending.userId, practiceId: pending.practiceId, role: pending.role, email: pending.email },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
-  )
-  res.json({ token, user: pending.user })
+    const token = jwt.sign(
+      { userId: pending.userId, practiceId: pending.practiceId, role: pending.role, email: pending.email },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+    )
+    res.json({ token, user: pending.user })
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
 // Export so login route can enqueue pending sessions
@@ -86,44 +88,52 @@ router.use(requireAuth)
 
 // POST /api/auth/totp/setup — generate new secret, store pending
 router.post('/setup', async (req, res) => {
-  const secret  = generateSecret()
-  const email   = encodeURIComponent(req.user.email)
-  const issuer  = encodeURIComponent('DentalAssistantPro')
-  const otpauth = `otpauth://totp/${issuer}:${email}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`
-  await queryRaw(
-    `INSERT INTO totp_secrets (user_id, secret, enabled) VALUES ($1, $2, FALSE)
-     ON CONFLICT (user_id) DO UPDATE SET secret = $2, enabled = FALSE`,
-    [req.user.userId, secret])
-  res.json({ secret, otpauthUrl: otpauth })
+  try {
+    const secret  = generateSecret()
+    const email   = encodeURIComponent(req.user.email)
+    const issuer  = encodeURIComponent('DentalAssistantPro')
+    const otpauth = `otpauth://totp/${issuer}:${email}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`
+    await queryRaw(
+      `INSERT INTO totp_secrets (user_id, secret, enabled) VALUES ($1, $2, FALSE)
+       ON CONFLICT (user_id) DO UPDATE SET secret = $2, enabled = FALSE`,
+      [req.user.userId, secret])
+    res.json({ secret, otpauthUrl: otpauth })
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
 // POST /api/auth/totp/enable  { code } — confirm code, activate 2FA
 router.post('/enable', async (req, res) => {
-  const { code } = req.body
-  const { rows } = await queryRaw(
-    'SELECT secret FROM totp_secrets WHERE user_id = $1 AND enabled = FALSE', [req.user.userId])
-  const secret = rows[0]?.secret
-  if (!secret) return res.status(400).json({ error: 'No pending 2FA setup' })
-  if (!verifyTOTP(secret, code)) return res.status(401).json({ error: 'Invalid code — check your authenticator app' })
-  await queryRaw('UPDATE totp_secrets SET enabled = TRUE WHERE user_id = $1', [req.user.userId])
-  res.json({ ok: true, message: '2FA enabled' })
+  try {
+    const { code } = req.body
+    const { rows } = await queryRaw(
+      'SELECT secret FROM totp_secrets WHERE user_id = $1 AND enabled = FALSE', [req.user.userId])
+    const secret = rows[0]?.secret
+    if (!secret) return res.status(400).json({ error: 'No pending 2FA setup' })
+    if (!verifyTOTP(secret, code)) return res.status(401).json({ error: 'Invalid code — check your authenticator app' })
+    await queryRaw('UPDATE totp_secrets SET enabled = TRUE WHERE user_id = $1', [req.user.userId])
+    res.json({ ok: true, message: '2FA enabled' })
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
 // POST /api/auth/totp/disable  { code }
 router.post('/disable', async (req, res) => {
-  const { code } = req.body
-  const { rows } = await queryRaw(
-    'SELECT secret FROM totp_secrets WHERE user_id = $1 AND enabled = TRUE', [req.user.userId])
-  const secret = rows[0]?.secret
-  if (!secret) return res.status(400).json({ error: '2FA is not enabled' })
-  if (!verifyTOTP(secret, code)) return res.status(401).json({ error: 'Invalid code' })
-  await queryRaw('DELETE FROM totp_secrets WHERE user_id = $1', [req.user.userId])
-  res.json({ ok: true, message: '2FA disabled' })
+  try {
+    const { code } = req.body
+    const { rows } = await queryRaw(
+      'SELECT secret FROM totp_secrets WHERE user_id = $1 AND enabled = TRUE', [req.user.userId])
+    const secret = rows[0]?.secret
+    if (!secret) return res.status(400).json({ error: '2FA is not enabled' })
+    if (!verifyTOTP(secret, code)) return res.status(401).json({ error: 'Invalid code' })
+    await queryRaw('DELETE FROM totp_secrets WHERE user_id = $1', [req.user.userId])
+    res.json({ ok: true, message: '2FA disabled' })
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
 // GET /api/auth/totp/status
 router.get('/status', async (req, res) => {
-  const { rows } = await queryRaw(
-    'SELECT enabled FROM totp_secrets WHERE user_id = $1', [req.user.userId])
-  res.json({ enabled: rows[0]?.enabled || false })
+  try {
+    const { rows } = await queryRaw(
+      'SELECT enabled FROM totp_secrets WHERE user_id = $1', [req.user.userId])
+    res.json({ enabled: rows[0]?.enabled || false })
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })

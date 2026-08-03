@@ -115,31 +115,33 @@ router.post('/webhook', async (req, res) => {
   const sub = event.data.object
   const tenantId = sub.metadata?.tenantId
 
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const plan = sub.metadata?.plan
-      if (plan && tenantId) {
-        await queryRaw(`UPDATE tenants SET plan = $1 WHERE id = $2`, [plan, tenantId])
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const plan = sub.metadata?.plan
+        if (plan && tenantId) {
+          await queryRaw(`UPDATE tenants SET plan = $1 WHERE id = $2`, [plan, tenantId])
+        }
+        break
       }
-      break
+      case 'customer.subscription.deleted': {
+        if (tenantId) await queryRaw(`UPDATE tenants SET plan = 'trial' WHERE id = $1`, [tenantId])
+        break
+      }
+      case 'invoice.payment_failed': {
+        // Log only — no plan_status column on tenants
+        console.warn('[billing] Payment failed for customer', sub.customer)
+        break
+      }
+      case 'invoice.paid': {
+        // Payment succeeded — ensure tenant stays active
+        const { rows } = await queryRaw(`SELECT id FROM tenants WHERE stripe_customer_id = $1`, [sub.customer])
+        if (rows[0]) await queryRaw(`UPDATE tenants SET active = TRUE WHERE id = $1`, [rows[0].id])
+        break
+      }
     }
-    case 'customer.subscription.deleted': {
-      if (tenantId) await queryRaw(`UPDATE tenants SET plan = 'trial' WHERE id = $1`, [tenantId])
-      break
-    }
-    case 'invoice.payment_failed': {
-      // Log only — no plan_status column on tenants
-      console.warn('[billing] Payment failed for customer', sub.customer)
-      break
-    }
-    case 'invoice.paid': {
-      // Payment succeeded — ensure tenant stays active
-      const { rows } = await queryRaw(`SELECT id FROM tenants WHERE stripe_customer_id = $1`, [sub.customer])
-      if (rows[0]) await queryRaw(`UPDATE tenants SET active = TRUE WHERE id = $1`, [rows[0].id])
-      break
-    }
-  }
-  res.json({ received: true })
+    res.json({ received: true })
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }) }
 })
 
 module.exports = router

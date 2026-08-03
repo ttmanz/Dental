@@ -1,7 +1,15 @@
 const router  = require('express').Router()
-const bcrypt  = require('bcryptjs')
+const crypto  = require('crypto')
 const jwt     = require('jsonwebtoken')
 const { queryRaw } = require('../db')
+
+// Constant-time string compare — avoids leaking credential match length via timing.
+function safeCompare(a, b) {
+  const bufA = Buffer.from(String(a))
+  const bufB = Buffer.from(String(b))
+  if (bufA.length !== bufB.length) return false
+  return crypto.timingSafeEqual(bufA, bufB)
+}
 
 // ── Superadmin guard ──────────────────────────────────────────────────────
 function requireSuperAdmin(req, res, next) {
@@ -21,7 +29,7 @@ router.post('/login', async (req, res) => {
   const username = (email || '').trim()
 
   if (process.env.SA_USERNAME && process.env.SA_PASSWORD) {
-    if (username === process.env.SA_USERNAME && password === process.env.SA_PASSWORD) {
+    if (safeCompare(username, process.env.SA_USERNAME) && safeCompare(password, process.env.SA_PASSWORD)) {
       const token = jwt.sign(
         { userId: 'sa-env', isSuperAdmin: true, email: username },
         process.env.JWT_SECRET,
@@ -168,7 +176,10 @@ router.post('/import-patients', async (req, res) => {
   if (!tenantId) return res.status(400).json({ error: 'tenantId required' })
   if (!Array.isArray(patients) || !patients.length) return res.status(400).json({ error: 'patients array required' })
 
-  const { rows: tRows } = await queryRaw('SELECT id FROM tenants WHERE id = $1', [tenantId])
+  let tRows
+  try {
+    ;({ rows: tRows } = await queryRaw('SELECT id FROM tenants WHERE id = $1', [tenantId]))
+  } catch (err) { console.error(err); return res.status(500).json({ error: 'Server error' }) }
   if (!tRows[0]) return res.status(404).json({ error: 'Tenant not found' })
 
   let imported = 0, updated = 0, failed = 0

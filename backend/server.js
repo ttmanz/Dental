@@ -36,8 +36,10 @@ app.use('/api/auth/login',    loginLimiter);
 app.use('/api/auth/register', loginLimiter);
 app.use('/api/',              apiLimiter);
 
-// Stripe webhook needs raw body — must come before express.json()
-app.use('/api/billing/webhook', require('./src/routes/billing').webhook || ((req,res,next)=>next()));
+// Stripe webhook needs raw body for signature verification — must come
+// before express.json(), or the body arrives pre-parsed and every webhook
+// call fails signature verification.
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '2mb' }));
 
 // Health
