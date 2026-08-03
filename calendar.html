@@ -7627,10 +7627,6 @@ async function initAppData() {
   updateDentistCounts()
 }
 
-// ── No-op stubs kept so existing call-sites don't throw ─────────────────
-function savePatients() {}
-function saveAppts()    {}
-
 function findPatientByName(name) {
   if (!name) return null
   const n = name.trim().toLowerCase()
@@ -9144,7 +9140,6 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 let recognition       = null
 let isRecording       = false
 let voiceQIdx         = 0
-let interimTranscript = ''
 
 // Show warning if speech not supported
 if (!SpeechRecognition) {
@@ -9222,7 +9217,6 @@ document.getElementById('voice-mic-btn').addEventListener('click', () => {
     if (final) {
       answerBox.value = (existing ? existing + ' ' : '') + final.trim()
     }
-    interimTranscript = interim
     if (interim) answerBox.placeholder = interim + '…'
   }
   recognition.onerror = (e) => { stopRecognition() }
@@ -9806,6 +9800,7 @@ function enableColDrop(col, dateStr) {
     const newDate = dateStr
 
     const a = _dragState.appt
+    const oldDate = a.date
     // No change — drop on same slot
     if (a.date === newDate && a.hour === newHour && a.min === newMin) return
 
@@ -9826,7 +9821,7 @@ function enableColDrop(col, dateStr) {
     // Toast with new time
     const months = lang === 'en' ? MONTHS_EN : MONTHS_EL
     const d = new Date(newDate + 'T00:00:00')
-    const dateLabel = newDate !== _dragState.appt?.date
+    const dateLabel = newDate !== oldDate
       ? `${d.getDate()} ${months[d.getMonth()]}, `
       : ''
     showToast(`📅 ${a.patient} → ${dateLabel}${String(newHour).padStart(2,'0')}:${String(newMin).padStart(2,'0')} ✓`)
@@ -10495,9 +10490,8 @@ setInterval(() => { if (typeof window.refreshReminderBadge === 'function') windo
     resetStatus()
   }
 
-  // Expose to global scope so makeApptBlock and modal button can call them
+  // Expose to global scope so makeApptBlock can call it
   window.aiStartSession = startSession
-  window.aiEndSession   = endSession
 
   // Wire session banner End button
   $('sb-end').addEventListener('click', endSession)
@@ -12303,14 +12297,6 @@ General rules (non-session):
       .replace('{dentist}',  appt.dentist_name || '')
   }
 
-  function formatPhone(phone) {
-    if (!phone) return ''
-    const digits = phone.replace(/\D/g,'')
-    // Greece: 30, Cyprus: 357; strip leading 0 if present
-    if (digits.startsWith('0')) return digits.slice(1)
-    return digits
-  }
-
   // ── Upcoming tab ──────────────────────────────────────────────────────────
   async function renderUpcoming() {
     content.innerHTML = `<div class="rem-empty" style="padding:20px">Loading…</div>`
@@ -14072,17 +14058,6 @@ const EOPYY_CATALOG = [
     } catch { if (typeof showToast === 'function') showToast('Saved locally') }
   })
 
-  // Hook into ops hub tab switching
-  const _origSwitch = window._switchOpsTab || null
-  // Patch the switchOpsTab from Ops Hub IIFE
-  const origOpsSwitch = document.querySelector('.ops-tab[data-ops-tab="surveys]')
-  // We use an event-based approach: listen for the surveys tab becoming active
-  const observer = new MutationObserver(() => {
-    const panel = document.getElementById('ops-panel-surveys')
-    if (panel?.classList.contains('active')) window._loadSurveyTab?.()
-  })
-  const surveysPanel = document.getElementById('ops-panel-surveys')
-  if (surveysPanel) observer.observe(surveysPanel, { attributeFilter: ['class'] })
 })()
 
 
@@ -14405,7 +14380,7 @@ window.auditLog = (function() {
       document.getElementById('dash-g-specialists').textContent = specs.length
       document.getElementById('dash-g-referrals').textContent   = refs.filter(r => r.status === 'pending' || r.status === 'accepted').length
       document.getElementById('dash-g-orders').textContent      = orders.filter(o => o.status === 'pending' || o.status === 'ordered').length
-      const lowCount = inv.filter(i => parseInt(i.qty)||0 <= parseInt(i.minQty)||0).length
+      const lowCount = inv.filter(i => (parseInt(i.qty)||0) <= (parseInt(i.minQty)||0)).length
       document.getElementById('dash-g-lowstock').textContent    = lowCount || '✓ OK'
       if (!lowCount) document.getElementById('dash-g-lowstock').style.color = '#22C47A'
     } catch {}
@@ -16990,7 +16965,7 @@ if (AUTH.isValid()) {
     const bannerText = document.getElementById('sup-alert-banner-text')
     if (!list) return
 
-    const low = INV.filter(i => parseInt(i.qty)||0 <= (parseInt(i.minQty)||0) && (parseInt(i.minQty)||0) > 0)
+    const low = INV.filter(i => (parseInt(i.qty)||0) <= (parseInt(i.minQty)||0) && (parseInt(i.minQty)||0) > 0)
     if (banner) {
       if (low.length) {
         banner.style.display = 'flex'
