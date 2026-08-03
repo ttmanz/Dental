@@ -1,6 +1,6 @@
 // Dental Assistant Pro — Service Worker
 // Strategy: cache-first for app shell; network-first for API calls.
-const CACHE  = 'dental-pro-v13'
+const CACHE  = 'dental-pro-v14'
 const SHELL  = [
   '/', '/calendar.html',
   '/portal', '/patient-portal.html', '/patient-portal-manifest.json',
